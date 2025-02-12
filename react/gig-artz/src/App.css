@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #060512;
+  padding: 0.1rem;
+}
+
+text {
+  color: #fff !important;
+}
+
+@layer components {
+  .input-field {
+    @apply w-full p-3 text-white bg-primary border border-transparent rounded-xl focus:ring-2 focus:ring-teal-500 active:bg-black;
+  }
+
+  .btn-primary {
+    @apply w-full py-3 bg-gradient-to-r from-teal-400 to-pink-500 text-white font-bold rounded-lg;
+  }
+
+  .auth-bg {
+    @apply min-h-screen bg-dark flex flex-col items-center p-5;
+  }
+
+  .bg-dark {
+    @apply bg-[#060512];
+  }
+
+  .form-container {
+    @apply w-full max-w-md bg-secondary rounded-lg p-6 space-y-6;
+  }
+}
+
+/* Define color variables */
+@layer base {
+  :root {
+    --color-dark: #060512;
+    --color-secondary: #1F1C29;
+    --color-primary: #060512;
+  }
+}
+
+/* Extend Tailwind's default theme */
+@layer utilities {
+  .bg-dark {
+    background-color: var(--color-dark);
+  }
+  
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+}
+
+/* Vertical scrollbar */
+::-webkit-scrollbar {
+  width: 0.2rem;
+  height: 0.2rem;
+}
+
+
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #060512;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #14b8a6;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
