@@ -1,299 +1,111 @@
-import React, { useState, useRef } from "react";
+import { AppDispatch } from "@/store/store";
+import { addEvent } from "../store/eventsSlice";
+import React, { useState, useReducer, useCallback } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+
+// Initial form data
+const initialState = {
+  title: "",
+  description: "",
+  category: "",
+  eventType: "",
+  hostName: "",
+  promoterId: "AUTO_GENERATED_ID", // Could be hidden or auto-filled
+  complimentaryTicket: false,
+  tip: false,
+  date: "",
+  eventStartTime: "",
+  eventEndTime: "",
+  venue: "",
+  artistLineUp: [""], // Dynamic array
+  ticketsAvailable: {
+    vip: {
+      quantity: 0,
+      price: 0,
+      ticketReleaseDate: "",
+      ticketReleaseTime: "",
+    },
+    general: {
+      quantity: 0,
+      price: 0,
+      ticketReleaseDate: "",
+      ticketReleaseTime: "",
+    },
+  },
+  eventVideo: null,
+  gallery: [],
+};
+
+// Reducer function
+const formReducer = (state, action) => {
+  if (action.type === "update") {
+    return { ...state, [action.name]: action.value };
+  }
+  if (action.type === "updateNested") {
+    return {
+      ...state,
+      ticketsAvailable: {
+        ...state.ticketsAvailable,
+        [action.ticketType]: {
+          ...state.ticketsAvailable[action.ticketType],
+          [action.name]: action.value,
+        },
+      },
+    };
+  }
+  if (action.type === "updateArray") {
+    const updatedArray = [...state.artistLineUp];
+    updatedArray[action.index] = action.value;
+    return { ...state, artistLineUp: updatedArray };
+  }
+  if (action.type === "addArtist") {
+    return { ...state, artistLineUp: [...state.artistLineUp, ""] };
+  }
+  if (action.type === "removeArtist") {
+    const updatedArray = [...state.artistLineUp];
+    updatedArray.splice(action.index, 1);
+    return { ...state, artistLineUp: updatedArray };
+  }
+  return state;
+};
 
 const AddEventForm: React.FC = () => {
-  // Step state to track the current step of the form
   const [step, setStep] = useState(1);
+  const [formData, dispatch] = useReducer(formReducer, initialState);
 
-  // State to track form data
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    date: "",
-    venue: "",
-    city: "",
-    eventType: "",
-    category: "",
-    artistLineUp: "",
-    generalPrice: "",
-    studentPrice: "",
-    goldenCirclePrice: "",
-    platinumPrice: "",
-    mapLink: "",
-    eventPic: null,
-    eventVideo: null,
-    startTime: "",
-    endTime: "",
-  });
+const dispatchTwo = useDispatch<AppDispatch>();
 
-  // Use refs to persist input values and avoid unnecessary re-renders
-  const titleRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const dateRef = useRef<HTMLInputElement>(null);
-  const venueRef = useRef<HTMLInputElement>(null);
-  const eventTypeRef = useRef<HTMLInputElement>(null);
-  const categoryRef = useRef<HTMLInputElement>(null);
-  const artistLineUpRef = useRef<HTMLInputElement>(null);
-  const generalPriceRef = useRef<HTMLInputElement>(null);
-  const studentPriceRef = useRef<HTMLInputElement>(null);
-  const goldenCirclePriceRef = useRef<HTMLInputElement>(null);
-  const platinumPriceRef = useRef<HTMLInputElement>(null);
-  const mapLinkRef = useRef<HTMLInputElement>(null);
-  const eventPicRef = useRef<HTMLInputElement>(null);
-  const eventVideoRef = useRef<HTMLInputElement>(null);
-  const cityRef = useRef<HTMLInputElement>(null);
-  const startTimeRef = useRef<HTMLInputElement>(null);
-  const endTimeRef = useRef<HTMLInputElement>(null);
-
-  // Handle next step
-  const handleNext = () => {
-    // Validate form data before moving to next step
-    if (step === 1 && !titleRef.current?.value) {
-      alert("Please enter an event title.");
-      return;
-    }
-    if (step === 1 && !descriptionRef.current?.value) {
-      alert("Please enter an event description.");
-      return;
-    }
-    if (step === 1 && !venueRef.current?.value) {
-      alert("Please enter an event venue.");
-      return;
-    }
-    if (step === 2 && !eventTypeRef.current?.value) {
-      alert("Please select an event type.");
-      return;
-    }
-    if (step === 2 && !categoryRef.current?.value) {
-      alert("Please select a category.");
-      return;
-    }
-    // Set form data for each step
-    setFormData({
-      ...formData,
-      title: titleRef.current?.value || "",
-      description: descriptionRef.current?.value || "",
-      date: dateRef.current?.value || "",
-      venue: venueRef.current?.value || "",
-      city: cityRef.current?.value || "",
-      eventType: eventTypeRef.current?.value || "",
-      category: categoryRef.current?.value || "",
-      artistLineUp: artistLineUpRef.current?.value || "",
-      generalPrice: generalPriceRef.current?.value || "",
-      studentPrice: studentPriceRef.current?.value || "",
-      goldenCirclePrice: goldenCirclePriceRef.current?.value || "",
-      platinumPrice: platinumPriceRef.current?.value || "",
-      mapLink: mapLinkRef.current?.value || "",
-      eventPic: eventPicRef.current?.files?.[0] ?? null,
-      eventVideo: eventVideoRef.current?.files?.[0] ?? null,
-      startTime: startTimeRef.current?.value || "",
-      endTime: endTimeRef.current?.value || "",
-    });
-
-    setStep((prevStep) => prevStep + 1);
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    const finalValue = type === "checkbox" ? checked : files ? files : value;
+    dispatch({ type: "update", name, value: finalValue });
   };
 
-  // Handle previous step
-  const handlePrevious = () => setStep((prevStep) => prevStep - 1);
+  const handleTicketChange = (e, ticketType) => {
+    const { name, value } = e.target;
+    dispatch({ type: "updateNested", ticketType, name, value });
+  };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.date ||
-      !formData.venue
-    ) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-    // Process form submission (e.g., send data to the server)
+  const handleArtistChange = (index, value) => {
+    dispatch({ type: "updateArray", index, value });
+  };
+
+  const handleNext = useCallback(() => {
+    setStep((prev) => prev + 1);
+  }, []);
+
+  const handlePrevious = useCallback(() => {
+    setStep((prev) => prev - 1);
+  }, []);
+
+  const handleSubmit = useCallback(() => {
     console.log("Form Submitted", formData);
+
+    // dispatch action
+    dispatchTwo(addEvent(formData))
     alert("Event Submitted Successfully!");
-  };
-
-  // Step 1: Event details form
-  const Step1 = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-white">Event Title</label>
-        <input
-          type="text"
-          ref={titleRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Event Description</label>
-        <textarea
-          ref={descriptionRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Event Date</label>
-        <input
-          type="date"
-          ref={dateRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Venue</label>
-        <input
-          type="text"
-          ref={venueRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">City</label>
-        <input
-          type="text"
-          ref={cityRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-    </div>
-  );
-
-  // Step 2: Event Type, Category, and Artist lineup
-  const Step2 = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-white">Event Type</label>
-        <input
-          type="text"
-          ref={eventTypeRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Category</label>
-        <input
-          type="text"
-          ref={categoryRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">
-          Artist Lineup (comma-separated)
-        </label>
-        <input
-          type="text"
-          ref={artistLineUpRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-          placeholder="Enter artist names separated by commas"
-        />
-      </div>
-    </div>
-  );
-
-  // Step 3: Ticket Prices
-  const Step3 = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-white">General Ticket Price</label>
-        <input
-          type="number"
-          ref={generalPriceRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Student Ticket Price</label>
-        <input
-          type="number"
-          ref={studentPriceRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Golden Circle Price</label>
-        <input
-          type="number"
-          ref={goldenCirclePriceRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Platinum Ticket Price</label>
-        <input
-          type="number"
-          ref={platinumPriceRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-    </div>
-  );
-
-  // Step 4: Upload Images, Video, and Map Link
-  const Step4 = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-white">Event Map Link</label>
-        <input
-          type="url"
-          ref={mapLinkRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Event Image</label>
-        <input
-          type="file"
-          ref={eventPicRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Event Video</label>
-        <input
-          type="file"
-          ref={eventVideoRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Event Start Time</label>
-        <input
-          type="time"
-          ref={startTimeRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-      <div>
-        <label className="block text-white">Event End Time</label>
-        <input
-          type="time"
-          ref={endTimeRef}
-          className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
-        />
-      </div>
-    </div>
-  );
-
-  // Step 5: Confirm and Submit
-  const Step5 = () => (
-    <div className="space-y-4">
-      <h2 className="text-white text-2xl">Confirm Your Event Details</h2>
-      <div className="space-y-2">
-        <p className="text-white">Title: {formData.title}</p>
-        <p className="text-white">Description: {formData.description}</p>
-        <p className="text-white">Start Time: {formData.startTime}</p>
-        <p className="text-white">End Time: {formData.endTime}</p>
-        <p className="text-white">Venue: {formData.venue}</p>
-        <p className="text-white">City: {formData.city}</p>
-      </div>
-      <button
-        onClick={handleSubmit}
-        className="mt-4 p-3 bg-blue-500 text-white rounded-lg"
-      >
-        Submit Event
-      </button>
-    </div>
-  );
+  }, [formData]);
 
   return (
     <div className="justify-center items-center z-20">
@@ -317,15 +129,231 @@ const AddEventForm: React.FC = () => {
           )}
         </div>
         <div className="bg-gray-800 p-6 rounded-lg">
-          {step === 1 && <Step1 />}
-          {step === 2 && <Step2 />}
-          {step === 3 && <Step3 />}
-          {step === 4 && <Step4 />}
-          {step === 5 && <Step5 />}
+          {step === 1 && (
+            <Step1 formData={formData} handleChange={handleChange} />
+          )}
+          {step === 2 && (
+            <Step2
+              formData={formData}
+              handleArtistChange={handleArtistChange}
+              dispatch={dispatch}
+            />
+          )}
+          {step === 3 && (
+            <Step3
+              formData={formData}
+              handleTicketChange={handleTicketChange}
+            />
+          )}
+          {step === 4 && (
+            <Step4 formData={formData} handleChange={handleChange} />
+          )}
+          {step === 5 && (
+            <Step5 formData={formData} handleSubmit={handleSubmit} />
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+// Step components wrapped in React.memo
+const Step1 = React.memo(({ formData, handleChange }) => (
+  <div className="space-y-4">
+    <label className="block text-white">Event Title</label>
+    <input
+      type="text"
+      name="title"
+      value={formData.title}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Event Description</label>
+    <textarea
+      name="description"
+      value={formData.description}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Category</label>
+    <input
+      type="text"
+      name="category"
+      value={formData.category}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Event Type</label>
+    <input
+      type="text"
+      name="eventType"
+      value={formData.eventType}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Host Name</label>
+    <input
+      type="text"
+      name="hostName"
+      value={formData.hostName}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Event Date</label>
+    <input
+      type="date"
+      name="date"
+      value={formData.date}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Event Start Time</label>
+    <input
+      type="time"
+      name="eventStartTime"
+      value={formData.eventStartTime}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Event End Time</label>
+    <input
+      type="time"
+      name="eventEndTime"
+      value={formData.eventEndTime}
+      onChange={handleChange}
+      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+    />
+
+    <label className="block text-white">Complimentary Ticket</label>
+    <input
+      type="checkbox"
+      name="complimentaryTicket"
+      checked={formData.complimentaryTicket}
+      onChange={handleChange}
+      className="mt-2"
+    />
+
+    <label className="block text-white">Tip</label>
+    <input
+      type="checkbox"
+      name="tip"
+      checked={formData.tip}
+      onChange={handleChange}
+      className="mt-2"
+    />
+  </div>
+));
+
+const Step2 = React.memo(({ formData, handleArtistChange, dispatch }) => (
+  <div className="space-y-4">
+    <label className="block text-white">Artist Lineup</label>
+    {formData.artistLineUp.map((artist, index) => (
+      <div key={index} className="flex">
+        <input
+          type="text"
+          value={artist}
+          onChange={(e) => handleArtistChange(index, e.target.value)}
+          className="p-3 bg-gray-700 text-white rounded-lg w-full"
+        />
+        <button
+          onClick={() => dispatch({ type: "removeArtist", index })}
+          className="ml-2 text-red-500"
+        >
+          X
+        </button>
+      </div>
+    ))}
+    <button
+      onClick={() => dispatch({ type: "addArtist" })}
+      className="text-green-500"
+    >
+      + Add Artist
+    </button>
+  </div>
+));
+
+const Step3 = React.memo(({ formData, handleTicketChange }) => (
+  <div className="space-y-4">
+    <h2 className="text-white text-xl">Ticket Prices</h2>
+    {["vip", "general"].map((type) => (
+      <div key={type} className="space-y-2">
+        <h3 className="text-white">{type.toUpperCase()} Tickets</h3>
+        <input
+          type="number"
+          name="quantity"
+          placeholder="Quantity"
+          value={formData.ticketsAvailable[type].quantity}
+          onChange={(e) => handleTicketChange(e, type)}
+          className="p-3 bg-gray-700 text-white rounded-lg w-full"
+        />
+        <input
+          type="number"
+          name="price"
+          placeholder="Price"
+          value={formData.ticketsAvailable[type].price}
+          onChange={(e) => handleTicketChange(e, type)}
+          className="p-3 bg-gray-700 text-white rounded-lg w-full"
+        />
+        <input
+          type="date"
+          name="ticketReleaseDate"
+          placeholder="Release Date"
+          value={formData.ticketsAvailable[type].ticketReleaseDate}
+          onChange={(e) => handleTicketChange(e, type)}
+          className="p-3 bg-gray-700 text-white rounded-lg w-full"
+        />
+        <input
+          type="time"
+          name="ticketReleaseTime"
+          placeholder="Release Time"
+          value={formData.ticketsAvailable[type].ticketReleaseTime}
+          onChange={(e) => handleTicketChange(e, type)}
+          className="p-3 bg-gray-700 text-white rounded-lg w-full"
+        />
+      </div>
+    ))}
+  </div>
+));
+
+const Step4 = React.memo(({ formData, handleChange }) => (
+  <div className="space-y-4">
+    <label className="block text-white">Event Video</label>
+    <input
+      type="file"
+      name="eventVideo"
+      onChange={handleChange}
+      className="p-3 w-full bg-gray-700 text-white rounded-lg"
+    />
+
+    <label className="block text-white">Gallery</label>
+    <input
+      type="file"
+      name="gallery"
+      multiple
+      onChange={handleChange}
+      className="p-3 w-full bg-gray-700 text-white rounded-lg"
+    />
+  </div>
+));
+
+const Step5 = React.memo(({ formData, handleSubmit }) => (
+  <div className="space-y-4">
+    <h2 className="text-white text-2xl">Confirm Your Event Details</h2>
+    <pre className="text-white">{JSON.stringify(formData, null, 2)}</pre>
+    <button
+      onClick={handleSubmit}
+      className="mt-4 p-3 bg-blue-500 text-white rounded-lg"
+    >
+      Submit Event
+    </button>
+  </div>
+));
 
 export default AddEventForm;

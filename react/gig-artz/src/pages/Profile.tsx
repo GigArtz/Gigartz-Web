@@ -3,11 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserProfile, updateUserProfile } from "../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
+import ProfileTabs from "../components/ProfileTabs";
 
 export default function Profile() {
   const dispatch = useDispatch();
-  const { profile, loading } = useSelector((state) => state.profile);
   const { uid } = useSelector((state) => state.auth);
+  const [userProfile, setUserProfile] = useState({});
 
   const [modalVisible, setModalVisible] = useState(false);
   const [userName, setUserName] = useState("");
@@ -16,11 +17,26 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [name, setName] = useState("");
 
+  const { profile } = useSelector((state) => state.profile);
+
   useEffect(() => {
     if (uid) {
       dispatch(fetchUserProfile(uid));
     }
   }, [uid, dispatch]);
+
+  useEffect(() => {
+    if (profile) {
+      setUserProfile(profile.userProfile);
+      setUserName(profile.userProfile?.userName || "");
+      setPhoneNumber(profile.userProfile?.phoneNumber || "");
+      setCity(profile.userProfile?.city || "");
+      setBio(profile.userProfile?.bio || "");
+      setName(profile.userProfile?.name || "");
+    }
+  }, [profile]);
+
+  //console.log("profile" , profile.userProfile)
 
   const handleSave = () => {
     dispatch(
@@ -35,40 +51,60 @@ export default function Profile() {
     setModalVisible(false);
   };
 
+
+  if (!profile){
+    return (
+      <div className="main-content">
+        <p className="text-center">Please Login</p>
+      </div>
+    );
+  }
   return (
-    <div className=" bg-gray-900 text-white">
+    <div className="main-content">
       <div className="relative">
         <img
-          src={profile?.coverProfile || blueBackground}
+          src={profile.userProfile?.coverProfile || blueBackground}
           alt="Cover"
           className="w-full h-40 object-cover"
         />
         <img
-          src={profile?.profilePicUrl || avatar}
+          src={profile.userProfile?.profilePicUrl || avatar}
           alt="Profile"
           className="w-28 h-28 rounded-full border-4 border-gray-900 absolute top-20 left-5"
         />
       </div>
       <div className="p-5">
-        <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
-        <p className="text-sm text-gray-400">@{profile?.userName || "username"}</p>
-        <p className="mt-2">{profile?.bio || "Add a bio"}</p>
-        <div className="flex gap-4 mt-4">
-          <p>
-            <span className="font-bold text-teal-400">{profile?.following || 0}</span>{" "}
-            Following
-          </p>
-          <p>
-            <span className="font-bold text-teal-400">{profile?.followers || 0}</span>{" "}
-            Followers
-          </p>
+        <h1 className="text-2xl font-bold">
+          {profile.userProfile?.name || "Name"}
+        </h1>
+        <p className="text-sm text-gray-400">
+          @{profile.userProfile?.userName || "username"}
+        </p>
+        <p className="mt-2">{profile.userProfile?.bio || "Add a bio"}</p>
+        <div className="flex flex-row justify-between">
+          <div className="flex gap-4 mt-8">
+            <p>
+              <span className="font-bold text-teal-400">
+                {profile.userProfile?.following || 0}
+              </span>{" "}
+              Following
+            </p>
+            <p>
+              <span className="font-bold text-teal-400">
+                {profile?.userProfile.followers || 0}
+              </span>{" "}
+              Followers
+            </p>
+          </div>
+          <div className="flex">
+            <button
+              onClick={() => setModalVisible(true)}
+              className="mt-5 px-4 py-2 border border-teal-500 rounded-md"
+            >
+              Edit Profile
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setModalVisible(true)}
-          className="mt-5 px-4 py-2 bg-teal-500 rounded-md"
-        >
-          Edit Profile
-        </button>
       </div>
 
       {modalVisible && (
@@ -143,6 +179,9 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {/* Profile Tabs */}
+      <ProfileTabs />
     </div>
   );
 }

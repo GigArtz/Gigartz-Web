@@ -20,14 +20,14 @@ const Home: React.FC = () => {
   }, [dispatch]);
 
   return (
-    <div className="flex flex-row h-screen bg-[#060512]">
+    <div className="main-content">
       {/* Sidebar (Hidden on very small screens) */}
      {/*  <div className="  border-gray-700 ">
         <Drawer />
       </div> */}
 
       {/* Main Content */}
-      <div className=" flex flex-col items-center justify-start">
+      <div className=" flex flex-col justify-start">
         <EventsTabs events={events} loading={loading} error={error} />
       </div>
 
@@ -37,7 +37,7 @@ const Home: React.FC = () => {
       </div> */}
 
       {/* Bottom Navigation (Only visible on small screens) */}
-      <div className="fixed bottom-0 w-full block md:hidden">
+      <div className="fixed bottom-0 w-full md:block hidden">
         <BottomNav />
       </div>
     </div>

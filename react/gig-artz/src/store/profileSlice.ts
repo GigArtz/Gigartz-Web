@@ -65,6 +65,24 @@ const profileSlice = createSlice({
       state.profile = action.payload;
       state.error = null;
     },
+    createBookingStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    createBookingSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    createBookingFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchDrawerProfileSuccess(state, action: PayloadAction<UserProfile>) {
+      state.loading = false;
+      state.profile = action.payload;
+      state.error = null;
+    },
     followProfileSuccess(state, action: PayloadAction<string>) {
       state.loading = false;
       state.success = action.payload;
@@ -120,7 +138,7 @@ const handleAxiosError = (
 };
 
 // Fetch user profile from Firestore
-export const fetchUserProfile =
+export const fetchDrawerUserProfile =
   (uid: string) => async (dispatch: AppDispatch) => {
     dispatch(profileSlice.actions.fetchProfileStart());
 
@@ -131,8 +149,57 @@ export const fetchUserProfile =
       );
       console.log("User profile response:", response.data.userProfile);
       dispatch(
-        profileSlice.actions.fetchProfileSuccess(response.data.userProfile)
+        profileSlice.actions.fetchDrawerProfileSuccess(
+          response.data.userProfile
+        )
       );
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          // The request was made and the server responded with an error
+          console.error("Response error:", axiosError.response?.data?.error);
+          dispatch(
+            profileSlice.actions.fetchProfileFailure(
+              axiosError.response?.data?.error || "Failed to fetch user profile"
+            )
+          );
+        } else if (axiosError.request) {
+          // The request was made, but no response was received
+          console.error("Request error:", axiosError.request);
+          dispatch(
+            profileSlice.actions.fetchProfileFailure(
+              "No response received from server"
+            )
+          );
+        } else {
+          // Something else happened during the setup of the request
+          console.error("Error setting up request:", axiosError.message);
+          dispatch(
+            profileSlice.actions.fetchProfileFailure(axiosError.message)
+          );
+        }
+      } else {
+        // Handle non-Axios errors
+        console.error("Unexpected error fetching user profile:", error);
+        dispatch(
+          profileSlice.actions.fetchProfileFailure("Unexpected error occurred")
+        );
+      }
+    }
+  };
+
+export const fetchUserProfile =
+  (uid: string) => async (dispatch: AppDispatch) => {
+    dispatch(profileSlice.actions.fetchProfileStart());
+
+    try {
+      console.log("Fetching user profile with user id:", uid);
+      const response = await axios.get(
+        `https://gigartz.onrender.com/user/${uid}`
+      );
+      console.log("User profile response:", response.data.userProfile);
+      dispatch(profileSlice.actions.fetchProfileSuccess(response.data));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
@@ -279,12 +346,7 @@ export const updateUserProfile =
 
 // Switch user profile via API
 export const switchUserProfile =
-  (
-    userId: string,
-    genre: string,
-    acceptTips: boolean,
-    acceptBookings: boolean
-  ) =>
+  (userId: string, genre: [], acceptTips: boolean, acceptBookings: boolean) =>
   async (dispatch: AppDispatch) => {
     dispatch(profileSlice.actions.updateProfileStart());
 
@@ -423,7 +485,7 @@ export const followUser =
       console.log("Follow user response:", response.data);
 
       // Dispatch success action with the updated profile response if needed
-      console.log(response.data?.message)
+      console.log(response.data?.message);
       dispatch(
         profileSlice.actions.followProfileSuccess(response.data?.message)
       );
@@ -432,10 +494,14 @@ export const followUser =
         const axiosError = error as AxiosError;
         if (axiosError.response) {
           // The request was made and the server responded with an error
-          console.error("Follow response error:", axiosError.response?.data?.message);
+          console.error(
+            "Follow response error:",
+            axiosError.response?.data?.message
+          );
           dispatch(
             profileSlice.actions.updateProfileFailure(
-              axiosError.response?.data?.message || "Failed to fetch user profile"
+              axiosError.response?.data?.message ||
+                "Failed to fetch user profile"
             )
           );
         } else if (axiosError.request) {
@@ -463,6 +529,69 @@ export const followUser =
     }
   };
 
+// Booking a freelancer
+export const bookFreelancer =
+  (bookingData: {
+    userId: string;
+    freelancerId: string;
+    eventDetails: string;
+    date: string; // Timestamp as a string
+    time: string;
+    venue: string;
+    additionalInfo?: string; // Optional additional information
+    status: string;
+    createdAt: string; // Timestamp as a string
+  }) =>
+  async (dispatch: AppDispatch) => {
+    dispatch(profileSlice.actions.createBookingStart());
+
+    try {
+      console.log("Booking freelancer...");
+      const response = await axios.post(
+        `https://gigartz.onrender.com/bookFreelancer`,
+        bookingData
+      );
+      console.log("Freelancer booked successfully:", response.data);
+
+      dispatch(
+        profileSlice.actions.createBookingSuccess(
+          "Freelancer booked successfully!"
+        )
+      );
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          console.error("Response error:", axiosError.response?.data);
+          dispatch(
+            profileSlice.actions.createBookingFailure(
+              axiosError.response?.data?.error || "Failed to book freelancer"
+            )
+          );
+        } else if (axiosError.request) {
+          console.error("Request error:", axiosError.request);
+          dispatch(
+            profileSlice.actions.createBookingFailure(
+              "No response received from server"
+            )
+          );
+        } else {
+          console.error("Error setting up request:", axiosError.message);
+          dispatch(
+            profileSlice.actions.createBookingFailure(
+              axiosError.message || "Unexpected error occurred"
+            )
+          );
+        }
+      } else {
+        console.error("Unexpected error:", error);
+        dispatch(
+          profileSlice.actions.createBookingFailure("Unexpected error occurred")
+        );
+      }
+    }
+  };
+
 // Export actions
 export const {
   fetchProfileStart,
@@ -470,6 +599,7 @@ export const {
   fetchProfileFailure,
   resetError,
   updateProfile,
+  fetchDrawerProfileSuccess,
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

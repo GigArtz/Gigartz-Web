@@ -3,126 +3,124 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 import { getMessages, sendMessage, Message } from "../store/messageSlice";
 
-// Define Contact and Conversation types for better typing
-import { Contact, Conversation } from "../store/messageSlice";
-
 const Messages: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { contacts, conversations, loading, error } = useSelector(
     (state: RootState) => state.messages
   );
-  const currentUserId = useSelector((state: RootState) => state.auth.uid); // Get the current user's ID from the state
-  const [newMessage, setNewMessage] = useState("");
+  const currentUserId = useSelector((state: RootState) => state.auth.uid);
 
- 
+  const [newMessage, setNewMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState("");
 
   useEffect(() => {
     if (currentUserId) {
-      dispatch(getMessages(currentUserId)); // Fetch messages when the component mounts
+      dispatch(getMessages(currentUserId));
     }
   }, [dispatch, currentUserId]);
 
-  console.log(contacts)
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (newMessage.trim() === "") return;
+    if (!newMessage.trim() || !selectedContact) return;
 
     const messageData: Message = {
       senderId: currentUserId!,
-      receiverId: conversations[0].contact, // Replace with the actual receiver ID
+      receiverId: selectedContact,
       message: newMessage,
       timestamp: new Date().toISOString(),
     };
 
     dispatch(sendMessage(messageData));
-    setNewMessage(""); // Clear the input after sending
+    setNewMessage(""); // Clear the input
+    setIsModalOpen(false); // Close modal after sending
   };
 
   return (
-    <div className="container mt-5">
-      <div className="row">
-        <div className="col-12">
-          <h4>Direct Messages</h4>
+    <div className="main-content">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Direct Messages</h2>
 
-          {/* Error Alert */}
-          {error && <div className="alert alert-danger">{error}</div>}
+      {/* Error Alert */}
+      {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          {/* Loading Spinner */}
-          {loading ? (
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
-            </div>
-          ) : (
-            <div>
-              <div
-                style={{ maxHeight: "500px", overflowY: "auto" }}
-                className="mb-3"
-              >
-                {/* Display conversations */}
-                {conversations.length === 0 ? (
-                  <div className="card">
-                    <div className="card-body">No messages yet</div>
-                  </div>
-                ) : (
-                  conversations.map((conversation, index) => (
-                    <div key={index}>
-                      {/* Assuming each conversation has messages */}
-                      {conversation.messages.map((msg, msgIndex) => (
-                        <div
-                          key={msgIndex}
-                          className={`card my-2 ${
-                            msg.senderId === currentUserId
-                              ? "bg-primary text-white"
-                              : "bg-light"
-                          }`}
-                        >
-                          <div className="card-body">
-                            <strong>
-                              {msg.senderId === currentUserId ? "You" : contacts[index].userName}
-                            </strong>
-                            <p>{msg.message}</p>
-                            <small>
-                              {new Date(msg.timestamp!).toLocaleString()}
-                            </small>
-                          </div>
-                        </div>
-                      ))}
-                      <hr />
-                    </div>
+      {/* New Conversation Button */}
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="mb-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+      >
+        Start New Conversation
+      </button>
 
-                  ))
-                )}
-              </div>
-
-              {/* Send Message Form */}
-              <form onSubmit={handleSendMessage}>
-                <div className="row">
-                  <div className="col-10">
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type your message..."
-                    />
-                  </div>
-                  <div className="col-2">
-                    <button
-                      type="submit"
-                      className="btn btn-primary w-100"
-                      disabled={loading}
-                    >
-                      Send
-                    </button>
-                  </div>
+      {/* Conversations List */}
+      <div className="max-h-[400px] overflow-y-auto space-y-3">
+        {loading ? (
+          <p className="text-gray-500">Loading messages...</p>
+        ) : conversations.length === 0 ? (
+          <p className="text-gray-500">No messages yet</p>
+        ) : (
+          conversations.map((conversation, index) => (
+            <div key={index} className="p-3 border rounded-lg shadow-sm">
+              <h3 className="font-semibold text-gray-700">
+                {contacts.find((c) => c.id === conversation.contact)?.userName || "Unknown"}
+              </h3>
+              {conversation.messages.map((msg, msgIndex) => (
+                <div
+                  key={msgIndex}
+                  className={`p-2 rounded-md mt-2 w-fit ${
+                    msg.senderId === currentUserId ? "bg-blue-500 text-white ml-auto" : "bg-gray-200"
+                  }`}
+                >
+                  <p>{msg.message}</p>
+                  <small className="text-xs opacity-75 block">
+                    {new Date(msg.timestamp!).toLocaleString()}
+                  </small>
                 </div>
-              </form>
+              ))}
             </div>
-          )}
-        </div>
+          ))
+        )}
       </div>
+
+      {/* New Message Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-[#060512]  bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white dark:bg-[#060512] border border-gray-700  p-5 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-3">New Message</h3>
+            <select
+              value={selectedContact}
+              onChange={(e) => setSelectedContact(e.target.value)}
+              className="w-full p-2 border rounded-lg mb-3"
+            >
+              <option value="">Select a contact</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id}>
+                  {contact.userName}
+                </option>
+              ))}
+            </select>
+            <textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="w-full p-2 border rounded-lg mb-3"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-300 px-3 py-1 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendMessage}
+                className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -14,7 +14,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-[1030px] pl-64 px-4">
+    <div className="min-h-screen">
       {/* For You Section */}
       <div className="mt-8">
         <h2 className="text-xl text-white font-semibold mb-4">For You</h2>

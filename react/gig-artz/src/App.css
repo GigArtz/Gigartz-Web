@@ -31,6 +31,10 @@ text {
   .form-container {
     @apply w-full max-w-md bg-secondary rounded-lg p-6 space-y-6;
   }
+
+  .main-content {
+    @apply lg:w-[58%] sm:w-[85%] md:w-[77%] relative border-l lg:border-r border-gray-700 lg:left-60 md:left-52 left-20 min-h-screen text-white p-4 md:px-1 lg:px-5;
+  }
 }
 
 /* Define color variables */

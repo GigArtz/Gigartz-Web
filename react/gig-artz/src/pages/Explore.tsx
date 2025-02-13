@@ -1,8 +1,11 @@
+import ProfileTabs from '../components/ProfileTabs'
 import React from 'react'
 
 function Explore() {
   return (
-    <div>Explore</div>
+    <div className='main-content'>
+      <ProfileTabs />
+    </div>
   )
 }
 
