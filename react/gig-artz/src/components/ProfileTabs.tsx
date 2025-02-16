@@ -48,9 +48,11 @@ function ProfileTabs() {
         {!loading && !error && (
           <>
             {activeTab === "gigGuide" && (
-              <div>
+              <div className="border flex flex-row gap-2" >
                 {userEvents.length > 0 ? (
-                  userEvents.map((event) => <EventCard key={event.id} event={event} cardSize="md" />)
+                  userEvents.map((event) => <div className="mb-2 border">
+                    <EventCard key={event.id} event={event} cardSize="md" />
+                  </div>)
                 ) : (
                   <p className="text-gray-400 text-center mt-4">No events found.</p>
                 )}

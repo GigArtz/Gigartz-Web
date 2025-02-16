@@ -22,7 +22,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
           className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center w-full h-full bg-gray-800 bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
         >
           <div
-            className="relative p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-gray-700 transform transition-all duration-300 ease-in-out"
+            className="relative p-4 w-full max-w-lg bg-white rounded-lg shadow-lg dark:bg-[#1F1C29] transform transition-all duration-300 ease-in-out"
             role="dialog"
             aria-labelledby="modal-title"
             aria-hidden={!isModalOpen ? "true" : "false"}
@@ -39,7 +39,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
               <button
                 onClick={closeModal}
                 type="button"
-                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-full p-2 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
+                className="text-gray-400 bg-transparent hover:bg-red-300 hover:text-red-900 rounded-full p-2 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
               >
                 <svg
                   className="w-4 h-4"
@@ -61,7 +61,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
             </div>
 
             {/* Modal Content */}
-            <div className="p-5 max-h-[70vh] overflow-y-auto">
+            <div className="p-2 max-h-[70vh] overflow-y-auto ">
               {/* Ensure AddEventForm is always within the modal */}
               <AddEventForm />
             </div>

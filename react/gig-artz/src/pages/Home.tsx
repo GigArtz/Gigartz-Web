@@ -37,9 +37,9 @@ const Home: React.FC = () => {
       </div> */}
 
       {/* Bottom Navigation (Only visible on small screens) */}
-      <div className="fixed bottom-0 w-full md:block hidden">
+      {/* <div className="fixed bottom-0 w-full md:block hidden">
         <BottomNav />
-      </div>
+      </div> */}
     </div>
   );
 };

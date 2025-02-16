@@ -128,7 +128,7 @@ const dispatchTwo = useDispatch<AppDispatch>();
             </button>
           )}
         </div>
-        <div className="bg-gray-800 p-6 rounded-lg">
+        <div className="dark:bg-[#1F1C29] p-6 rounded-lg">
           {step === 1 && (
             <Step1 formData={formData} handleChange={handleChange} />
           )}
@@ -166,7 +166,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="title"
       value={formData.title}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Event Description</label>
@@ -174,7 +174,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="description"
       value={formData.description}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Category</label>
@@ -183,7 +183,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="category"
       value={formData.category}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Event Type</label>
@@ -192,7 +192,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="eventType"
       value={formData.eventType}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Host Name</label>
@@ -201,7 +201,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="hostName"
       value={formData.hostName}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Event Date</label>
@@ -210,7 +210,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="date"
       value={formData.date}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Event Start Time</label>
@@ -219,7 +219,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="eventStartTime"
       value={formData.eventStartTime}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Event End Time</label>
@@ -228,7 +228,7 @@ const Step1 = React.memo(({ formData, handleChange }) => (
       name="eventEndTime"
       value={formData.eventEndTime}
       onChange={handleChange}
-      className="mt-2 p-3 w-full rounded-lg bg-gray-700 text-white"
+      className="input-field"
     />
 
     <label className="block text-white">Complimentary Ticket</label>
