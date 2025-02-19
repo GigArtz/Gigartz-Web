@@ -1,10 +1,10 @@
-import ProfileTabs from '../components/ProfileTabs'
+import ExploreTabs from '../components/ExploreTabs'
 import React from 'react'
 
 function Explore() {
   return (
     <div className='main-content'>
-      <ProfileTabs />
+      <ExploreTabs />
     </div>
   )
 }

@@ -20,7 +20,7 @@ function BottomNav() {
 
       {/* Bottom Navigation */}
       <div
-        className="fixed z-50 w-full h-16 max-w-lg -translate-x-1/2 bg-[#060512] border border-gray-700 rounded-full bottom-4 left-1/2 dark:bg-gray-800 dark:border-gray-600 w-4/5"
+        className="fixed z-50 h-16 max-w-lg -translate-x-1/2 bg-[#060512] border border-gray-700 rounded-full bottom-4 left-1/2 dark:bg-gray-800 dark:border-gray-600 w-4/5"
        hidden={isModalOpen}
       >
         <div className="grid h-full max-w-lg grid-cols-5 mx-auto">

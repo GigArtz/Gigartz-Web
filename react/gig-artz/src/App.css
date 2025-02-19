@@ -33,7 +33,7 @@ text {
   }
 
   .main-content {
-    @apply lg:w-[58%] sm:w-[85%] md:w-[77%] relative border-l lg:border-r border-gray-700 lg:left-60 md:left-52 left-20 min-h-screen text-white p-4 md:px-1 lg:px-5;
+    @apply lg:w-[60%] sm:w-[100%] md:w-[80%] relative border-l lg:border-r border-gray-700 lg:left-[15%] md:left-[20%]  min-h-screen text-white p-4 md:px-1 lg:px-5;
   }
 }
 

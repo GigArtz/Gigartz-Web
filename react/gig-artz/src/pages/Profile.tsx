@@ -4,9 +4,10 @@ import { fetchUserProfile, updateUserProfile } from "../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import ProfileTabs from "../components/ProfileTabs";
+import { AppDispatch } from "../store/store";
 
 export default function Profile() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { uid } = useSelector((state) => state.auth);
   const [userProfile, setUserProfile] = useState({});
 
@@ -17,22 +18,24 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [name, setName] = useState("");
 
-  const { profile } = useSelector((state) => state.profile);
-
   useEffect(() => {
     if (uid) {
       dispatch(fetchUserProfile(uid));
     }
   }, [uid, dispatch]);
 
+  const { profile } = useSelector((state) => state.profile);
+  
+  console.log(profile)
+
   useEffect(() => {
     if (profile) {
-      setUserProfile(profile.userProfile);
-      setUserName(profile.userProfile?.userName || "");
-      setPhoneNumber(profile.userProfile?.phoneNumber || "");
-      setCity(profile.userProfile?.city || "");
-      setBio(profile.userProfile?.bio || "");
-      setName(profile.userProfile?.name || "");
+      setUserProfile(profile);
+      setUserName(profile?.userName || "");
+      setPhoneNumber(profile?.phoneNumber || "");
+      setCity(profile?.city || "");
+      setBio(profile?.bio || "");
+      setName(profile?.name || "");
     }
   }, [profile]);
 
@@ -51,8 +54,7 @@ export default function Profile() {
     setModalVisible(false);
   };
 
-
-  if (!profile){
+  if (!profile) {
     return (
       <div className="main-content">
         <p className="text-center">Please Login</p>
@@ -63,46 +65,56 @@ export default function Profile() {
     <div className="main-content">
       <div className="relative">
         <img
-          src={profile.userProfile?.coverProfile || blueBackground}
+          src={profile?.coverProfile || blueBackground}
           alt="Cover"
-          className="w-full h-40 object-cover"
+          className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
         />
         <img
-          src={profile.userProfile?.profilePicUrl || avatar}
+          src={profile?.profilePicUrl || avatar}
           alt="Profile"
-          className="w-28 h-28 rounded-full border-4 border-gray-900 absolute top-20 left-5"
+          className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10"
         />
       </div>
+
       <div className="p-5">
+        <div className="flex justify-end">
+          <button onClick={() => setModalVisible(true)} className="border border-teal-400 px-2 py-1 rounded-2xl">Edit Profile</button>
+        </div>
         <h1 className="text-2xl font-bold">
-          {profile.userProfile?.name || "Name"}
+          {profile?.name || "Name"}
         </h1>
         <p className="text-sm text-gray-400">
-          @{profile.userProfile?.userName || "username"}
+          @{profile?.userName || "username"}
         </p>
-        <p className="mt-2">{profile.userProfile?.bio || "Add a bio"}</p>
+        <p className="mt-2">{profile?.bio || "Add a bio"}</p>
         <div className="flex flex-row justify-between">
-          <div className="flex gap-4 mt-8">
-            <p>
-              <span className="font-bold text-teal-400">
-                {profile.userProfile?.following || 0}
-              </span>{" "}
-              Following
-            </p>
-            <p>
-              <span className="font-bold text-teal-400">
-                {profile?.userProfile.followers || 0}
-              </span>{" "}
-              Followers
-            </p>
-          </div>
-          <div className="flex">
-            <button
-              onClick={() => setModalVisible(true)}
-              className="mt-5 px-4 py-2 border border-teal-500 rounded-md"
-            >
-              Edit Profile
-            </button>
+          <div className="flex-row gap-4 mt-2">
+            <div className="flex gap-2">
+              <p>
+                <span className="font-bold text-teal-400">
+                  {profile?.following || 0}
+                </span>{" "}
+                Following
+              </p>
+              <p>
+                <span className="font-bold text-teal-400">
+                  {profile?.followers || 0}
+                </span>{" "}
+                Followers
+              </p>
+            </div>
+            <div className="flex">
+              <div className="flex gap-2 my-2">
+                {(profile?.genre || [])
+                  .slice(1, 4) // Only take the first 3 items
+                  .map((genre, index) => (
+                    <div key={index}>
+                      <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">{genre.name}</p>
+                    </div>
+                  ))}
+              </div>
+             
+            </div>
           </div>
         </div>
       </div>
@@ -181,7 +193,8 @@ export default function Profile() {
       )}
 
       {/* Profile Tabs */}
-      <ProfileTabs />
+      <ProfileTabs uid={uid} />
+    
     </div>
   );
 }

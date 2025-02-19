@@ -47,7 +47,7 @@ const EventGalleryCarousel = ({ event }) => {
       </div>
 
       {/* Navigation Buttons */}
-      <button
+    {/*   <button
         onClick={prevSlide}
         className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full"
       >
@@ -58,10 +58,10 @@ const EventGalleryCarousel = ({ event }) => {
         className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full"
       >
         ❯
-      </button>
+      </button> */}
 
       {/* Indicators */}
-      <div className="flex justify-center space-x-2 mt-2">
+     {/*  <div className="flex justify-center space-x-2 mt-2">
         {event.gallery.map((_, index) => (
           <span
             key={index}
@@ -70,7 +70,7 @@ const EventGalleryCarousel = ({ event }) => {
             }`}
           ></span>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };

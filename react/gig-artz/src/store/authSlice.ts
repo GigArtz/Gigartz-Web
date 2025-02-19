@@ -9,7 +9,7 @@ import {
   TwitterAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { createUser } from "./profileSlice";
+import { createUser, fetchUserProfile, UserProfile } from "./profileSlice";
 import { AppDispatch } from "./store";
 
 // User Interface
@@ -26,6 +26,7 @@ interface AuthState {
   uid: string | null;
   loading: boolean;
   error: string | null;
+  current_user: UserProfile | null;
 }
 
 // Define formData type for registration
@@ -39,6 +40,7 @@ export interface RegistrationData {
 // Initial state
 const initialState: AuthState = {
   user: null,
+  current_user: null,
   uid: null,
   loading: false,
   error: null,
@@ -64,13 +66,13 @@ const authSlice = createSlice({
     loginSuccess(state, action: PayloadAction<{ user: User; uid: string }>) {
       state.loading = false;
       state.user = action.payload.user;
-      state.uid = action.payload.uid;
+      state.uid = action.payload.uid; // Ensure uid is set
       state.error = null;
     },
     registerSuccess(state, action: PayloadAction<{ user: User; uid: string }>) {
       state.loading = false;
       state.user = action.payload.user;
-      state.uid = action.payload.uid;
+      state.uid = action.payload.uid; // Ensure uid is set
       state.error = null;
     },
     loginFailure(state, action: PayloadAction<string>) {
@@ -152,13 +154,19 @@ export const loginUser = (credentials: { email: string; password: string }) => a
 
     if (response && response.data) {
       const uid = response.data.user.uid;
-      console.log("Res Data:", response.data);
+      console.log("Logged Data:", response.data);
       console.log("Uid:", uid);
-      
-      // Dispatch the login success action
-      dispatch(authSlice.actions.loginSuccess({ user: response.data.user, uid: response.data.user.uid }));
 
-      // Optionally, you can log the success message here for debugging, but do not rely on the store state immediately
+      // Fetch user profile after successful login
+      const profileResponse = await dispatch(fetchUserProfile(uid));  // Assume fetchUserProfile dispatches action to update profile state
+      console.log("User profile data: ", profileResponse);
+
+      // Dispatch the login success action with the user data and profile
+      dispatch(authSlice.actions.loginSuccess({
+        user: response.data.user,
+        uid: uid,
+      }));
+
       console.log("Login Successful!");
     }
   } catch (error: unknown) {
@@ -174,6 +182,9 @@ export const loginUser = (credentials: { email: string; password: string }) => a
     }
   }
 };
+
+
+
 
 // Social login handler
 export const socialLogin = (provider: "facebook" | "google" | "twitter") => async (dispatch: AppDispatch) => {

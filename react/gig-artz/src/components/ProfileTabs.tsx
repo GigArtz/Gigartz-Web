@@ -2,17 +2,21 @@ import React, { useState } from "react";
 import EventCard from "./EventCard";
 import { useSelector } from "react-redux";
 
-function ProfileTabs() {
-  const { profile, loading, error } = useSelector((state) => state.profile);
-  const userEvents = profile?.userEvents || [];
-  const userReviews = profile?.userProfile?.userEvents || [];
+function ProfileTabs({ uid}) {
+  const { loading, error } = useSelector((state) => state.profile);
+
+  const events = useSelector((state) => state.events);
+
+  console.log(events);
+
+  const userEvents = events?.events.filter((event) => event.promoterId === uid);
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("gigGuide");
 
   return (
     <div>
-      <div className="text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
+      <div className="text-sm font-medium text-center border-b text-gray-400 border-gray-700">
         <ul className="flex flex-wrap -mb-px">
           <li className="me-2">
             <button
@@ -48,9 +52,9 @@ function ProfileTabs() {
         {!loading && !error && (
           <>
             {activeTab === "gigGuide" && (
-              <div className="border flex flex-row gap-2" >
+              <div className="flex flex-row gap-2" >
                 {userEvents.length > 0 ? (
-                  userEvents.map((event) => <div className="mb-2 border">
+                  userEvents.map((event) => <div className="mb-2">
                     <EventCard key={event.id} event={event} cardSize="md" />
                   </div>)
                 ) : (

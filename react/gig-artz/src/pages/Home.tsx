@@ -13,33 +13,22 @@ const Home: React.FC = () => {
     (state: RootState) => state.events
   );
 
-  
-
   useEffect(() => {
     dispatch(fetchAllEvents());
   }, [dispatch]);
 
   return (
     <div className="main-content">
-      {/* Sidebar (Hidden on very small screens) */}
-     {/*  <div className="  border-gray-700 ">
-        <Drawer />
-      </div> */}
-
+    
       {/* Main Content */}
       <div className=" flex flex-col justify-start">
         <EventsTabs events={events} loading={loading} error={error} />
       </div>
 
-     {/*  {/* Side Bar (Hidden on small screens)
-      <div className="w-1/4 min-w-60 h-full hidden md:block">
-        <SideBar />
-      </div> */}
-
       {/* Bottom Navigation (Only visible on small screens) */}
-      {/* <div className="fixed bottom-0 w-full md:block hidden">
+      <div className="fixed px-4 bottom-0 w-full block md:hidden">
         <BottomNav />
-      </div> */}
+      </div>
     </div>
   );
 };

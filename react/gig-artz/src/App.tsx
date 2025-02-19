@@ -20,6 +20,8 @@ import Messages from './pages/Messages';
 import Explore from './pages/Explore';
 import Drawer from './components/Drawer';
 import SideBar from './components/SideBar';
+import Monetization from './pages/Monetization';
+import People from './pages/People';
 
 function App() {
   return (
@@ -36,7 +38,10 @@ function App() {
           <Route path="/events" element={<><Drawer /><EventManager /><SideBar /></>} />
           <Route path="/explore" element={<><Drawer /><Explore /><SideBar /></>} />
           <Route path="/profile" element={<><Drawer /><Profile /><SideBar /></>} />
+          <Route path="/people/:uid"  element={<><Drawer /><People /><SideBar /></>} />
           <Route path="/register" element={<Register />} />
+          <Route path="/monetization" element={<><Drawer /><Monetization /><SideBar /></>} />
+          
           <Route path="/home" element={<><Drawer /><Home /><SideBar /></>} />
           <Route path="/reset-password" element={<Forgot />} />
         </Routes>

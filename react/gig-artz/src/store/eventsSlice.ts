@@ -84,6 +84,45 @@ const eventsSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
+    createGuestListStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    createReviewStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    createLikeStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    createLikeSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    createLikeFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    createReviewSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    createReviewFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    createGuestListSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    createGuestListFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
     fetchEventsSuccess(state, action: PayloadAction<Event[]>) {
       state.loading = false;
       state.events = action.payload;
@@ -99,6 +138,32 @@ const eventsSlice = createSlice({
       state.error = action.payload;
     },
     createEventsFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    buyTicketStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    buyTicketSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    buyTicketFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    scanTicketStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    scanTicketSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    scanTicketFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
     },
@@ -152,6 +217,7 @@ export const fetchAllEvents = () => async (dispatch: AppDispatch) => {
   }
 };
 
+// Add reviews
 export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.createEventsStart());
 
@@ -200,11 +266,302 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
   }
 };
 
+// Adding guest list
+export const addGuestList =
+  (guestListData: {
+    userId: string;
+    guestListName: string;
+    guests: { name: string; email: string; phoneNumber: string }[];
+  }) =>
+    async (dispatch: AppDispatch) => {
+      dispatch(eventsSlice.actions.createGuestListStart());
+
+      try {
+        console.log("Adding guest list...");
+        const response = await axios.post(
+          `https://gigartz.onrender.com/addGuestList`,
+          guestListData
+        );
+        console.log("Guest list added successfully:", response.data);
+
+        dispatch(
+          eventsSlice.actions.createGuestListSuccess(
+            "Guest list added successfully!"
+          )
+        );
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError;
+          if (axiosError.response) {
+            console.error("Response error:", axiosError.response?.data);
+            dispatch(
+              eventsSlice.actions.createGuestListFailure(
+                axiosError.response?.data?.error || "Failed to add guest list"
+              )
+            );
+          } else if (axiosError.request) {
+            console.error("Request error:", axiosError.request);
+            dispatch(
+              eventsSlice.actions.createGuestListFailure(
+                "No response received from server"
+              )
+            );
+          } else {
+            console.error("Error setting up request:", axiosError.message);
+            dispatch(
+              eventsSlice.actions.createGuestListFailure(
+                axiosError.message || "Unexpected error occurred"
+              )
+            );
+          }
+        } else {
+          console.error("Unexpected error:", error);
+          dispatch(
+            eventsSlice.actions.createGuestListFailure(
+              "Unexpected error occurred"
+            )
+          );
+        }
+      }
+    };
+
+// Adding a review
+export const addReview =
+  (eventId: string, reviewData: {
+    userId: string;
+    title: string;
+    reviewText: string;
+    rating: number;
+    image?: string; // Optional image
+  }) =>
+    async (dispatch: AppDispatch) => {
+      dispatch(eventsSlice.actions.createReviewStart());
+
+      try {
+        console.log("Adding review...");
+        const response = await axios.post(
+          `https://gigartz.onrender.com/events/${eventId}/reviews`,
+          reviewData
+        );
+        console.log("Review added successfully:", response.data);
+
+        dispatch(
+          eventsSlice.actions.createReviewSuccess(
+            "Review added successfully!"
+          )
+        );
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError;
+          if (axiosError.response) {
+            console.error("Response error:", axiosError.response?.data);
+            dispatch(
+              eventsSlice.actions.createReviewFailure(
+                axiosError.response?.data?.error || "Failed to add review"
+              )
+            );
+          } else if (axiosError.request) {
+            console.error("Request error:", axiosError.request);
+            dispatch(
+              eventsSlice.actions.createReviewFailure(
+                "No response received from server"
+              )
+            );
+          } else {
+            console.error("Error setting up request:", axiosError.message);
+            dispatch(
+              eventsSlice.actions.createReviewFailure(
+                axiosError.message || "Unexpected error occurred"
+              )
+            );
+          }
+        } else {
+          console.error("Unexpected error:", error);
+          dispatch(
+            eventsSlice.actions.createReviewFailure(
+              "Unexpected error occurred"
+            )
+          );
+        }
+      }
+    };
+
+// Like an event
+export const addLike = (eventId: string, userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createLikeStart());
+
+  try {
+    console.log("Adding like...");
+    const response = await axios.post(
+      `https://gigartz.onrender.com/addLike`,
+      { eventId, userId }
+    );
+    console.log("Like added successfully:", response.data);
+
+    dispatch(
+      eventsSlice.actions.createLikeSuccess("Like added successfully!")
+    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.createLikeFailure(
+            axiosError.response?.data?.error || "Failed to add like"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.createLikeFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.createLikeFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(
+        eventsSlice.actions.createLikeFailure("Unexpected error occurred")
+      );
+    }
+  }
+};
+
+// Buy a ticket for an event
+export const buyTicket = (
+  eventId: string,
+  ticketData: {
+    customerUid: string;
+    customerName: string;
+    customerEmail: string;
+    amount: number;
+    ticketType: string;
+    location: string;
+    eventName: string;
+    eventDate: string;
+    description: string;
+    image: string;
+  }
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.buyTicketStart());
+
+  try {
+    console.log("Purchasing ticket...");
+    const response = await axios.post(
+      `https://gigartz.onrender.com/buy-ticket`,
+      { eventId, ...ticketData }
+    );
+    console.log("Ticket purchased successfully:", response.data);
+
+    dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.buyTicketFailure(
+            axiosError.response?.data?.error || "Failed to purchase ticket"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.buyTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.buyTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(eventsSlice.actions.buyTicketFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Scan a ticket using QR code data
+export const scanTicket = (
+  qrCodeData: string,
+  customerUid: string
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.scanTicketStart());
+
+  try {
+    console.log("Scanning ticket...");
+    const response = await axios.post(
+      `https://gigartz.onrender.com/scan-ticket`,
+      { qrCodeData, customerUid }
+    );
+    console.log("Ticket scanned successfully:", response.data);
+
+    dispatch(eventsSlice.actions.scanTicketSuccess("Ticket scanned successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.response?.data?.error || "Failed to scan ticket"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(eventsSlice.actions.scanTicketFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+
 export const {
   fetchEventsStart,
   createEventsStart,
   createEventsSuccess,
   createEventsFailure,
+  createGuestListStart,
+  createGuestListSuccess,
+  createGuestListFailure,
+  createLikeStart,
+  createLikeSuccess,
+  createLikeFailure,
+  buyTicketStart,
+  buyTicketSuccess,
+  buyTicketFailure,
+  scanTicketStart,
+  scanTicketSuccess,
+  scanTicketFailure,
+  createReviewStart,
+  createReviewSuccess,
   fetchEventsSuccess,
   fetchEventsFailure,
   resetError,

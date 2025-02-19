@@ -6,7 +6,7 @@ import WhatsHappening from "./WhatsHappening";
 function SideBar() {
   
   return (
-    <div className="items-center justify-center flex-row h-screen pt-4 fixed top-0 right-0 w-16 lg:w-80 md:hidden min-h-screen bg-white dark:bg-[#060512] shadow-md transition-all duration-300 min-w-60 hidden lg:block">
+    <div className="items-center justify-center flex-row h-screen pt-4 fixed top-0 right-0 lg:w-[25%] md:hidden min-h-screen dark:bg-[#060512] shadow-md transition-all duration-300 min-w-60 hidden lg:block">
       {/* Sidebar */}
       <aside className="w-full h-full sticky-top px-4">
         <div>

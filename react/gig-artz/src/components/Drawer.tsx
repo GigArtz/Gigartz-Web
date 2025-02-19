@@ -12,14 +12,16 @@ import {
 } from "react-icons/fa"; // Importing icons from react-icons
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
-import { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
-import { useState } from "react";
+import { AppDispatch, RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
+import { fetchUserProfile } from "../store/profileSlice"; // Import fetchDrawerUserProfile
 
 function Drawer() {
   const navigate = useNavigate();
   const location = useLocation(); // Get current route
+  const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const { profile } = useSelector((state) => state.profile);
 
@@ -30,16 +32,23 @@ function Drawer() {
   // Function to close the modal
   const closeModal = () => setIsModalOpen(false);
 
+  useEffect(() => {
+    dispatch(fetchUserProfile(user?.uid))
+  }, [user, dispatch])
+
+  console.log(profile)
+
   const navItems = [
     { icon: FaHome, label: "Home", link: "/home" },
+    { icon: FaUsers, label: "Guest Lists", link: "/guest-lists" },
+    { icon: FaWallet, label: "Wallet", link: "/wallet" },
     { icon: FaSearch, label: "Explore", link: "/explore" },
     { icon: FaBell, label: "Notifications", link: "/notifications" },
     { icon: FaEnvelope, label: "Messages", link: "/messages" },
-    { icon: FaUser, label: "Profile", link: "/profile" },
-    { icon: FaCog, label: "Settings", link: "/settings" },
-    { icon: FaWallet, label: "Wallet", link: "/wallet" },
     { icon: FaDollarSign, label: "Monetization", link: "/monetization" },
-   // { icon: FaUsers, label: "Guest Lists", link: "/guest-lists" },
+    { icon: FaCog, label: "Settings", link: "/settings" },
+    { icon: FaUser, label: "Profile", link: "/profile" },
+   
   ];
 
   return (
@@ -50,20 +59,20 @@ function Drawer() {
       {/* Responsive Sidebar */}
       <div
         id="drawer-navigation"
-        className="fixed top-0 left-0 lg:w-56 min-h-screen bg-white dark:bg-[#060512] shadow-md transition-all duration-300"
+        className="hidden md:block fixed top-0 left-0 lg:w-[15%] min-h-screen bg-[#060512] shadow-md transition-all duration-300"
       >
         {/* Profile Section */}
-        <div className="lg:flex-col hidden md:block items-center py-4 px-4">
+        <div className="lg:flex-col hidden md:block justify-items-center py-4 px-4 mx-4 border-b">
           <img
-            src={profile?.userProfile?.photoURL || avatar}
+            src={profile?.photoURL || avatar}
             alt="Profile"
             className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-gray-900"
           />
-          <p className="text-lg font-medium text-gray-800 dark:text-gray-200 mt-4 hidden md:block">
-            {profile?.userProfile?.name || "brooke lines"}
+          <p className="text-lg font-medium text-white mt-4 hidden md:block">
+            {profile?.userName || "brooke lines"}
           </p>
-          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-2 hidden md:block">
-            @{profile?.userProfile?.userName || "brooke lines"}
+          <p className="text-sm font-medium text-teal-400 hidden md:block">
+            {profile?.bio || "brooke lines"}
           </p>
         </div>
 
@@ -86,8 +95,8 @@ function Drawer() {
                     <item.icon
                       className={`w-5 h-5 ${
                         isActive
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-gray-500 dark:text-gray-400"
+                          ? "text-blue-400"
+                          : "text-white-400"
                       }`}
                     />
                     <span className="ml-3 hidden md:block">{item.label}</span>
@@ -97,7 +106,7 @@ function Drawer() {
             })}
           </ul>
 
-          <div className="flex flex-row  gap-3 font-medium ml-4 px-2 py-1 mb-2 justify-center rounded-2xl">
+          <div className="flex flex-row font-medium px-2 py-1 mb-2 mt-2 justify-center rounded-2xl">
             {/* Add Button */}
             <button
               onClick={openModal} // Open modal on click
@@ -106,7 +115,7 @@ function Drawer() {
               className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 group focus:ring-4 focus:ring-teal-300 focus:outline-none dark:focus:ring-teal-800"
             >
               {/* <FaPlus className="w-4 h-4 text-white" /> */}
-              Post
+              Create
             </button>
           
           </div>

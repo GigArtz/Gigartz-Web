@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EventCard from "./EventCard";
+import UserCard from "./UserCard";
+import { AppDispatch, RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllProfiles } from "../store/profileSlice";
 
 interface EventsTabsProps {
   events: any[];
@@ -13,11 +17,19 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
     return events;
   };
 
+  const dispatch = useDispatch<AppDispatch>();
+  
+  useEffect(() => {
+    dispatch(fetchAllProfiles())
+  }, []);
+
+  const userList = useSelector((state: RootState) => state.profile);
+
   return (
-    <div className="min-h-screen">
-      {/* For You Section */}
+    <div className="min-h-screen max-w-full">
+      {/* Trending Events Section */}
       <div className="mt-8">
-        <h2 className="text-xl text-white font-semibold mb-4">For You</h2>
+        <h2 className="text-xl text-white font-semibold mb-4">Trending</h2>
         <div className="overflow-x-auto scrollbar-hide whitespace-nowrap scroll-smooth snap-x flex space-x-4 pb-4">
           {loading && <p className="text-white">Loading events...</p>}
           {error && <p className="text-red-500">Error: {error}</p>}
@@ -25,16 +37,18 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
             <p className="text-white text-center">No events found.</p>
           )}
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start">
+            <div key={event.id} className="snap-start max-w-full">
               <EventCard event={event} cardSize="lg" />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Trending Events Section */}
+      {/* For You Section */}
       <div className="mt-8">
-        <h2 className="text-xl text-white font-semibold mb-4">Trending Events</h2>
+        <h2 className="text-xl text-white font-semibold mb-4">
+          Upcoming Events
+        </h2>
         <div className="overflow-x-auto scrollbar-hide whitespace-nowrap scroll-smooth snap-x flex space-x-4 pb-4">
           {loading && <p className="text-white">Loading events...</p>}
           {error && <p className="text-red-500">Error: {error}</p>}
@@ -43,15 +57,32 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           )}
           {getFilteredEvents().map((event) => (
             <div key={event.id} className="snap-start">
-              <EventCard event={event} cardSize="lg" />
+              <EventCard event={event} cardSize="sm" />
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Freelancers */}
+      <div className="mt-8">
+        <div className="flex flex-row gap-2 overflow-auto">
+          {userList && userList.userList && userList.userList.length > 0 ? (
+            userList.userList.map((user) => (
+              <div key={user.uid} className="mb-2">
+                <UserCard user={user} />
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400 text-center mt-4">No users found.</p>
+          )}
         </div>
       </div>
 
       {/* Events Near You Section */}
       <div className="mt-8">
-        <h2 className="text-xl text-white font-semibold mb-4">Events Near You</h2>
+        <h2 className="text-xl text-white font-semibold mb-4">
+          Events Near You
+        </h2>
         <div className="overflow-x-auto scrollbar-hide whitespace-nowrap scroll-smooth snap-x flex space-x-4 pb-4">
           {loading && <p className="text-white">Loading events...</p>}
           {error && <p className="text-red-500">Error: {error}</p>}
@@ -60,7 +91,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           )}
           {getFilteredEvents().map((event) => (
             <div key={event.id} className="snap-start">
-              <EventCard event={event} cardSize="lg" />
+              <EventCard event={event} cardSize="sm" />
             </div>
           ))}
         </div>
