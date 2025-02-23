@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import EventCard from "./EventCard";
 import { useSelector } from "react-redux";
+import Loader from "./Loader";
 
 function ProfileTabs({ uid}) {
   const { loading, error } = useSelector((state) => state.profile);
@@ -16,6 +17,7 @@ function ProfileTabs({ uid}) {
 
   return (
     <div>
+      {loading && <Loader message="Loading ..." />}
       <div className="text-sm font-medium text-center border-b text-gray-400 border-gray-700">
         <ul className="flex flex-wrap -mb-px">
           <li className="me-2">

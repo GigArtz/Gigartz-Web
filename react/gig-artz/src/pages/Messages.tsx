@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 import { getMessages, sendMessage, Message } from "../store/messageSlice";
+import Loader from "../components/Loader";
 
 const Messages: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -38,12 +39,15 @@ const Messages: React.FC = () => {
 
   return (
     <div className="main-content">
-      <div className="flex flex-row justify-center h-screen">
-        <div className="border-r border-gray-700  w-[26rem]">
-          <h2 className="text-xl font-semibold text-white-800 mb-4">Messages</h2>
+      {loading && <Loader message="Loading ..." />}
+      <div className="flex md:flex-row justify-center h-screen">
+        <div className="md:border-r border-gray-700  w-[26rem]">
+          <h2 className="text-xl font-semibold text-white-800 mb-4">
+            Messages
+          </h2>
           {/* Error Alert */}
           {error && <div className="text-red-500 text-sm">{error}</div>}
-          
+
           {/* Conversations List */}
           <div className="max-h-[400px] overflow-y-auto space-y-3">
             {loading ? (
@@ -76,12 +80,21 @@ const Messages: React.FC = () => {
               ))
             )}
           </div>
+
+          {/* New Conversation Button */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="md:hidden fixed bottom-5 right-4 mb-4 text-white w-40 rounded-3xl btn-primary"
+          >
+            New Message
+          </button>
         </div>
-        <div className="flex items-center ">
+
+        <div className="hidden md:flex md:items-center ">
           <div className="p-8">
             <p className="mb-16">
-              Select a message Choose from your existing conversations, start a new
-              one, or just keep swimming.
+              Select a message Choose from your existing conversations, start a
+              new one, or just keep swimming.
             </p>
             {/* New Conversation Button */}
             <button

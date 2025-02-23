@@ -37,7 +37,7 @@ export default function Profile() {
       setBio(profile?.bio || "");
       setName(profile?.name || "");
     }
-  }, [profile]);
+  }, [profile, dispatch]);
 
   //console.log("profile" , profile.userProfile)
 
@@ -63,6 +63,7 @@ export default function Profile() {
   }
   return (
     <div className="main-content">
+      
       <div className="relative">
         <img
           src={profile?.coverProfile || blueBackground}
@@ -106,10 +107,10 @@ export default function Profile() {
             <div className="flex">
               <div className="flex gap-2 my-2">
                 {(profile?.genre || [])
-                  .slice(1, 4) // Only take the first 3 items
+                  .slice(0, 4) // Only take the first 3 items
                   .map((genre, index) => (
                     <div key={index}>
-                      <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">{genre.name}</p>
+                      <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">{genre || genre.name}</p>
                     </div>
                   ))}
               </div>

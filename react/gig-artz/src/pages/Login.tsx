@@ -8,6 +8,7 @@ import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/White.png";
+import Loader from "../components/Loader";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -45,6 +46,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
+      {loading && <Loader message="Loading ..." />}
+      
       {/* Logo Section */}
       <div className="flex justify-center md:w-1/3">
         <img src={logo} alt="Logo" className="w-32 md:w-2/3" />

@@ -81,7 +81,7 @@ const EventDetails = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="main-content px-2">
       {/* Event Gallery Carousel */}
       <EventGalleryCarousel event={event} />
 
@@ -122,7 +122,7 @@ const EventDetails = () => {
       {/* Event Info */}
       <div className="mt-4 mb-4">
         <h2 className="text-2xl font-bold">Info.</h2>
-        <div className="flex gap-52">
+        <div className="flex gap-x-medium md:justify-between">
           <div>
             <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
               <FaCalendar className="w-5 h-5 text-white mr-2" />
@@ -172,18 +172,18 @@ const EventDetails = () => {
             <div className="flex items-center">
               <button
                 className="bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
-                onClick={() => handleQuantityChange(type, 1)}
-                disabled={ticketQuantities[type] >= ticket.quantity} // Prevent exceeding available tickets
-              >
-                +
-              </button>
-              <p className="px-2 py-1">{ticketQuantities[type]}</p>
-              <button
-                className="bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
                 onClick={() => handleQuantityChange(type, -1)}
                 disabled={ticketQuantities[type] <= 0} // Prevent negative tickets
               >
                 -
+              </button>
+              <p className="px-2 py-1">{ticketQuantities[type]}</p>
+              <button
+                className="bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
+                onClick={() => handleQuantityChange(type, 1)}
+                disabled={ticketQuantities[type] >= ticket.quantity} // Prevent exceeding available tickets
+              >
+                +
               </button>
             </div>
           </div>

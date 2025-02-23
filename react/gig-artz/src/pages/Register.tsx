@@ -7,6 +7,7 @@ import { RootState } from "../store/store";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import logo from "../assets/White.png";
 import { useNavigate } from "react-router-dom";
+import Loader from "../components/Loader";
 
 const InputField = ({
   label,
@@ -34,7 +35,11 @@ const InputField = ({
           className="absolute right-3 top-3 text-white"
           onClick={onToggle}
         >
-          {showValue ? <MdVisibilityOff size={24} /> : <MdVisibility size={24} />}
+          {showValue ? (
+            <MdVisibilityOff size={24} />
+          ) : (
+            <MdVisibility size={24} />
+          )}
         </button>
       )}
     </div>
@@ -42,11 +47,7 @@ const InputField = ({
 );
 
 const Button = ({ label, onClick, disabled }) => (
-  <button
-  className="btn-primary"
-    onClick={onClick}
-    disabled={disabled}
-  >
+  <button className="btn-primary" onClick={onClick} disabled={disabled}>
     {label}
   </button>
 );
@@ -68,7 +69,13 @@ const Register = () => {
   const toggleShowPassword2 = () => setShowPassword2((prev) => !prev);
 
   const handleRegister = () => {
-    if (!userName || !emailAddress || !password || !confirmPassword || !phoneNumber) {
+    if (
+      !userName ||
+      !emailAddress ||
+      !password ||
+      !confirmPassword ||
+      !phoneNumber
+    ) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -85,7 +92,14 @@ const Register = () => {
       return;
     }
     dispatch(
-      registerUser({ userName, emailAddress, password, confirmPassword, phoneNumber, fcmToken: "12345678" })
+      registerUser({
+        userName,
+        emailAddress,
+        password,
+        confirmPassword,
+        phoneNumber,
+        fcmToken: "12345678",
+      })
     );
     if (error) {
       toast.error(`Sign up Failed! ${error}`);
@@ -95,18 +109,74 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#060512] flex flex-col items-center p-5">
-      <img src={logo} alt="Logo" className="w-72 mt-2" />
-      <div className="w-full max-w-md bg-[#1F1C29] rounded-lg p-6 space-y-6">
-        <InputField label="Username" type="text" placeholder="Enter username" value={userName} onChange={(e) => setUserName(e.target.value)} />
-        <InputField label="Phone Number" type="text" placeholder="Enter phone number" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
-        <InputField label="Email" type="email" placeholder="Enter email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-        <InputField label="Password" type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} showToggle onToggle={toggleShowPassword} showValue={showPassword} />
-        <InputField label="Confirm Password" type="password" placeholder="Confirm password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} showToggle onToggle={toggleShowPassword2} showValue={showPassword2} />
-        <Button label={loading ? "Signing up..." : "Sign Up"} onClick={handleRegister} disabled={loading} />
-        <p className="text-center text-white mt-4">
-          Already have an account? <span className="text-teal-400 cursor-pointer" onClick={() => navigation.navigate("/")}>Sign In</span>
-        </p>
+    <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
+      {loading && <Loader message="Loading ..." />}
+
+      {/* Logo Section */}
+      <div className="flex justify-center md:w-1/3">
+        <img src={logo} alt="Logo" className="w-32 md:w-2/3" />
+      </div>
+
+      {/* Form Section */}
+      <div className="w-full max-w-md bg-[#1F1C29] rounded-lg p-6 space-y-6 shadow-lg">
+        
+        <form className="space-y-6">
+          <InputField
+            label="Username"
+            type="text"
+            placeholder="Enter username"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+          />
+          <InputField
+            label="Phone Number"
+            type="text"
+            placeholder="Enter phone number"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+          />
+          <InputField
+            label="Email"
+            type="email"
+            placeholder="Enter email"
+            value={emailAddress}
+            onChange={(e) => setEmailAddress(e.target.value)}
+          />
+          <InputField
+            label="Password"
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            showToggle
+            onToggle={toggleShowPassword}
+            showValue={showPassword}
+          />
+          <InputField
+            label="Confirm Password"
+            type="password"
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            showToggle
+            onToggle={toggleShowPassword2}
+            showValue={showPassword2}
+          />
+          <Button
+            label={loading ? "Signing up..." : "Sign Up"}
+            onClick={handleRegister}
+            disabled={loading}
+          />
+          <p className="text-center text-white mt-4">
+            Already have an account?{" "}
+            <span
+              className="text-teal-400 cursor-pointer"
+              onClick={() => navigation.navigate("/")}
+            >
+              Sign In
+            </span>
+          </p>
+        </form>
       </div>
       <ToastContainer />
     </div>

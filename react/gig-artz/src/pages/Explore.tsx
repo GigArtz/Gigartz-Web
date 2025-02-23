@@ -1,5 +1,4 @@
 import ExploreTabs from '../components/ExploreTabs'
-import React from 'react'
 
 function Explore() {
   return (

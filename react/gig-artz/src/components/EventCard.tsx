@@ -31,13 +31,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize = "md" }) => {
     cardSize === "sm"
       ? "w-[20rem]"
       : cardSize === "lg"
-      ? "md:w-[48rem] lg:w-[48] w-[38rem]"
+      ? "md:w-[48rem] lg:w-[48] w-[22.5rem]"
       : "max-w-sm";
 
   return (
     <Link to={`/events/?eventId=${event.id}`} className="block">
       <div
-        className={`${cardWidth}  border rounded-lg shadow-lg bg-gray-800 border-gray-700 cursor-pointer flex-shrink-0 transition-transform `}
+        className={`${cardWidth}  border rounded-xl shadow-lg bg-gray-800 border-gray-700 cursor-pointer flex-shrink-0 transition-transform `}
       >
         {/* Clickable Image */}
         <img
@@ -55,25 +55,26 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize = "md" }) => {
               </h5>
             </div>
 
-            {cardSize === 'lg' &&  <div className="flex gap-2">
-              {/* Comments */}
-              <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-                <FaComment className="w-5 h-5 text-gray-500 mr-2" />
-                {event.comments.length}
-              </p>
-              {/* Likes */}
-              <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-                <FaHeart  className="w-5 h-5 text-red-500 mr-2" />
-                {event.likes}
-              </p>
-            </div>}
+            {cardSize === "lg" && (
+              <div className="flex gap-2">
+                {/* Comments */}
+                <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
+                  <FaComment className="w-5 h-5 text-gray-500 mr-2" />
+                  <button>{event.comments.length}</button>
+                </p>
+                {/* Likes */}
+                <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
+                  <FaHeart className="w-5 h-5 text-red-500 mr-2" />
+                  {event.likes}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Date with Calendar Icon */}
           <p className="mb-3 font-normal text-gray-700 dark:text-gray-400 flex items-center text-sm sm:text-base text-wrap">
             {event.date}
           </p>
-
         </div>
       </div>
     </Link>

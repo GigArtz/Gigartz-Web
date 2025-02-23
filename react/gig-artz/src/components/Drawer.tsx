@@ -26,17 +26,22 @@ function Drawer() {
   const { profile } = useSelector((state) => state.profile);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // State to control drawer visibility
+
   // Function to open the modal
   const openModal = () => setIsModalOpen(true);
 
   // Function to close the modal
   const closeModal = () => setIsModalOpen(false);
 
-  useEffect(() => {
-    dispatch(fetchUserProfile(user?.uid))
-  }, [user, dispatch])
+  // Function to toggle the drawer
+  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
-  console.log(profile)
+  useEffect(() => {
+    dispatch(fetchUserProfile(user?.uid));
+  }, [user, dispatch]);
+
+  console.log(profile);
 
   const navItems = [
     { icon: FaHome, label: "Home", link: "/home" },
@@ -48,7 +53,6 @@ function Drawer() {
     { icon: FaDollarSign, label: "Monetization", link: "/monetization" },
     { icon: FaCog, label: "Settings", link: "/settings" },
     { icon: FaUser, label: "Profile", link: "/profile" },
-   
   ];
 
   return (
@@ -56,17 +60,14 @@ function Drawer() {
       {/* Modal */}
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
-      {/* Responsive Sidebar */}
-      <div
-        id="drawer-navigation"
-        className="hidden md:block fixed top-0 left-0 lg:w-[15%] min-h-screen bg-[#060512] shadow-md transition-all duration-300"
-      >
-        {/* Profile Section */}
-        <div className="lg:flex-col hidden md:block justify-items-center py-4 px-4 mx-4 border-b">
+      {/* Profile Section */}
+      <div className="md:block fixed top-0  left-0 w-[55%] md:w-[20%] lg:w-[15%] h-[10%] md:h-[20%] bg-[#060512] shadow-md transition-all duration-300">
+        <div className="lg:flex-col md:block justify-items-left md:justify-items-center p-2 bg-[#060512] shadow-sm md:mx-4 md:mb-1 md:border-b">
           <img
             src={profile?.photoURL || avatar}
             alt="Profile"
             className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-gray-900"
+            onClick={toggleDrawer} // Toggle drawer on click
           />
           <p className="text-lg font-medium text-white mt-4 hidden md:block">
             {profile?.userName || "brooke lines"}
@@ -75,7 +76,15 @@ function Drawer() {
             {profile?.bio || "brooke lines"}
           </p>
         </div>
+      </div>
 
+      {/* Responsive Sidebar */}
+      <div
+        id="drawer-navigation"
+        className={`fixed top-20 md:top-[25%] left-0 w-[55%] z-10 md:w-[20%] lg:w-[15%] min-h-screen bg-[#060512] shadow-md transition-all duration-300 ${
+          isDrawerOpen ? "block" : "hidden"
+        } md:block`}
+      >
         {/* Navigation Links */}
         <nav className="py-4">
           <ul className="space-y-2 font-medium px-4">
@@ -85,21 +94,22 @@ function Drawer() {
               return (
                 <li key={index}>
                   <a
-                    onClick={() => navigate(item.link)}
+                    onClick={() => {
+                      navigate(item.link);
+                      setIsDrawerOpen(false); // Close drawer on navigation
+                    }}
                     className={`flex items-center p-2 rounded-lg cursor-pointer transition ${
                       isActive
-                        ? "bg-gray-200 dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold"
+                        ? "bg-gray-800 text-teal-400 font-semibold"
                         : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <item.icon
                       className={`w-5 h-5 ${
-                        isActive
-                          ? "text-blue-400"
-                          : "text-white-400"
+                        isActive ? "text-teal-400" : "text-white-400"
                       }`}
                     />
-                    <span className="ml-3 hidden md:block">{item.label}</span>
+                    <span className="ml-3 md:block">{item.label}</span>
                   </a>
                 </li>
               );
@@ -117,7 +127,6 @@ function Drawer() {
               {/* <FaPlus className="w-4 h-4 text-white" /> */}
               Create
             </button>
-          
           </div>
         </nav>
       </div>
