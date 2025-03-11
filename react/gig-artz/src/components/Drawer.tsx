@@ -61,35 +61,47 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:block fixed top-0  left-0 w-[55%] md:w-[20%] lg:w-[15%] h-[10%] md:h-[20%] bg-[#060512] shadow-md transition-all duration-300">
-        <div className="lg:flex-col md:block justify-items-left md:justify-items-center p-2 bg-[#060512] shadow-sm md:mx-4 md:mb-1 md:border-b">
+      <div className="md:block fixed top-0 z-10 left-0 w-[100%] md:w-[20%] lg:w-[15%] h-[9%] md:h-[20%] bg-[#060512] shadow-md transition-all duration-300">
+        <div className="lg:flex-col md:block p-2 justify-items-left md:justify-items-center px-2 bg-[#060512] shadow-sm md:mx-4 md:mb-1 md:border-b">
           <img
             src={profile?.photoURL || avatar}
             alt="Profile"
-            className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-gray-900"
+            className="w-14 h-14 md:w-20 md:h-20 rounded-full border-4 border-gray-900"
             onClick={toggleDrawer} // Toggle drawer on click
           />
-          <p className="text-lg font-medium text-white mt-4 hidden md:block">
-            {profile?.userName || "brooke lines"}
-          </p>
-          <p className="text-sm font-medium text-teal-400 hidden md:block">
-            {profile?.bio || "brooke lines"}
-          </p>
         </div>
       </div>
 
       {/* Responsive Sidebar */}
       <div
         id="drawer-navigation"
-        className={`fixed top-20 md:top-[25%] left-0 w-[55%] z-10 md:w-[20%] lg:w-[15%] min-h-screen bg-[#060512] shadow-md transition-all duration-300 ${
+        className={`fixed top-20 md:top-[25%] left-0 w-[65%] z-10 md:w-[20%] lg:w-[15%] min-h-screen bg-[#060512] shadow-md transition-all duration-300 ${
           isDrawerOpen ? "block" : "hidden"
         } md:block`}
       >
+        {/* Profile Section */}
+        <div className="md:block fixed top-0  left-0 w-[65%] md:w-[20%] lg:w-[15%] h-[10%] md:h-[20%] bg-[#060512] shadow-md transition-all duration-300">
+          <div className="lg:flex-col md:block justify-items-center md:justify-items-center p-2 bg-[#060512] shadow-sm md:mx-4 md:mb-1 md:border-b">
+            <img
+              src={profile?.photoURL || avatar}
+              alt="Profile"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-gray-900"
+              onClick={toggleDrawer} // Toggle drawer on click
+            />
+            <p className="text-lg font-medium text-white mt-4 md:block">
+              {profile?.userName || "brooke lines"}
+            </p>
+            <p className="text-sm font-medium text-teal-400 md:block">
+              {profile?.bio || "brooke lines"}
+            </p>
+          </div>
+        </div>
+
         {/* Navigation Links */}
         <nav className="py-4">
           <ul className="space-y-2 font-medium px-4">
             {navItems.map((item, index) => {
-              const isActive = location.pathname === item.link; // Check if current route matches
+              const isActive = location.pathname.includes(item.link); // Check if current route matches
 
               return (
                 <li key={index}>

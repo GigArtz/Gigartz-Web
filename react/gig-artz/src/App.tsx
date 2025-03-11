@@ -37,6 +37,7 @@ function App() {
           <Route path="/tickets" element={<><Drawer /><Tickets /><SideBar /></>} />
           <Route path="/events" element={<><Drawer /><EventManager /><SideBar /></>} />
           <Route path="/explore" element={<><Drawer /><Explore /><SideBar /></>} />
+          <Route path="/explore/:search" element={<><Drawer /><Explore /><SideBar /></>} />
           <Route path="/profile" element={<><Drawer /><Profile /><SideBar /></>} />
           <Route path="/people/:uid"  element={<><Drawer /><People /><SideBar /></>} />
           <Route path="/register" element={<Register />} />
@@ -45,19 +46,7 @@ function App() {
           <Route path="/home" element={<><Drawer /><Home /><SideBar /></>} />
           <Route path="/reset-password" element={<Forgot />} />
         </Routes>
-          {/* Define your Routes here 
-          <Route path="/" element={<Login />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/follow" element={<Follow />} />
-          <Route path="/checkout" element={<Payment />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/tickets" element={<Tickets />} />
-          <Route path="/events" element={<EventManager />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/reset-password" element={<Forgot />} />*/}
+         
         
       </Router>
     </Provider>

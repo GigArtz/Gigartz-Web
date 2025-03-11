@@ -5,13 +5,20 @@ import { fetchAllProfiles } from "../store/profileSlice";
 import UserCard from "./UserCard";
 import { AppDispatch } from "../store/store";
 import { fetchAllEvents } from "../store/eventsSlice";
+import { useParams } from "react-router-dom";
 
 function ExploreTabs() {
+  
+    const { search } = useParams<{ search: string }>(); // Extract search term from URL
   const dispatch: AppDispatch = useDispatch();
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("top");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(search || "");
+
+  useEffect(() => {
+    setSearchQuery(search || "");
+  }, [search]);
 
   useEffect(() => {
     dispatch(fetchAllProfiles());

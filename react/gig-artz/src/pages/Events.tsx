@@ -10,7 +10,7 @@ import {
   FaShare,
 } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface Event {
   id: string;
@@ -32,6 +32,9 @@ interface Event {
 }
 
 const EventDetails = () => {
+  
+  const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("eventId");
   const [event, setEvent] = useState<Event | null>(null);
@@ -80,6 +83,12 @@ const EventDetails = () => {
     );
   }
 
+  const viewHostProfile = () => {
+    navigate(`/people/${event.promoterId}`);
+  };
+
+
+
   return (
     <div className="main-content px-2">
       {/* Event Gallery Carousel */}
@@ -89,7 +98,7 @@ const EventDetails = () => {
         <div>
           {/* Event Title */}
           <h1 className="text-3xl font-bold text-white">{event.title}</h1>
-          <p className="text-gray-400 mt-2">{event.hostName}</p>
+          <button onClick={viewHostProfile} className="text-gray-400 mt-2">{event.hostName}</button>
         </div>
 
         <div className="flex gap-2">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom"; // Import useParams
-import { fetchUserProfile, followUser } from "../store/profileSlice";
+import { fetchAllProfiles, followUser } from "../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import ProfileTabs from "../components/ProfileTabs";
@@ -27,11 +27,24 @@ const People: React.FC = () => {
   //const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
+  // Fetch users
+  useEffect(() => {
+    dispatch(fetchAllProfiles());
+  }, [dispatch, uid]);
+
   const userList = useSelector((state: RootState) => state.profile);
 
   const userProfile = userList.userList.find(
-    (user: UserProfile) => user.id === uid
+    (user: UserProfile) => user?.id === uid
   );
+
+  const [isFreelancer, setIsFreelancer] = useState<boolean>(
+    userProfile?.roles?.freelancer || false
+  );
+
+  useEffect(() => {
+    setIsFreelancer(userProfile?.roles?.freelancer || false);
+  }, [userProfile]);
 
   const handleFollow = () => {
     setIsFollowing((prev) => !prev);
