@@ -9,8 +9,9 @@ import {
   FaLocationArrow,
   FaShare,
 } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { buyTicket } from "../store/eventsSlice";
 
 interface Event {
   id: string;
@@ -32,7 +33,6 @@ interface Event {
 }
 
 const EventDetails = () => {
-  
   const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
@@ -44,6 +44,7 @@ const EventDetails = () => {
   const eventData: Event[] = useSelector(
     (state: RootState) => state.events.events
   );
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const foundEvent = eventData.find((e) => e.id === eventId);
@@ -83,79 +84,81 @@ const EventDetails = () => {
     );
   }
 
+  // Buy ticket
+  const handlePurchase = () => {
+    if (eventId) {
+      const ticketDetails = {
+        customerUid: "exampleUid", // replace with actual customer UID
+        customerName: "exampleName", // replace with actual customer name
+        customerEmail: "exampleEmail", // replace with actual customer email
+        amount: totalTicketPrice,
+        ticketType: "exampleType", // replace with actual ticket type
+        location: event.venue,
+        eventName: event.title,
+        eventDate: event.date,
+        description: event.description,
+        image: event.gallery[0], // replace with actual image if available
+      };
+      dispatch(buyTicket(ticketDetails));
+    }
+  };
+
   const viewHostProfile = () => {
     navigate(`/people/${event.promoterId}`);
   };
 
-
-
   return (
-    <div className="main-content px-2">
-      {/* Event Gallery Carousel */}
+    <div className="main-content px-4 md:px-8 mb-3">
       <EventGalleryCarousel event={event} />
 
-      <div className="flex justify-between">
+      <div className="flex flex-row md:flex-row justify-between gap-4">
         <div>
-          {/* Event Title */}
           <h1 className="text-3xl font-bold text-white">{event.title}</h1>
-          <button onClick={viewHostProfile} className="text-gray-400 mt-2">{event.hostName}</button>
+          <button onClick={viewHostProfile} className="text-gray-400 mt-2">
+            {event.hostName}
+          </button>
         </div>
 
-        <div className="flex gap-2">
-          {/* Comments */}
-          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400 flex items-center text-sm sm:text-base">
-            <FaComment className="w-5 h-5 text-gray-500 mr-2" />
-            {event.comments.length}
+        <div className="flex gap-4 text-gray-400 text-sm md:text-base">
+          <p className="flex items-center">
+            <FaComment className="w-5 h-5 mr-2" /> {event.comments.length}
           </p>
-          {/* Likes */}
-          <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-            <FaHeart className="w-5 h-5 text-red-500 mr-2" />
-            {event.likes}
+          <p className="flex items-center">
+            <FaHeart className="w-5 h-5 text-red-500 mr-2" /> {event.likes}
           </p>
-          {/* Share */}
-          <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-            <FaShare className="w-5 h-5 text-gray-500 mr-2" />
+          <p className="flex items-center">
+            <FaShare className="w-5 h-5 mr-2" />
           </p>
         </div>
       </div>
 
-      {/* Event Metadata */}
       <hr className="mt-4" />
 
-      {/* Event Description */}
       <h2 className="text-2xl font-bold">Description</h2>
       <p className="mt-4 text-lg">{event.description}</p>
 
       <hr className="mt-4" />
 
-      {/* Event Info */}
-      <div className="mt-4 mb-4">
-        <h2 className="text-2xl font-bold">Info.</h2>
-        <div className="flex gap-x-medium md:justify-between">
-          <div>
-            <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-              <FaCalendar className="w-5 h-5 text-white mr-2" />
-              {event.date}
-            </p>
-            <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-              <FaLocationArrow className="w-5 h-5 text-white mr-2" />
-              {event.venue}
-            </p>
-          </div>
-          <div>
-            <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-              <FaClock className="w-5 h-5 text-white mr-2" />
-              {event.time}
-            </p>
-            <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
-              <FaClock className="w-5 h-5 text-white mr-2" />
-              {event.category}
-            </p>
-          </div>
+      <div className="mt-4 mb-4 grid grid-cols-2 gap-4 sticky top-3">
+        <div>
+          <p className="flex items-center">
+            <FaCalendar className="w-5 h-5 text-white mr-2" /> {event.date}
+          </p>
+          <p className="flex items-center">
+            <FaLocationArrow className="w-5 h-5 text-white mr-2" />{" "}
+            {event.venue}
+          </p>
+        </div>
+        <div>
+          <p className="flex items-center">
+            <FaClock className="w-5 h-5 text-white mr-2" /> {event.time}
+          </p>
+          <p className="flex items-center">
+            <FaClock className="w-5 h-5 text-white mr-2" /> {event.category}
+          </p>
         </div>
       </div>
 
-      {/* Event Video */}
       {event.eventVideo && (
         <div className="mt-4">
           <video controls className="w-full rounded-lg">
@@ -165,52 +168,48 @@ const EventDetails = () => {
         </div>
       )}
 
-      {/* Tickets Section */}
       <hr className="mt-4" />
-      <div className="mt-6">
+
+      <div className="mt-6 mb-20">
         <h2 className="text-2xl font-bold">Tickets</h2>
         {Object.entries(event.ticketsAvailable).map(([type, ticket]) => (
           <div
             key={type}
-            className="bg-gray-800 p-4 rounded-lg flex justify-between items-center mt-2"
+            className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center mt-2"
           >
-            <div>
+            <div className="text-left">
               <p className="text-lg font-bold capitalize">{type} Ticket</p>
               <p className="text-gray-300">R {ticket.price}</p>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center mt-2 sm:mt-0">
               <button
-                className="bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
+                className="bg-blue-500 px-3 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
                 onClick={() => handleQuantityChange(type, -1)}
-                disabled={ticketQuantities[type] <= 0} // Prevent negative tickets
+                disabled={ticketQuantities[type] <= 0}
               >
                 -
               </button>
-              <p className="px-2 py-1">{ticketQuantities[type]}</p>
+              <p className="px-4">{ticketQuantities[type]}</p>
               <button
-                className="bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
+                className="bg-blue-500 px-3 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
                 onClick={() => handleQuantityChange(type, 1)}
-                disabled={ticketQuantities[type] >= ticket.quantity} // Prevent exceeding available tickets
+                disabled={ticketQuantities[type] >= ticket.quantity}
               >
                 +
               </button>
             </div>
           </div>
         ))}
-      </div>
 
-      <div className="bg-gray-800 p-4 rounded-lg flex justify-between items-center mt-2">
-        <div>
-          <p className="text-lg font-bold capitalize">
-            Total: R {totalTicketPrice}
-          </p>
-        </div>
-        <div className="flex">
-          <button className="bg-blue-500 px-2 py-1 rounded-lg hover:bg-blue-600">
+        <div className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center my-4">
+          <p className="text-lg font-bold">Total: R {totalTicketPrice}</p>
+          <button onClick={handlePurchase} className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600 mt-2 sm:mt-0">
             Get Tickets
           </button>
         </div>
       </div>
+
+     
     </div>
   );
 };

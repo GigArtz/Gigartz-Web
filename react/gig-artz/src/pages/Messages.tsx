@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 import { getMessages, sendMessage, Message } from "../store/messageSlice";
 import Loader from "../components/Loader";
+import Chat from "../components/Chat";
 
 const Messages: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,6 +15,9 @@ const Messages: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState("");
+  const [activeConversation, setActiveConversation] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (currentUserId) {
@@ -33,70 +37,79 @@ const Messages: React.FC = () => {
     };
 
     dispatch(sendMessage(messageData));
-    setNewMessage(""); // Clear the input
-    setIsModalOpen(false); // Close modal after sending
+    setNewMessage("");
+    setIsModalOpen(false);
+  };
+
+  const getConversation = (contactId: string) => {
+    return conversations.find(
+      (conversation) => conversation.contact === contactId
+    );
   };
 
   return (
-    <div className="main-content">
-      {loading && <Loader message="Loading ..." />}
-      <div className="flex md:flex-row justify-center h-screen">
-        <div className="md:border-r border-gray-700  w-[26rem]">
-          <h2 className="text-xl font-semibold text-white-800 mb-4">
-            Messages
-          </h2>
-          {/* Error Alert */}
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+    <div className="main-content flex h-screen">
+      {/* Sidebar - Conversations List */}
+      <div className="md:w-[30%] w-full md:border-r border-gray-700 p-4">
+        <h2 className="text-xl font-semibold text-white-800 mb-4">Messages</h2>
 
-          {/* Conversations List */}
-          <div className="max-h-[400px] overflow-y-auto space-y-3">
-            {loading ? (
-              <p className="text-gray-500">Loading messages...</p>
-            ) : conversations.length === 0 ? (
-              <p className="text-gray-500">No messages yet</p>
-            ) : (
-              conversations.map((conversation, index) => (
-                <div key={index} className="p-3 border rounded-lg shadow-sm">
-                  <h3 className="font-semibold text-gray-700">
-                    {contacts.find((c) => c.id === conversation.contact)
-                      ?.userName || "Unknown"}
+        {loading && <Loader message="Loading..." />}
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+
+        {/* Conversations */}
+        <div className="max-h-[75vh] overflow-y-auto space-y-3">
+          {conversations.length === 0 ? (
+            <p className="text-gray-500">No messages yet</p>
+          ) : (
+            conversations.map((conversation) => {
+              const contact = contacts.find(
+                (c) => c.id === conversation.contact
+              );
+              const lastMessage = conversation.messages.length
+                ? conversation.messages[conversation.messages.length - 1]
+                : null;
+
+              return (
+                <div
+                  key={conversation.contact}
+                  className={`p-3 rounded-lg cursor-pointer transition ${
+                    activeConversation === conversation.contact
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-800 hover:bg-gray-700"
+                  }`}
+                  onClick={() => setActiveConversation(conversation.contact)}
+                >
+                  <h3 className="font-semibold">
+                    {contact?.userName || "Unknown"}
                   </h3>
-                  {conversation.messages.map((msg, msgIndex) => (
-                    <div
-                      key={msgIndex}
-                      className={`p-2 rounded-md mt-2 w-fit ${
-                        msg.senderId === currentUserId
-                          ? "bg-blue-500 text-white ml-auto"
-                          : "bg-gray-200"
-                      }`}
-                    >
-                      <p>{msg.message}</p>
-                      <small className="text-xs opacity-75 block">
-                        {new Date(msg.timestamp!).toLocaleString()}
-                      </small>
-                    </div>
-                  ))}
+                  {lastMessage && (
+                    <p className="text-sm text-gray-300 truncate">
+                      {lastMessage.senderId === currentUserId ? "You: " : ""}
+                      {lastMessage.message}
+                    </p>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* New Conversation Button */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="md:hidden fixed bottom-5 right-4 mb-4 text-white w-40 rounded-3xl btn-primary"
-          >
-            New Message
-          </button>
+              );
+            })
+          )}
         </div>
 
-        <div className="hidden md:flex md:items-center ">
-          <div className="p-8">
-            <p className="mb-16">
-              Select a message Choose from your existing conversations, start a
-              new one, or just keep swimming.
-            </p>
-            {/* New Conversation Button */}
+        {/* New Conversation Button */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-5 right-4 md:hidden text-white w-40 rounded-3xl btn-primary"
+        >
+          New Message
+        </button>
+      </div>
+
+      {/* Chat Panel */}
+      <div className="hidden md:flex flex-1 items-center justify-center">
+        {activeConversation ? (
+          <Chat conversation={getConversation(activeConversation)} />
+        ) : (
+          <div className="text-center p-8">
+            <p className="mb-16">Select a conversation to start chatting.</p>
             <button
               onClick={() => setIsModalOpen(true)}
               className="mb-4 text-white w-40 rounded-3xl btn-primary"
@@ -104,13 +117,13 @@ const Messages: React.FC = () => {
               New Message
             </button>
           </div>
-        </div>
+        )}
       </div>
 
       {/* New Message Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-[#060512]  bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white dark:bg-[#1F1C29] border border-gray-700  p-5 rounded-lg shadow-lg w-96">
+        <div className="fixed inset-0 bg-[#060512] bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white dark:bg-[#1F1C29] border border-gray-700 p-5 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-semibold mb-3">New Message</h3>
             <select
               value={selectedContact}

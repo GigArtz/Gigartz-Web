@@ -5,20 +5,13 @@ import { fetchAllProfiles } from "../store/profileSlice";
 import UserCard from "./UserCard";
 import { AppDispatch } from "../store/store";
 import { fetchAllEvents } from "../store/eventsSlice";
-import { useParams } from "react-router-dom";
+import SearchBar from "./SearchBar";
 
 function ExploreTabs() {
-  
-    const { search } = useParams<{ search: string }>(); // Extract search term from URL
   const dispatch: AppDispatch = useDispatch();
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("top");
-  const [searchQuery, setSearchQuery] = useState(search || "");
-
-  useEffect(() => {
-    setSearchQuery(search || "");
-  }, [search]);
 
   useEffect(() => {
     dispatch(fetchAllProfiles());
@@ -33,32 +26,17 @@ function ExploreTabs() {
 
   const eventList = events || [];
 
-  // Filter events and users based on search query
-  const filteredEvents = eventList?.filter(
-    (event) =>
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.venue.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredUsers = userList?.filter(
-    (user) =>
-      user.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  console.log(eventList);
 
   return (
     <div>
       <div>
-
-        {/* Search Bar */}
-        <div className="relative rounded-lg border  border-gray-700 bg-[#060512]">
+        <div className="relative rounded-lg border border-gray-700 dark:border-gray-700 bg-[#060512] dark:bg-gray-700">
           <form>
             <input
               type="text"
               className="w-full px-4 py-2 rounded-lg bg-[#060512] dark:border-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none"
               placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button className="absolute right-0 top-0 mt-2 mr-3">
               <svg
@@ -79,10 +57,8 @@ function ExploreTabs() {
           </form>
         </div>
       </div>
-
-      {/* Tabs */}
-      <div className="text-sm font-medium text-center border-b border-gray-700">
-        <ul className="flex flex-wrap w-full justify-evenly -mb-px">
+      <div className="text-sm font-medium text-center text-gray-500 border-b dark:border-gray-700">
+        <ul className="flex flex-wrap -mb-px">
           <li className="me-2">
             <button
               onClick={() => setActiveTab("top")}
@@ -145,22 +121,34 @@ function ExploreTabs() {
             {activeTab === "top" && (
               <>
                 <div className="flex flex-row gap-2 overflow-y-auto">
-                  {filteredEvents.length > 0 ? (
-                    filteredEvents.map((event) => (
-                      <div className="mb-2" key={event.id}>
-                        <EventCard event={event} cardSize="sm" />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400 text-center mt-4">
+                  {/* Scrollable Row */}
+
+                  {eventList?.length === 0 && !loading && !error && (
+                    <p className="text-white text-center w-full">
                       No events found.
                     </p>
                   )}
+
+                  {eventList?.map((event) => (
+                    <div
+                      key={event.id}
+                      className="snap-start flex-shrink-0 w-[100%] p-1"
+                    >
+                      <EventCard event={event} cardSize="lg" />
+                    </div>
+                  ))}
                 </div>
-                <div className="flex flex-wrap gap-4 mt-4">
-                  {filteredUsers?.length > 0 ? (
-                    filteredUsers.map((user) => (
-                      <div className="mb-2" key={user.id}>
+
+                <div className="mt-2 w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-4">
+                    Trending
+                  </h2>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {userList.length > 0 ? (
+                    userList.map((user) => (
+                      <div className="mb-2">
                         <UserCard user={user} />
                       </div>
                     ))
@@ -175,31 +163,15 @@ function ExploreTabs() {
 
             {activeTab === "people" && (
               <div className="flex flex-row gap-2 overflow-auto">
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <div className="mb-2" key={user.id}>
+                {userList.length > 0 ? (
+                  userList.map((user) => (
+                    <div className="mb-2">
                       <UserCard user={user} />
                     </div>
                   ))
                 ) : (
                   <p className="text-gray-400 text-center mt-4">
                     No users found.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {activeTab === "events" && (
-              <div className="flex flex-row gap-2 overflow-auto">
-                {filteredEvents.length > 0 ? (
-                  filteredEvents.map((event) => (
-                    <div className="mb-2" key={event.id}>
-                      <EventCard event={event} cardSize="sm" />
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-center mt-4">
-                    No events found.
                   </p>
                 )}
               </div>

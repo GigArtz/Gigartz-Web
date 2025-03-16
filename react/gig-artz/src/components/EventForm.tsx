@@ -76,7 +76,7 @@ const AddEventForm: React.FC = () => {
 
   return (
     <div className="justify-center items-center z-20">
-      <div className="flex-row p-8 space-y-6">
+      <div className="flex-row p-2 space-y-2 md:p-8 md:space-y-6">
         <div className="flex justify-between">
           {step > 1 && (
             <button onClick={() => setStep((prev) => prev - 1)} className="text-white flex items-center">
@@ -89,7 +89,7 @@ const AddEventForm: React.FC = () => {
             </button>
           )}
         </div>
-        <div className="p-6 rounded-lg">
+        <div className="md:p-6 rounded-lg">
           {step === 1 && <Step1 formData={formData} handleChange={handleChange} />}
           {step === 2 && <Step2 formData={formData} handleArtistChange={handleArtistChange} dispatch={dispatch} />}
           {step === 3 && <Step3 formData={formData} handleTicketChange={handleTicketChange} />}

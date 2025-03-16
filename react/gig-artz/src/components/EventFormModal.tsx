@@ -19,7 +19,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
           id="authentication-modal"
           tabIndex={-1}
           aria-hidden={!isModalOpen} // Accessibility improvement for screen readers
-          className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center w-full h-full bg-[#1F1C29] bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
+          className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center px-2 w-full h-full bg-[#1F1C29] bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
         >
           <div
             className="relative p-4 w-full max-w-lg rounded-lg shadow-lg bg-[#1F1C29] transform transition-all duration-300 ease-in-out"
@@ -28,10 +28,10 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
             aria-hidden={!isModalOpen ? "true" : "false"}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-600">
+            <div className="flex items-center justify-between p-2 md:p-5 border-b rounded-t border-gray-600">
               <h3
                 id="modal-title"
-                className="text-xl font-semibold text-white"
+                className="text-lg md:text-xl font-semibold text-white"
               >
                 Event Details
               </h3>
@@ -61,7 +61,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
             </div>
 
             {/* Modal Content */}
-            <div className="p-2 max-h-[70vh] overflow-y-auto ">
+            <div className="px-2 md:max-h-[70vh] overflow-y-auto ">
               
               {/* Ensure AddEventForm is always within the modal */}
               <AddEventForm />

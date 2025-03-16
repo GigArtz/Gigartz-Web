@@ -99,7 +99,7 @@ function Drawer() {
 
         {/* Navigation Links */}
         <nav className="py-4">
-          <ul className="space-y-2 font-medium px-4">
+          <ul className="space-y-2 font-medium md:px-4">
             {navItems.map((item, index) => {
               const isActive = location.pathname.includes(item.link); // Check if current route matches
 
@@ -110,7 +110,7 @@ function Drawer() {
                       navigate(item.link);
                       setIsDrawerOpen(false); // Close drawer on navigation
                     }}
-                    className={`flex items-center p-2 rounded-lg cursor-pointer transition ${
+                    className={`flex items-center p-2 rounded-2xl text-sm cursor-pointer transition ${
                       isActive
                         ? "bg-gray-800 text-teal-400 font-semibold"
                         : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"

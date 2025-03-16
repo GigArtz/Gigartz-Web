@@ -1,15 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import image from "../assets/blue.jpg"; // Default fallback image
-import {
-  FaLocationArrow,
-  FaDollarSign,
-  FaCalendarAlt,
-  FaClock,
-  FaHeart,
-  FaBitcoin,
-  FaComment,
-} from "react-icons/fa"; // Import icons for location, price, date, and time
+import { FaHeart, FaComment } from "react-icons/fa";
 
 interface EventCardProps {
   event: {
@@ -20,59 +12,54 @@ interface EventCardProps {
     date: string;
     time: string;
     price: string;
-    gallery?: string[]; // Optional gallery with images
+    likes?: number;
+    comments?: string[];
+    gallery?: string[];
   };
-  cardSize?: "sm" | "md" | "lg"; // Accepts "sm", "md", or "lg" for small, medium, or large cards
+  cardSize?: "sm" | "md" | "lg";
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, cardSize = "md" }) => {
-  // Set different max-widths based on the `cardSize` prop
-  const cardWidth =
-    cardSize === "sm"
-      ? "w-[20rem]"
-      : cardSize === "lg"
-      ? "md:w-[48rem] lg:w-[48] w-[22.5rem]"
-      : "max-w-sm";
-
+const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
   return (
-    <Link to={`/events/?eventId=${event.id}`} className="block">
-      <div
-        className={`${cardWidth}  border rounded-xl shadow-lg bg-gray-800 border-gray-700 cursor-pointer flex-shrink-0 transition-transform `}
-      >
-        {/* Clickable Image */}
+    <Link to={`/events/?eventId=${event.id}`} className="block w-full h-full">
+      <div className="w-[100%] h-full flex flex-col flex-1 min-w-0 rounded-xl shadow-lg border border-gray-800 cursor-pointer transition-transform">
+        {/* Image */}
         <img
-          className="rounded-t-lg w-full h-56 object-cover sm:h-48 md:h-56 lg:h-64"
-          src={event.gallery?.[0] || image} // Fallback to static image if event does not have an image field
+          className={`w-full object-cover object-top rounded-t-xl ${
+            cardSize === "sm"
+              ? "h-32"
+              : cardSize === "md"
+              ? "h-32 md:h-56 p-0 rounded-t-2xl "
+              : "h-64"
+          }`}
+          src={event.gallery?.[0] || image} // Fallback image
           alt={event.title}
         />
 
-        <div className="p-5">
+        <div className="p-5 flex flex-col flex-1">
           <div className="flex justify-between">
-            <div>
-              {/* Clickable Title */}
-              <h5 className="mb-2 text-2xl font-bold tracking-tight text-wrap text-white">
-                {event.title}
-              </h5>
-            </div>
+            <h5 className="mb-2 text-base md:text-2xl font-bold text-white text-wrap">
+              {event.title}
+            </h5>
 
             {cardSize === "lg" && (
               <div className="flex gap-2">
                 {/* Comments */}
-                <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
+                <p className="text-gray-400 flex items-center text-sm">
                   <FaComment className="w-5 h-5 text-gray-500 mr-2" />
-                  <button>{event.comments.length}</button>
+                  <button>{event.comments?.length || 0}</button>
                 </p>
                 {/* Likes */}
-                <p className="mb-3 font-normal text-gray-400 flex items-center text-sm sm:text-base">
+                <p className="text-gray-400 flex items-center text-sm">
                   <FaHeart className="w-5 h-5 text-red-500 mr-2" />
-                  {event.likes}
+                  {event.likes || 0}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Date with Calendar Icon */}
-          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400 flex items-center text-sm sm:text-base text-wrap">
+          {/* Date */}
+          <p className="mb-3 text-gray-400 flex items-center text-xs md:text-sm">
             {event.date}
           </p>
         </div>

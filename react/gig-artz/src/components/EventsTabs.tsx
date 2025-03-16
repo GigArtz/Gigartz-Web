@@ -27,19 +27,23 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
   const { userList } = useSelector((state: RootState) => state.profile);
 
   return (
-    <div className="min-h-screen max-w-full">
+    <div className="">
       {loading && <Loader message="Loading ..." />}
 
       {/* Trending Events Section */}
-      <div className="mt-2">
+      <div className="mt-2 w-full p-2 rounded-xl">
         <h2 className="text-xl text-white font-semibold mb-4">Trending</h2>
-        <div className="overflow-x-auto scrollbar-hide whitespace-nowrap scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl">
+
+        {/* Scrollable Row */}
+        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full">
           {error && <p className="text-red-500">Error: {error}</p>}
+
           {getFilteredEvents().length === 0 && !loading && !error && (
-            <p className="text-white text-center">No events found.</p>
+            <p className="text-white text-center w-full">No events found.</p>
           )}
+
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start max-w-full">
+            <div key={event.id} className="snap-start flex-shrink-0 w-[100%] p-1">
               <EventCard event={event} cardSize="lg" />
             </div>
           ))}
@@ -47,19 +51,20 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
       </div>
 
       {/* For You Section */}
-      <div className="mt-8">
-        <h2 className="text-xl text-white font-semibold mb-4">
-          Upcoming Events
-        </h2>
-        <div className="overflow-x-auto scrollbar-hide whitespace-nowrap scroll-smooth snap-x flex space-x-4 pb-4">
-          {loading && <p className="text-white">Loading events...</p>}
+      <div className="mt-2 w-full p-2 rounded-xl">
+        <h2 className="text-xl text-white font-semibold mb-4">For You</h2>
+
+        {/* Scrollable Row */}
+        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full justify-evenly">
           {error && <p className="text-red-500">Error: {error}</p>}
+
           {getFilteredEvents().length === 0 && !loading && !error && (
-            <p className="text-white text-center">No events found.</p>
+            <p className="text-white text-center w-full">No events found.</p>
           )}
+
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start">
-              <EventCard event={event} cardSize="sm" />
+            <div key={event.id} className="snap-start flex-shrink-0 w-[49%] p-1">
+              <EventCard event={event} cardSize="md" />
             </div>
           ))}
         </div>
@@ -90,19 +95,22 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
       </div>
 
       {/* Events Near You Section */}
-      <div className="mt-8">
+      <div className="mt-2 w-full p-2 rounded-xl">
         <h2 className="text-xl text-white font-semibold mb-4">
           Events Near You
         </h2>
-        <div className="overflow-x-auto scrollbar-hide whitespace-nowrap scroll-smooth snap-x flex space-x-4 pb-4">
-          {loading && <p className="text-white">Loading events...</p>}
+
+        {/* Scrollable Row */}
+        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full justify-evenly">
           {error && <p className="text-red-500">Error: {error}</p>}
+
           {getFilteredEvents().length === 0 && !loading && !error && (
-            <p className="text-white text-center">No events found.</p>
+            <p className="text-white text-center w-full">No events found.</p>
           )}
+
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start">
-              <EventCard event={event} cardSize="sm" />
+            <div key={event.id} className="snap-start flex-shrink-0 w-[49%] p-1">
+              <EventCard event={event} cardSize="md" />
             </div>
           ))}
         </div>

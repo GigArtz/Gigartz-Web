@@ -19,10 +19,10 @@ const Home: React.FC = () => {
 
   return (
     <div className="main-content">
-      {loading && <Loader message="Loading ..." />}
+     
 
       {/* Main Content */}
-      <div className=" flex flex-col justify-start">
+      <div className="flex flex-col justify-evenly">
         <EventsTabs events={events} loading={loading} error={error} />
       </div>
 
