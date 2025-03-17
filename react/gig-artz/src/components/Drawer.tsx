@@ -61,8 +61,8 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:block fixed top-0 z-10 left-0 w-[100%] md:w-[20%] lg:w-[15%] h-[9%] md:h-[20%] bg-[#060512] shadow-md transition-all duration-300">
-        <div className="lg:flex-col md:block p-2 justify-items-left md:justify-items-center px-2 bg-[#060512] shadow-sm md:mx-4 md:mb-1 md:border-b">
+      <div className="md:block fixed top-0 left-0 w-[100%] md:w-[20%] lg:w-[15%] h-[5%] md:h-[10%] bg-[#060512] shadow-md transition-all duration-300">
+        <div className="lg:flex-col md:block p-2 justify-items-left md:justify-items-center px-2 bg-[#060512] shadow-sm md:mx-4">
           <img
             src={profile?.photoURL || avatar}
             alt="Profile"
@@ -75,7 +75,7 @@ function Drawer() {
       {/* Responsive Sidebar */}
       <div
         id="drawer-navigation"
-        className={`fixed top-20 md:top-[25%] left-0 w-[65%] z-10 md:w-[20%] lg:w-[15%] min-h-screen bg-[#060512] shadow-md transition-all duration-300 ${
+        className={`fixed top-20 border md:top-[25%] lg:top-[24%] left-0 w-[65%]  md:w-[20%] lg:w-[15%] min-h-screen z-10 bg-[#060512] shadow-md transition-all duration-300 ${
           isDrawerOpen ? "block" : "hidden"
         } md:block`}
       >

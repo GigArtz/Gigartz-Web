@@ -4,7 +4,6 @@ import BottomNav from "../components/BottomNav";
 import { fetchAllEvents } from "../store/eventsSlice";
 import { RootState } from "../store/store";
 import EventsTabs from "../components/EventsTabs";
-import Loader from "../components/Loader";
 
 const Home: React.FC = () => {
   const dispatch = useDispatch();
