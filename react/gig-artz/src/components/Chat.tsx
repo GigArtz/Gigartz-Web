@@ -57,7 +57,7 @@ const Chat: React.FC<ChatProps> = ({ conversation }) => {
   }
 
   return (
-    <div className="flex flex-col h-screen md:w-full p-5">
+    <div className="flex flex-col h-screen md:w-full pl-4 py-5">
       {/* Chat Header */}
       <div className="p-4 bg-gray-800 text-white flex items-center rounded-3xl">
         <h2 className="text-lg font-semibold">{conversation.contact}</h2>

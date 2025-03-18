@@ -145,16 +145,16 @@ const EventDetails = () => {
             <FaCalendar className="w-5 h-5 text-white mr-2" /> {event.date}
           </p>
           <p className="flex items-center">
-            <FaLocationArrow className="w-5 h-5 text-white mr-2" />{" "}
+            <FaLocationArrow className="w-5 h-5 text-white mr-2 mt-2" />{" "}
             {event.venue}
           </p>
         </div>
-        <div>
+        <div className="">
           <p className="flex items-center">
             <FaClock className="w-5 h-5 text-white mr-2" /> {event.time}
           </p>
           <p className="flex items-center">
-            <FaClock className="w-5 h-5 text-white mr-2" /> {event.category}
+            <FaClock className="w-5 h-5 text-white mr-2 mt-2" /> {event.category}
           </p>
         </div>
       </div>

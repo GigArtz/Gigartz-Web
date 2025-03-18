@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { FaHome, FaSearch, FaPlus, FaBell, FaEnvelope } from "react-icons/fa"; // Importing icons from react-icons
 import { useNavigate } from "react-router-dom";
 import Modal from "./EventFormModal"; // Import the Modal component
@@ -21,12 +21,12 @@ function BottomNav() {
       {/* Bottom Navigation */}
       <div
         className="fixed z-50 h-16 max-w-lg -translate-x-1/2 bg-[#060512] border border-gray-700 rounded-full bottom-4 left-1/2 dark:bg-gray-800 dark:border-gray-600 w-4/5"
-       hidden={isModalOpen}
+        hidden={isModalOpen}
       >
         <div className="grid h-full max-w-lg grid-cols-5 mx-auto">
           {/* Home Button */}
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
             data-tooltip-target="tooltip-home"
             type="button"
             className="inline-flex flex-col items-center justify-center px-5 rounded-s-full hover:bg-gray-700 dark:hover:bg-gray-600 group"
@@ -37,8 +37,8 @@ function BottomNav() {
 
           {/* Search Button */}
           <button
-             onClick={openModal} // Open modal on click
-              data-tooltip-target="tooltip-search"
+            onClick={() => navigate("/explore")}
+            data-tooltip-target="tooltip-search"
             type="button"
             className="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 dark:hover:bg-gray-600 group"
           >

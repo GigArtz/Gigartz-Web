@@ -1,11 +1,11 @@
 import React from 'react'
 
-function Notifications() {
+function Wallet() {
   return (
     <div className='main-content'>
-      <div>Notifications</div>
+        <div>Wallet</div>
     </div>
   )
 }
 
-export default Notifications
+export default Wallet

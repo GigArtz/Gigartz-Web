@@ -1,11 +1,11 @@
 import React from 'react'
 
-function Notifications() {
+function GuestList() {
   return (
     <div className='main-content'>
-      <div>Notifications</div>
+        <div>GuestList</div>
     </div>
   )
 }
 
-export default Notifications
+export default GuestList

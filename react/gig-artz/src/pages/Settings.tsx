@@ -1,11 +1,11 @@
 import React from 'react'
 
-function Notifications() {
+function Settings() {
   return (
     <div className='main-content'>
-      <div>Notifications</div>
+        <div>Settings</div>
     </div>
   )
 }
 
-export default Notifications
+export default Settings

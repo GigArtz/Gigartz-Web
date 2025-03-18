@@ -4,7 +4,6 @@ import UserCard from "./UserCard";
 import { AppDispatch, RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProfiles } from "../store/profileSlice";
-import Loader from "./Loader";
 
 interface EventsTabsProps {
   events: any[];
@@ -26,9 +25,22 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
   const { userList } = useSelector((state: RootState) => state.profile);
 
+  if (loading)
+    return (
+      <div className="flex mt-8 justify-center items-center">
+        <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+
   return (
     <div className="">
-      {loading && <Loader message="Loading ..." />}
+      {/* Spinner */}
+
+      {loading && (
+        <div className="flex justify-center">
+          <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
+        </div>
+      )}
 
       {/* Trending Events Section */}
       <div className="mt-2 w-full p-2 rounded-xl">
@@ -43,7 +55,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           )}
 
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start flex-shrink-0 w-[100%] p-1">
+            <div
+              key={event.id}
+              className="snap-start flex-shrink-0 w-[100%] p-1"
+            >
               <EventCard event={event} cardSize="lg" />
             </div>
           ))}
@@ -63,7 +78,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           )}
 
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start flex-shrink-0 w-[49%] p-1">
+            <div
+              key={event.id}
+              className="snap-start flex-shrink-0 w-[49%] p-1"
+            >
               <EventCard event={event} cardSize="md" />
             </div>
           ))}
@@ -109,7 +127,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           )}
 
           {getFilteredEvents().map((event) => (
-            <div key={event.id} className="snap-start flex-shrink-0 w-[49%] p-1">
+            <div
+              key={event.id}
+              className="snap-start flex-shrink-0 w-[49%] p-1"
+            >
               <EventCard event={event} cardSize="md" />
             </div>
           ))}

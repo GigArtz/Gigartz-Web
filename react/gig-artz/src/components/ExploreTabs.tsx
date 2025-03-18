@@ -30,7 +30,7 @@ function ExploreTabs() {
 
   return (
     <div>
-      <div>
+      <div className="mt-2">
         <div className="relative rounded-lg border border-gray-700 dark:border-gray-700 bg-[#060512] dark:bg-gray-700">
           <form>
             <input
@@ -57,8 +57,9 @@ function ExploreTabs() {
           </form>
         </div>
       </div>
-      <div className="text-sm font-medium text-center text-gray-500 border-b dark:border-gray-700">
-        <ul className="flex flex-wrap -mb-px">
+
+      <div className="text-sm font-medium text-center  text-gray-500 border-b border-gray-700">
+        <ul className="flex flex-wrap justify-between -mb-px">
           <li className="me-2">
             <button
               onClick={() => setActiveTab("top")}
@@ -113,9 +114,13 @@ function ExploreTabs() {
       </div>
 
       <div className="p-4">
-        {loading && <p className="text-gray-500">Loading...</p>}
+        {loading &&  (
+        <div className="flex mt-8 justify-center items-center">
+          <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
+        </div>
+        )}
+        
         {error && <p className="text-red-500">Error: {error}</p>}
-
         {!loading && !error && (
           <>
             {activeTab === "top" && (

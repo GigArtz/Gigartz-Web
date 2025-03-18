@@ -51,6 +51,14 @@ const People: React.FC = () => {
     dispatch(followUser(user_id, uid));
   };
 
+  if (loading) {
+    return (
+      <div className="main-content">
+        <p className="text-center">loading...</p>
+      </div>
+    );
+  }
+
   if (!userProfile) {
     return (
       <div className="main-content">

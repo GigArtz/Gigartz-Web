@@ -3,7 +3,7 @@ import EventCard from "./EventCard";
 import { useSelector } from "react-redux";
 import Loader from "./Loader";
 
-function ProfileTabs({ uid}) {
+function ProfileTabs({ uid }) {
   const { loading, error } = useSelector((state) => state.profile);
 
   const events = useSelector((state) => state.events);
@@ -17,7 +17,6 @@ function ProfileTabs({ uid}) {
 
   return (
     <div>
-      {loading && <Loader message="Loading ..." />}
       <div className="text-sm font-medium text-center border-b text-gray-400 border-gray-700">
         <ul className="flex flex-wrap -mb-px">
           <li className="me-2">
@@ -48,19 +47,30 @@ function ProfileTabs({ uid}) {
       </div>
 
       <div className="p-4">
-        {loading && <p className="text-gray-500">Loading...</p>}
+        {/* Spinner */}
+
+        {loading && (
+          <div className="flex justify-center">
+            <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
+          </div>
+        )}
+
         {error && <p className="text-red-500">Error: {error}</p>}
 
         {!loading && !error && (
           <>
             {activeTab === "gigGuide" && (
-              <div className="flex flex-row gap-2" >
+              <div className="flex flex-row gap-2">
                 {userEvents.length > 0 ? (
-                  userEvents.map((event) => <div className="mb-2">
-                    <EventCard key={event.id} event={event} cardSize="md" />
-                  </div>)
+                  userEvents.map((event) => (
+                    <div className="mb-2">
+                      <EventCard key={event.id} event={event} cardSize="md" />
+                    </div>
+                  ))
                 ) : (
-                  <p className="text-gray-400 text-center mt-4">No events found.</p>
+                  <p className="text-gray-400 text-center mt-4">
+                    No events found.
+                  </p>
                 )}
               </div>
             )}
