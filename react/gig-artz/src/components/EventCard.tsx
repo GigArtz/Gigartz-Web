@@ -39,7 +39,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
 
         <div className="p-5 flex flex-col flex-1">
           <div className="flex justify-between">
-            <h5 className="mb-2 text-base md:text-2xl font-bold text-white text-wrap">
+            <h5 className={`mb-2 text-base md:text-2xl font-bold text-white text-wrap line-clamp-1 ${
+            cardSize === "sm"
+              ? "w-40"
+              : cardSize === "md"
+              ? "text-sm md:text-sm"
+              : "text-lg"
+          }`}>
               {event.title}
             </h5>
 
@@ -47,12 +53,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
               <div className="flex gap-2">
                 {/* Comments */}
                 <p className="text-gray-400 flex items-center text-sm">
-                  <FaComment className="w-5 h-5 text-gray-500 mr-2" />
+                  <FaComment className="w-4 h-4 text-gray-500 mr-2" />
                   <button>{event.comments?.length || 0}</button>
                 </p>
                 {/* Likes */}
                 <p className="text-gray-400 flex items-center text-sm">
-                  <FaHeart className="w-5 h-5 text-gray-500 mr-2 hover:text-red-500" />
+                  <FaHeart className="w-4 h-4 text-gray-500 mr-2 hover:text-red-500" />
                   {event.likes || 0}
                 </p>
               </div>
@@ -61,7 +67,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
 
           {/* Date */}
           <p className="mb-3 text-gray-400 flex items-center text-xs md:text-sm">
-            {event.date}
+            {new Date(event.date).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
           </p>
         </div>
       </div>

@@ -70,7 +70,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
         <h2 className="text-xl text-white font-semibold mb-4">For You</h2>
 
         {/* Scrollable Row */}
-        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full justify-evenly">
+        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-2 md:space-x-4 pb-4 rounded-xl w-full justify-evenly">
           {error && <p className="text-red-500">Error: {error}</p>}
 
           {getFilteredEvents().length === 0 && !loading && !error && (

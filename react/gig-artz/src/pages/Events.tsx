@@ -48,13 +48,11 @@ const EventDetails = () => {
   const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.auth);
 
-  // Comments Modal 
+  // Comments Modal
   const [isVisible, setIsVisible] = React.useState(false);
 
   // Share Modal
   const [isShareVisible, setIsShareVisible] = React.useState(false);
-
-
 
   useEffect(() => {
     const foundEvent = eventData.find((e) => e.id === eventId);
@@ -150,7 +148,10 @@ const EventDetails = () => {
 
         <div className="flex gap-4 text-gray-400 text-sm md:text-base">
           <p className="flex items-center">
-            <FaComment onClick={() => showComments} className="w-5 h-5 hover:text-teal-500 mr-2" />{" "}
+            <FaComment
+              onClick={() => showComments}
+              className="w-5 h-5 hover:text-teal-500 mr-2"
+            />{" "}
             {event.comments.length}
           </p>
           <p className="flex items-center">
@@ -176,7 +177,12 @@ const EventDetails = () => {
       <div className="mt-4 mb-4 grid grid-cols-2 gap-4 sticky top-3">
         <div>
           <p className="flex items-center">
-            <FaCalendar className="w-5 h-5 text-white mr-2" /> {event.date}
+            <FaCalendar className="w-5 h-5 text-white mr-2" />{" "}
+            {new Date(event.date).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
           </p>
           <p className="flex items-center">
             <FaLocationArrow className="w-5 h-5 text-white mr-2 mt-2" />{" "}

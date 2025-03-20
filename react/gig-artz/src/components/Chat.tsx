@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { Message } from "../store/messageSlice";
 import { FaPaperclip, FaPaperPlane } from "react-icons/fa";
+import { formatDate } from "../helpers/Formats";
 
 interface ChatProps {
   conversation?: {
@@ -21,15 +22,6 @@ const Chat: React.FC<ChatProps> = ({ conversation }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation?.messages]);
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
-  };
-
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-  };
 
   const groupMessagesByDate = () => {
     const grouped: { [date: string]: Message[] } = {};

@@ -13,6 +13,8 @@ import {
   FaTicketAlt,
   FaCalendar,
   FaSignOutAlt,
+  FaArrowAltCircleLeft,
+  FaArrowLeft,
 } from "react-icons/fa"; // Importing icons from react-icons
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -62,15 +64,18 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:hidden fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
-        <div className="p-2 px-2 bg-[#060512] shadow-sm">
+      <div className="md:hidden border fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+        <div className="p-2 px-2 bg-[#060512] shadow-sm flex justify-between items-center">
+          <div className="flex flex-row text-center gap-4 border">
+            <FaArrowLeft className="text-white" />
+            <p className="text-white text-xl font-semibold">Location</p>
+          </div>
           <img
             src={profile?.photoURL || avatar}
             alt="Profile"
             className="w-12 h-12 md:w-20 md:h-20 rounded-full border-4 border-gray-900 cursor-pointer"
             onClick={toggleDrawer} // Toggle drawer on click
           />
-          <p>Location</p>
         </div>
       </div>
 
@@ -99,7 +104,7 @@ function Drawer() {
           </div>
         </div>
 
-        <hr className="mx-3 hidden md:block"/>
+        <hr className="mx-3 hidden md:block" />
 
         {/* Navigation Links */}
         <nav className="py-4 mt-14 md:mt-1 overflow-y-auto max-h-[75vh] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-800">
