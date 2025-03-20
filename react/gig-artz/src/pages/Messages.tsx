@@ -4,6 +4,7 @@ import { AppDispatch, RootState } from "../store/store";
 import { getMessages, sendMessage, Message } from "../store/messageSlice";
 import Loader from "../components/Loader";
 import Chat from "../components/Chat";
+import Header from "../components/Header";
 
 const Messages: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -57,7 +58,7 @@ const Messages: React.FC = () => {
         {error && <div className="text-red-500 text-sm">{error}</div>}
 
         {/* Conversations */}
-        <div className="max-h-[75vh] overflow-y-auto space-y-3">
+        <div className="max-h-[100vh] overflow-y-auto space-y-3">
           {conversations.length === 0 ? (
             <p className="text-gray-500">No messages yet</p>
           ) : (
@@ -103,7 +104,7 @@ const Messages: React.FC = () => {
         </button>
       </div>
 
-      {/* Chat Panel */}
+      {/* Desktop Chat Panel */}
       <div className="hidden md:flex flex-1 items-center justify-center">
         {activeConversation ? (
           <Chat conversation={getConversation(activeConversation)} />
@@ -112,13 +113,51 @@ const Messages: React.FC = () => {
             <p className="mb-16">Select a conversation to start chatting.</p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="mb-4 text-white w-40 rounded-3xl btn-primary"
+              className="hidden md:block mb-4 text-white w-40 rounded-3xl btn-primary"
             >
               New Message
             </button>
           </div>
         )}
       </div>
+
+      {/* Mobile Chat Modal */}
+      {activeConversation && (
+        <div className="fixed z-10 inset-0 bg-black bg-opacity-70 flex md:hidden">
+          <div className="bg-[#060512] h-full w-full flex flex-col relative">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-[#060512] sticky top-0 z-10">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                {contacts?.contact || "Unknown"}
+              </h3>
+              <button
+                onClick={() => setActiveConversation(null)}
+                className="text-gray-500 hover:text-red-500 transition"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Chat Component (Scrollable) */}
+            <div className="flex-1 overflow-y-auto">
+              <Chat conversation={getConversation(activeConversation)} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Message Modal */}
       {isModalOpen && (
