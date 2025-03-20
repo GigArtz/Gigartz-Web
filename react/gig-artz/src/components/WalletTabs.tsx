@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import EventCard from "./EventCard";
 import { useSelector } from "react-redux";
 
-function ProfileTabs({ uid }) {
+function WalletTabs({ uid }) {
   const { loading, error } = useSelector((state) => state.profile);
   const events = useSelector((state) => state.events);
 
@@ -11,32 +11,45 @@ function ProfileTabs({ uid }) {
   // State to track active tab
   const [activeTab, setActiveTab] = useState("gigGuide");
 
+ 
   return (
     <div>
       <div className="text-sm font-medium text-center border-b text-gray-400 border-gray-700 flex flex-col">
-        <ul className="flex flex-wrap justify-items-stretch -mb-px">
+        <ul className="flex flex-wrap justify-between -mb-px">
           <li className="me-2">
             <button
-              onClick={() => setActiveTab("gigGuide")}
+              onClick={() => setActiveTab("events")}
               className={`inline-block p-4 border-b-2 rounded-t-lg ${
                 activeTab === "gigGuide"
                   ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
                   : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
               }`}
             >
-              Gig Guide
+              Events
             </button>
           </li>
           <li className="me-2">
             <button
-              onClick={() => setActiveTab("reviews")}
+              onClick={() => setActiveTab("tips")}
               className={`inline-block p-4 border-b-2 rounded-t-lg ${
                 activeTab === "reviews"
                   ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
                   : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
               }`}
             >
-              Reviews
+              Tips
+            </button>
+          </li>
+          <li className="me-2">
+            <button
+              onClick={() => setActiveTab("bookings")}
+              className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                activeTab === "reviews"
+                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
+                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+              }`}
+            >
+              Bookings
             </button>
           </li>
         </ul>
@@ -81,4 +94,4 @@ function ProfileTabs({ uid }) {
   );
 }
 
-export default ProfileTabs;
+export default WalletTabs;

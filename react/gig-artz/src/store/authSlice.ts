@@ -92,6 +92,8 @@ const authSlice = createSlice({
       state.user = null;
       state.uid = null;
       state.error = null;
+      // Clear local storage
+      localStorage.removeItem("user");
     },
     resetError(state) {
       state.error = null;
@@ -168,6 +170,9 @@ export const loginUser = (credentials: { email: string; password: string }) => a
       }));
 
       console.log("Login Successful!");
+
+      // Save user data to local storage
+      localStorage.setItem("user", JSON.stringify(response.data.user));
     }
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

@@ -1,9 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchUserProfile } from "../store/profileSlice"; // Import fetchUserProfile
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../store/store";
-import People from "../pages/People";
 
 interface User {
   uid: string;

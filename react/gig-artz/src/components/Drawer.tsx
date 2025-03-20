@@ -9,6 +9,10 @@ import {
   FaBell,
   FaEnvelope,
   FaPlus,
+  FaQrcode,
+  FaTicketAlt,
+  FaCalendar,
+  FaSignOutAlt,
 } from "react-icons/fa"; // Importing icons from react-icons
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -28,31 +32,28 @@ function Drawer() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // State to control drawer visibility
 
-  // Function to open the modal
-  const openModal = () => setIsModalOpen(true);
-
-  // Function to close the modal
-  const closeModal = () => setIsModalOpen(false);
-
-  // Function to toggle the drawer
-  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
-
   useEffect(() => {
     dispatch(fetchUserProfile(user?.uid));
   }, [user, dispatch]);
 
-  console.log(profile);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   const navItems = [
     { icon: FaHome, label: "Home", link: "/home" },
     { icon: FaUsers, label: "Guest Lists", link: "/guest-lists" },
     { icon: FaWallet, label: "Wallet", link: "/wallet" },
+    { icon: FaQrcode, label: "Scan Ticket", link: "/scan" },
+    { icon: FaTicketAlt, label: "Tickets", link: "/tickets" },
+    { icon: FaCalendar, label: "Bookings", link: "/bookings" },
     { icon: FaSearch, label: "Explore", link: "/explore" },
     { icon: FaBell, label: "Notifications", link: "/notifications" },
     { icon: FaEnvelope, label: "Messages", link: "/messages" },
     { icon: FaDollarSign, label: "Monetization", link: "/monetization" },
     { icon: FaCog, label: "Settings", link: "/settings" },
     { icon: FaUser, label: "Profile", link: "/profile" },
+    { icon: FaSignOutAlt, label: "Sign Out", link: "/sign-out" },
   ];
 
   return (
@@ -61,48 +62,47 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:hidden fixed z-10 top-0 left-0 w-[100%] md:w-[20%] lg:w-[15%] md:h-[10%] shadow-md transition-all duration-300">
-        <div className="lg:flex-col md:block p-2 justify-items-left md:justify-items-center px-2 bg-[#060512] shadow-sm md:mx-4">
+      <div className="md:hidden fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+        <div className="p-2 px-2 bg-[#060512] shadow-sm">
           <img
             src={profile?.photoURL || avatar}
             alt="Profile"
-            className="w-12 h-12  md:w-20 md:h-20 rounded-full border-4 border-gray-900"
+            className="w-12 h-12 md:w-20 md:h-20 rounded-full border-4 border-gray-900 cursor-pointer"
             onClick={toggleDrawer} // Toggle drawer on click
           />
-
           <p>Location</p>
         </div>
-
-        <div></div>
       </div>
 
       {/* Responsive Sidebar */}
       <div
         id="drawer-navigation"
-        className={`fixed top-20 md:top-[25%] lg:top-[20%] left-0 w-[65%]  md:w-[20%] lg:w-[15%] min-h-screen z-10 bg-[#060512] shadow-md transition-all duration-300 ${
+        className={`fixed top-20 md:top-[25%] lg:top-[20%] left-0 w-[65%] md:w-[20%] lg:w-[15%] min-h-screen z-10 bg-[#060512] shadow-md transition-all duration-300 ${
           isDrawerOpen ? "block" : "hidden"
         } md:block`}
       >
         {/* Profile Section */}
-        <div className="fixed top-0 px-3 left-0 w-[65%] md:w-[20%] lg:w-[15%] h-[10%] md:h-[20%] bg-[#060512] shadow-md transition-all duration-300">
-          <div className="md:block justify-items-center md:justify-items-center p-2 bg-[#060512] md:border-b">
+        <div className="fixed items-center top-0 px-3 left-0 w-[65%] md:w-[20%] lg:w-[15%] h-[10%] md:h-[20%] bg-[#060512] shadow-md">
+          <div className="md:block border-b md:border-b-0 md:justify-items-center p-2">
             <img
               src={profile?.photoURL || avatar}
               alt="Profile"
-              className="w-12 h-12 md:w-20 md:h-20 rounded-full border-2 border-teal-500"
+              className="w-12 h-12 md:w-20 md:h-20 rounded-full border-2 border-teal-500 cursor-pointer"
               onClick={toggleDrawer} // Toggle drawer on click
             />
-            <p className="text-lg font-medium text-white mt-4 md:block">
+            <p className="text-lg font-medium text-white mt-4">
               {profile?.userName || "brooke lines"}
             </p>
-            <p className="text-sm font-medium text-teal-400 md:block">
+            <p className="text-sm font-medium text-teal-400">
               {profile?.bio || "brooke lines"}
             </p>
           </div>
         </div>
 
+        <hr className="mx-3 hidden md:block"/>
+
         {/* Navigation Links */}
-        <nav className="py-4 my-auto mt-14 md:mt-1">
+        <nav className="py-4 mt-14 md:mt-1 overflow-y-auto max-h-[75vh] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-800">
           <ul className="space-y-2 font-medium lg:pt-3 px-4">
             {navItems.map((item, index) => {
               const isActive = location.pathname.includes(item.link); // Check if current route matches
@@ -125,22 +125,20 @@ function Drawer() {
                         isActive ? "text-teal-400" : "text-white-400"
                       }`}
                     />
-                    <span className="ml-3 md:block">{item.label}</span>
+                    <span className="ml-3">{item.label}</span>
                   </a>
                 </li>
               );
             })}
           </ul>
 
-          <div className="flex flex-row font-medium px-2 py-1 mb-2 mt-2 justify-center rounded-2xl">
+          <div className="flex flex-row font-medium px-2 py-1 mt-4 justify-center">
             {/* Add Button */}
             <button
               onClick={openModal} // Open modal on click
-              data-tooltip-target="tooltip-add"
               type="button"
-              className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 group focus:ring-4 focus:ring-teal-300 focus:outline-none dark:focus:ring-teal-800"
+              className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
             >
-              {/* <FaPlus className="w-4 h-4 text-white" /> */}
               Create
             </button>
           </div>

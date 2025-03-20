@@ -391,7 +391,7 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
   dispatch(eventsSlice.actions.createLikeStart());
 
   try {
-    console.log("Adding like...");
+    console.log("Adding like...", eventId, userId );
     const response = await axios.post(
       `https://gigartz.onrender.com/addLike`,
       { eventId, userId }

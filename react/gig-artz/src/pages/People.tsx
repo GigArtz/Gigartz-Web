@@ -6,6 +6,7 @@ import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import ProfileTabs from "../components/ProfileTabs";
 import { RootState, AppDispatch } from "../store/store";
+import { FaEnvelope, FaPlus } from "react-icons/fa";
 
 // User Profile Type
 interface UserProfile {
@@ -83,7 +84,9 @@ const People: React.FC = () => {
       </div>
 
       <div className="p-5">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          <button><FaPlus /></button>
+          <button><FaEnvelope /></button>
           <button
             onClick={handleFollow}
             className={`border px-4 py-1 rounded-2xl ${

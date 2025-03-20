@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import image from "../assets/blue.jpg"; // Default fallback image
 import { FaHeart, FaComment } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 interface EventCardProps {
   event: {
@@ -51,7 +52,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
                 </p>
                 {/* Likes */}
                 <p className="text-gray-400 flex items-center text-sm">
-                  <FaHeart className="w-5 h-5 text-red-500 mr-2" />
+                  <FaHeart className="w-5 h-5 text-gray-500 mr-2 hover:text-red-500" />
                   {event.likes || 0}
                 </p>
               </div>
