@@ -44,9 +44,9 @@ function Drawer() {
 
   const navItems = [
     { icon: FaHome, label: "Home", link: "/home" },
-    { icon: FaUsers, label: "Guest Lists", link: "/guest-lists" },
+    { icon: FaUsers, label: "Guest Lists", link: "/guest-list" },
     { icon: FaWallet, label: "Wallet", link: "/wallet" },
-    { icon: FaQrcode, label: "Scan Ticket", link: "/scan" },
+    { icon: FaQrcode, label: "Scan Ticket", link: "/scanner" },
     { icon: FaTicketAlt, label: "Tickets", link: "/tickets" },
     { icon: FaCalendar, label: "Bookings", link: "/bookings" },
     { icon: FaSearch, label: "Explore", link: "/explore" },
@@ -64,18 +64,28 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:hidden border fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+      <div className="md:hidden border-b border-gray-500 fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
         <div className="p-2 px-2 bg-[#060512] shadow-sm flex justify-between items-center">
-          <div className="flex flex-row text-center gap-4 border">
-            <FaArrowLeft className="text-white" />
-            <p className="text-white text-xl font-semibold">Location</p>
+          <div className="flex flex-row text-center gap-4 px-2">
+            <div className="flex align-middle p-2">
+              <FaArrowLeft className="text-white " />
+            </div>
           </div>
-          <img
-            src={profile?.photoURL || avatar}
-            alt="Profile"
-            className="w-12 h-12 md:w-20 md:h-20 rounded-full border-4 border-gray-900 cursor-pointer"
-            onClick={toggleDrawer} // Toggle drawer on click
-          />
+
+          <div>
+            <p className="text-white text-xl font-semibold capitalize text-center">
+              {location.pathname.split("/")}
+            </p>
+          </div>
+
+          <div className="">
+            <img
+              src={profile?.photoURL || avatar}
+              alt="Profile"
+              className="w-12 h-12 md:w-20 md:h-20 rounded-full border-4 border-gray-900 cursor-pointer"
+              onClick={toggleDrawer} // Toggle drawer on click
+            />
+          </div>
         </div>
       </div>
 

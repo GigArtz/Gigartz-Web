@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import AddEventForm from "./EventForm";
 
-function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: () => void }) {
+function Modal({
+  isModalOpen,
+  closeModal,
+}: {
+  isModalOpen: boolean;
+  closeModal: () => void;
+}) {
   // Focus the modal when it's opened for better accessibility
   useEffect(() => {
     if (isModalOpen) {
@@ -19,7 +25,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
           id="authentication-modal"
           tabIndex={-1}
           aria-hidden={!isModalOpen} // Accessibility improvement for screen readers
-          className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center px-2 w-full h-full bg-[#1F1C29] bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
+          className="fixed top-0 left-0 right-0 z-10 flex justify-center items-center px-2 w-full h-full bg-[#1F1C29] bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
         >
           <div
             className="relative p-4 w-full max-w-lg rounded-lg shadow-lg bg-[#1F1C29] transform transition-all duration-300 ease-in-out"
@@ -28,18 +34,11 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
             aria-hidden={!isModalOpen ? "true" : "false"}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-2 md:p-5 border-b rounded-t border-gray-600">
-              <h3
-                id="modal-title"
-                className="text-lg md:text-xl font-semibold text-white"
-              >
-                Event Details
-              </h3>
-              {/* Close Button */}
-              <button
+            <div className="flex items-end justify-end p-2 md:p-5 rounded-t">
+            <button
                 onClick={closeModal}
                 type="button"
-                className="text-gray-400 bg-transparent hover:bg-red-300 hover:text-red-900 rounded-full p-2 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
+                className="text-gray-400 bg-transparent hover:bg-red-300 hover:text-red-900 rounded-full inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
               >
                 <svg
                   className="w-4 h-4"
@@ -61,8 +60,7 @@ function Modal({ isModalOpen, closeModal }: { isModalOpen: boolean; closeModal: 
             </div>
 
             {/* Modal Content */}
-            <div className="px-2 md:max-h-[70vh] overflow-y-auto ">
-              
+            <div className="px-2 md:max-h-[70vh] max-h-[60vh]  overflow-y-auto ">
               {/* Ensure AddEventForm is always within the modal */}
               <AddEventForm />
             </div>

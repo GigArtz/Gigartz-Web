@@ -75,7 +75,7 @@ const AddEventForm: React.FC = () => {
   };
 
   return (
-    <div className="justify-center items-center z-20">
+    <div className="justify-center items-center z-30">
       <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
         <div className="rounded-lg">
           {step === 1 && (
@@ -101,7 +101,7 @@ const AddEventForm: React.FC = () => {
           {step === 6 && <Step6 formData={formData} />}
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between ">
           {step > 1 && (
             <button
               onClick={() => setStep((prev) => prev - 1)}
@@ -149,8 +149,9 @@ const AddEventForm: React.FC = () => {
 
 // Step 1: Basic Event Details
 const Step1 = ({ formData, handleChange }) => (
-  <div className="space-y-4">
-    <label className="block text-white">Event Event</label>
+  <div className="space-y-2">
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">Event Details</label>
+    <label className="block text-white">Event Name</label>
     <input
       type="text"
       name="title"
@@ -193,8 +194,8 @@ const Step1 = ({ formData, handleChange }) => (
 
 // Step 2: Artist Lineup
 const Step2 = ({ formData, handleArtistChange, dispatch }) => (
-  <div className="space-y-4 ">
-    <label className="block text-white">Artist Line Up</label>
+  <div className="space-y-2">
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-5 text-center">Artist Line Up</label>
     {formData.artistLineUp.map((artist, index) => (
       <div key={index} className="flex">
         <input
@@ -225,7 +226,9 @@ const Step2 = ({ formData, handleArtistChange, dispatch }) => (
 
 // Step 3: Event Schedule
 const Step3 = ({ formData, handleChange }) => (
-  <div className="space-y-4">
+  <div className="space-y-2">
+    
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">Event Date and Time</label>
     <label className="block text-white">Select Date</label>
     <input
       type="date"
@@ -297,7 +300,6 @@ const Step4 = () => {
         info: "",
         ticketReleaseDate: "",
         ticketReleaseTime: "",
-        availability: "",
       });
 
       setIsAdding(false);
@@ -313,9 +315,9 @@ const Step4 = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-white text-xl">Tickets</h2>
-
+    <div className="space-y-2">
+      
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">Event Tickets</label>
       {/* Existing Tickets List */}
       {tickets.map((ticket, index) => (
         <div key={index} className="space-y-2 border-b border-gray-500 pb-4">
@@ -333,7 +335,7 @@ const Step4 = () => {
 
       {/* Add New Ticket Section */}
       {isAdding ? (
-        <div className="space-y-2 border border-gray-500 p-4 rounded-lg">
+        <div className="space-y-2">
           {!isTypeSelected && ( <h3 className="text-white">Add New Ticket</h3>)}
          
 
@@ -447,7 +449,9 @@ const Step4 = () => {
 
 // Step 4: Media Uploads
 const Step5 = ({ formData, handleChange }) => (
-  <div className="space-y-4">
+  <div className="space-y-2">
+    
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center mb-4">Event Gallery</label>
     <label className="block text-white">Event Video</label>
     <input
       type="file"
@@ -470,7 +474,7 @@ const Step5 = ({ formData, handleChange }) => (
 // Step 5: Confirmation
 const Step6 = ({ formData }) => (
   <div className="space-y-4">
-    <h2 className="text-white text-2xl">Confirm Your Event</h2>
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center">Event Summary</label>
     <pre className="text-white">{JSON.stringify(formData, null, 2)}</pre>
   </div>
 );
