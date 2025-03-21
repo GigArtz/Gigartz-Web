@@ -223,11 +223,12 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
 
   try {
     console.log("Adding event...");
+    console.log(eventData);
     const response = await axios.post(
       `https://gigartz.onrender.com/addevent`,
       eventData
     );
-    console.log("Event added successfully:", response.data);
+    console.log("Event added successfully:", response?.data?.error);
 
     dispatch(
       eventsSlice.actions.createEventsSuccess("Event added successfully!")
@@ -236,10 +237,10 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        console.error("Response error:", axiosError.response);
         dispatch(
           eventsSlice.actions.createEventsFailure(
-            axiosError.response?.data?.error || "Failed to add event"
+            axiosError.response?.data || "Failed to add event"
           )
         );
       } else if (axiosError.request) {

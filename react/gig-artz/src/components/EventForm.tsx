@@ -1,32 +1,42 @@
-import React, { useState, useReducer, useCallback } from "react";
+import { RootState } from "../store/store";
+import { addEvent } from "../store/eventsSlice";
+import React, { useState, useReducer, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaCircle, FaTrash } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+// Initialize Firebase Storage
+const storage = getStorage();
 
 // Initial form state
 const initialState = {
+  // Basic Event Details
   title: "",
   description: "",
   category: "",
-  eventType: "",
-  hostName: "",
-  promoterId: "AUTO_GENERATED_ID", // Could be hidden or auto-filled
+  eventType: "Public", // Default to Public, can be changed to Private
+  promoterId: "", // Could be hidden or auto-filled
   complimentaryTicket: false,
   tip: false,
+
+  // Event Schedule
   date: "",
   eventStartTime: "",
   eventEndTime: "",
-  time: "",
+
+  // Venue
   venue: "",
-  artistLineUp: [""], // Dynamic array
-  ticketsAvailable: [{}],
-  eventVideo: null,
+
+  // Artist Lineup
+  artistLineUp: [""], // Dynamic array for artists
+
+  // Tickets Section
+  ticketsAvailable: {}, // Each ticket will be an object with type, price, quantity, etc.
+
+  // Media Uploads
+  eventVideo: "",
   gallery: [],
-  // Add missing fields here
-  ticketReleaseDate: "",
-  ticketReleaseTime: "",
-  info: "",
-  price: "",
-  quantity: "",
-  type: "",
 };
 
 // Reducer function
@@ -35,11 +45,31 @@ const formReducer = (state, action) => {
     return { ...state, [action.name]: action.value };
   }
   if (action.type === "updateNested") {
-    const updatedTickets = [...state.ticketsAvailable];
-    updatedTickets[action.index] = {
-      ...updatedTickets[action.index],
+    const updatedTickets = { ...state.ticketsAvailable };
+    updatedTickets[action.ticketType] = {
+      ...updatedTickets[action.ticketType],
       [action.name]: action.value,
     };
+    return { ...state, ticketsAvailable: updatedTickets };
+  }
+  if (action.type === "addTicket") {
+    return {
+      ...state,
+      ticketsAvailable: {
+        ...state.ticketsAvailable,
+        [action.ticketType]: {
+          price: action.ticket.price,
+          quantity: action.ticket.quantity,
+          ticketInfo: action.ticket.ticketInfo,
+          ticketReleaseDate: action.ticket.ticketReleaseDate,
+          ticketReleaseTime: action.ticket.ticketReleaseTime,
+        },
+      },
+    };
+  }
+  if (action.type === "removeTicket") {
+    const updatedTickets = { ...state.ticketsAvailable };
+    delete updatedTickets[action.ticketType];
     return { ...state, ticketsAvailable: updatedTickets };
   }
   if (action.type === "updateArray") {
@@ -55,28 +85,97 @@ const formReducer = (state, action) => {
     updatedArray.splice(action.index, 1);
     return { ...state, artistLineUp: updatedArray };
   }
-  if (action.type === "addTicket") {
-    return {
-      ...state,
-      ticketsAvailable: [...state.ticketsAvailable, action.ticket],
-    };
-  }
-  if (action.type === "removeTicket") {
-    const updatedTickets = [...state.ticketsAvailable];
-    updatedTickets.splice(action.index, 1);
-    return { ...state, ticketsAvailable: updatedTickets };
-  }
   return state;
 };
 
 const AddEventForm: React.FC = () => {
+  const dispatchRedux = useDispatch(); // Use Redux dispatch
   const [step, setStep] = useState(1);
   const [formData, dispatch] = useReducer(formReducer, initialState);
+  const { profile } = useSelector((state: RootState) => state.profile);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const localUser = (() => {
+    const storedAuthUser = localStorage.getItem("authUser");
+    return storedAuthUser ? JSON.parse(storedAuthUser) : null;
+  })();
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        // Fallback to localStorage user
+        setCurrentUser(localUser || null);
+      }
+    });
+
+    return () => unsubscribe();
+    console.log(profile);
+  }, []); // Dependency array ensures this runs only once on mount
+
+  useEffect(() => {
+    // Extract UID from Firebase or localStorage
+    const uid = profile?.id || currentUser?.uid || localUser?.uid;
+
+    if (uid && formData.promoterId !== uid) {
+      dispatch({
+        type: "update",
+        name: "promoterId",
+        value: uid,
+      });
+    }
+  }, [profile?.id, currentUser?.uid, localUser?.uid, formData.promoterId]);
+  // Ensure dependencies are stable and avoid unnecessary re-renders
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     const finalValue = type === "checkbox" ? checked : files ? files : value;
     dispatch({ type: "update", name, value: finalValue });
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    dispatch({ type: "update", name, value });
+  };
+
+  const handleGalleryChange = async (e) => {
+    const files = Array.from(e.target.files); // Convert file list to array
+    const uploadedImages = [];
+
+    for (const file of files) {
+      const storageRef = ref(storage, `eventImages/${Date.now()}_${file.name}`);
+
+      try {
+        const snapshot = await uploadBytes(storageRef, file);
+        const imageUrl = await getDownloadURL(snapshot.ref); // Correct usage of snapshot.ref
+        uploadedImages.push(imageUrl); // Save the URL to the array
+      } catch (error) {
+        console.error("Error uploading image: ", error.message); // Log error message
+        alert(
+          "Failed to upload one or more images. Please check your permissions."
+        );
+      }
+    }
+
+    dispatch({ type: "update", name: "gallery", value: uploadedImages });
+  };
+
+  const handleVideoChange = async (e) => {
+    const file = e.target.files[0]; // Only one video file selected
+    if (!file) return;
+
+    const storageRef = ref(storage, `eventVideos/${Date.now()}_${file.name}`);
+
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const videoUrl = await getDownloadURL(snapshot.ref); // Correct usage of snapshot.ref
+      dispatch({ type: "update", name: "eventVideo", value: videoUrl });
+    } catch (error) {
+      console.error("Error uploading video: ", error.message); // Log error message
+      alert("Failed to upload the video. Please check your permissions.");
+    }
   };
 
   const handleTicketChange = (e, ticketType) => {
@@ -86,6 +185,80 @@ const AddEventForm: React.FC = () => {
 
   const handleArtistChange = (index, value) => {
     dispatch({ type: "updateArray", index, value });
+  };
+
+  const handleSubmit = async () => {
+    // Ensure userId and promoterId are valid
+    const userId = localUser?.uid || currentUser?.uid;
+    const promoterId = localUser?.uid || userId; // Default to "12345" if profile.id is unavailable
+
+    if (!userId) {
+      alert("User ID is missing. Please ensure you are logged in.");
+      return;
+    }
+
+    // Validate ticketsAvailable
+    const ticketsAvailable = Object.keys(formData.ticketsAvailable).reduce(
+      (acc, ticketType) => {
+        const ticket = formData.ticketsAvailable[ticketType];
+        if (
+          ticket.price &&
+          ticket.quantity &&
+          ticket.ticketInfo &&
+          ticket.ticketReleaseDate &&
+          ticket.ticketReleaseTime
+        ) {
+          acc[ticketType] = {
+            price: ticket.price,
+            quantity: ticket.quantity,
+            ticketInfo: ticket.ticketInfo,
+            ticketReleaseDate: ticket.ticketReleaseDate,
+            ticketReleaseTime: ticket.ticketReleaseTime,
+          };
+        } else {
+          console.warn(
+            `Ticket type "${ticketType}" is missing required fields.`
+          );
+        }
+        return acc;
+      },
+      {}
+    );
+
+    if (Object.keys(ticketsAvailable).length === 0) {
+      alert("Please ensure all ticket types have complete information.");
+      return;
+    }
+
+    // For gallery, we already stored the URLs in formData.gallery during upload
+    const galleryUrls = formData.gallery;
+
+    // For video, we already stored the URL in formData.eventVideo during upload
+    const eventVideoUrl = formData.eventVideo;
+
+    // Now, create your event object with these URLs
+    const eventObject = {
+      userId, // Ensure userId is included
+      promoterId, // Ensure promoterId is included
+      title: formData.title,
+      description: formData.description,
+      date: formData.date,
+      venue: formData.venue,
+      eventVideo: eventVideoUrl, // Firebase video URL
+      eventType: formData.eventType,
+      category: formData.category,
+      time: formData.eventStartTime,
+      ticketsAvailable, // Validated ticketsAvailable
+      eventStartTime: formData.eventStartTime,
+      eventEndTime: formData.eventEndTime,
+      gallery: galleryUrls, // Firebase image URLs
+      artistLineUp: formData.artistLineUp,
+    };
+
+    console.log("Submitting eventObject:", eventObject); // Debugging log to verify ticket information
+
+    // Dispatch to Redux or submit to your backend
+    dispatchRedux(addEvent(eventObject));
   };
 
   return (
@@ -102,15 +275,16 @@ const AddEventForm: React.FC = () => {
               dispatch={dispatch}
             />
           )}
-          {step === 3 && <Step3 formData={formData} dispatch={dispatch} />}
-          {step === 4 && (
-            <Step4
-              formData={formData}
-              handleTicketChange={handleTicketChange}
-            />
+          {step === 3 && (
+            <Step3 formData={formData} handleDateChange={handleDateChange} />
           )}
+          {step === 4 && <Step4 formData={formData} dispatch={dispatch} />}
           {step === 5 && (
-            <Step5 formData={formData} handleChange={handleChange} />
+            <Step5
+              formData={formData}
+              handleGalleryChange={handleGalleryChange}
+              handleVideoChange={handleVideoChange}
+            />
           )}
           {step === 6 && <Step6 formData={formData} />}
         </div>
@@ -137,7 +311,10 @@ const AddEventForm: React.FC = () => {
           {
             // Show submit button on the last step
             step === 6 && (
-              <button className="p-2 px-4 bg-teal-500 rounded-lg text-white">
+              <button
+                onClick={handleSubmit}
+                className="p-2 px-4 bg-teal-500 rounded-lg text-white"
+              >
                 Submit
               </button>
             )
@@ -180,7 +357,7 @@ const Step1 = ({ formData, handleChange }) => (
     <label className="block text-white">Event Venue</label>
     <input
       type="text"
-      name="title"
+      name="venue"
       value={formData.venue}
       onChange={handleChange}
       className="input-field"
@@ -199,12 +376,23 @@ const Step1 = ({ formData, handleChange }) => (
     <label className="block text-white">Event Category</label>
     <input
       type="text"
-      name="title"
+      name="category"
       value={formData.category}
       onChange={handleChange}
       className="input-field"
       placeholder="Event Category"
     />
+
+    <label className="block text-white">Event Type</label>
+    <select
+      name="eventType"
+      value={formData.eventType}
+      onChange={handleChange}
+      className="input-field"
+    >
+      <option value="Public">Public</option>
+      <option value="Private">Private</option>
+    </select>
   </div>
 );
 
@@ -243,7 +431,7 @@ const Step2 = ({ formData, handleArtistChange, dispatch }) => (
 );
 
 // Step 3: Event Schedule
-const Step3 = ({ formData, handleChange }) => (
+const Step3 = ({ formData, handleDateChange }) => (
   <div className="space-y-2">
     <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
       Event Date and Time
@@ -253,7 +441,7 @@ const Step3 = ({ formData, handleChange }) => (
       type="date"
       name="date"
       value={formData.date}
-      onChange={handleChange}
+      onChange={handleDateChange}
       className="input-field"
     />
 
@@ -262,7 +450,7 @@ const Step3 = ({ formData, handleChange }) => (
       type="time"
       name="eventStartTime"
       value={formData.eventStartTime}
-      onChange={handleChange}
+      onChange={handleDateChange}
       className="input-field"
     />
 
@@ -271,66 +459,60 @@ const Step3 = ({ formData, handleChange }) => (
       type="time"
       name="eventEndTime"
       value={formData.eventEndTime}
-      onChange={handleChange}
+      onChange={handleDateChange}
       className="input-field"
     />
   </div>
 );
 
 // Step 4: Tickets
-const Step4 = () => {
-  // State to manage ticket list
-  const [tickets, setTickets] = useState([]);
+const Step4 = ({ formData, dispatch }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [isTypeSelected, setIsTypeSelected] = useState(false);
-
-  // Default new ticket structure
+  const [newTicketType, setNewTicketType] = useState("");
   const [newTicket, setNewTicket] = useState({
-    type: "",
-    quantity: "",
     price: "",
-    info: "",
+    quantity: "",
+    ticketInfo: "",
     ticketReleaseDate: "",
     ticketReleaseTime: "",
   });
 
-  // Handle input changes for new ticket
   const handleNewTicketChange = (field, value) => {
     setNewTicket((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Add new ticket to the list
   const addTicketType = () => {
     if (
-      newTicket.type &&
-      newTicket.quantity &&
+      newTicketType &&
       newTicket.price &&
+      newTicket.quantity &&
+      newTicket.ticketInfo &&
       newTicket.ticketReleaseDate &&
-      newTicket.ticketReleaseTime &&
-      newTicket.info
+      newTicket.ticketReleaseTime
     ) {
-      setTickets([...tickets, newTicket]);
+      dispatch({
+        type: "addTicket", // Use the correct action type
+        ticketType: newTicketType, // Pass the ticket type as a key
+        ticket: newTicket, // Pass the ticket details
+      });
 
-      // Reset new ticket form
+      setNewTicketType("");
       setNewTicket({
-        type: "",
-        quantity: "",
         price: "",
-        info: "",
+        quantity: "",
+        ticketInfo: "",
         ticketReleaseDate: "",
         ticketReleaseTime: "",
       });
 
       setIsAdding(false);
-      setIsTypeSelected(false);
     } else {
       alert("Please fill in all required fields.");
     }
   };
 
-  // Remove a ticket from the list
-  const removeTicketType = (index) => {
-    setTickets(tickets.filter((_, i) => i !== index));
+  const removeTicketType = (ticketType) => {
+    dispatch({ type: "removeTicket", ticketType });
   };
 
   return (
@@ -339,12 +521,15 @@ const Step4 = () => {
         Event Tickets
       </label>
       {/* Existing Tickets List */}
-      {tickets.map((ticket, index) => (
-        <div key={index} className="space-y-2 border-b border-gray-500 pb-4">
+      {Object.keys(formData.ticketsAvailable).map((ticketType) => (
+        <div
+          key={ticketType}
+          className="space-y-2 border-b border-gray-500 pb-4"
+        >
           <div className="flex justify-between items-center">
-            <h3 className="text-white">Ticket Type: {ticket.type}</h3>
+            <h3 className="text-white">Ticket Type: {ticketType}</h3>
             <button
-              onClick={() => removeTicketType(index)}
+              onClick={() => removeTicketType(ticketType)}
               className="text-red-500"
             >
               <FaTrash />
@@ -356,101 +541,70 @@ const Step4 = () => {
       {/* Add New Ticket Section */}
       {isAdding ? (
         <div className="space-y-2">
-          {!isTypeSelected && <h3 className="text-white">Add New Ticket</h3>}
-
-          {!isTypeSelected ? (
-            <div>
-              <input
-                type="text"
-                placeholder="Enter Ticket Type"
-                value={newTicket.type}
-                onChange={(e) => handleNewTicketChange("type", e.target.value)}
-                className="input-field"
-              />
-              <button
-                onClick={() =>
-                  newTicket.type.trim()
-                    ? setIsTypeSelected(true)
-                    : alert("Please enter a ticket type first.")
-                }
-                className="p-1 px-3 mt-2 text-green-500 border border-green-500 rounded-lg"
-              >
-                Next
-              </button>
-            </div>
-          ) : (
-            <>
-              <label className="block text-white text-center font-semibold">
-                {newTicket.type} Ticket
-              </label>
-              <label className="block text-white">Ticket Price</label>
-              <input
-                type="number"
-                placeholder="Price"
-                value={newTicket.price}
-                onChange={(e) => handleNewTicketChange("price", e.target.value)}
-                className="input-field"
-              />
-
-              <label className="block text-white">Tickets Available</label>
-              <input
-                type="number"
-                placeholder="Quantity"
-                value={newTicket.quantity}
-                onChange={(e) =>
-                  handleNewTicketChange("quantity", e.target.value)
-                }
-                className="input-field"
-              />
-
-              <label className="block text-white">Tickets Information</label>
-              <textarea
-                placeholder="Ticket Information"
-                value={newTicket.info}
-                onChange={(e) => handleNewTicketChange("info", e.target.value)}
-                className="input-field"
-              />
-
-              <label className="block text-white">Release Date</label>
-              <input
-                type="date"
-                placeholder="Release Date"
-                value={newTicket.ticketReleaseDate}
-                onChange={(e) =>
-                  handleNewTicketChange("ticketReleaseDate", e.target.value)
-                }
-                className="input-field"
-              />
-
-              <label className="block text-white">Release Time</label>
-              <input
-                type="time"
-                placeholder="Release Time"
-                value={newTicket.ticketReleaseTime}
-                onChange={(e) =>
-                  handleNewTicketChange("ticketReleaseTime", e.target.value)
-                }
-                className="input-field"
-              />
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={() => {
-                    setIsAdding(false);
-                    setIsTypeSelected(false);
-                  }}
-                  className="p-1 px-3 text-gray-500 border border-gray-500 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={addTicketType}
-                  className="p-1 px-3 text-green-500 border border-green-500 rounded-lg"
-                >
-                  Save
-                </button>
-              </div>
-            </>
-          )}
+          <input
+            type="text"
+            placeholder="Enter Ticket Type"
+            value={newTicketType}
+            onChange={(e) => setNewTicketType(e.target.value)}
+            className="input-field"
+          />
+          <label className="block text-white">Ticket Price</label>
+          <input
+            type="number"
+            placeholder="Price"
+            value={newTicket.price}
+            onChange={(e) => handleNewTicketChange("price", e.target.value)}
+            className="input-field"
+          />
+          <label className="block text-white">Tickets Available</label>
+          <input
+            type="number"
+            placeholder="Available"
+            value={newTicket.quantity}
+            onChange={(e) => handleNewTicketChange("quantity", e.target.value)}
+            className="input-field"
+          />
+          <label className="block text-white">Ticket Information</label>
+          <textarea
+            placeholder="Ticket Information"
+            value={newTicket.ticketInfo}
+            onChange={(e) =>
+              handleNewTicketChange("ticketInfo", e.target.value)
+            }
+            className="input-field"
+          />
+          <label className="block text-white">Release Date</label>
+          <input
+            type="date"
+            value={newTicket.ticketReleaseDate}
+            onChange={(e) =>
+              handleNewTicketChange("ticketReleaseDate", e.target.value)
+            }
+            className="input-field"
+          />
+          <label className="block text-white">Release Time</label>
+          <input
+            type="time"
+            value={newTicket.ticketReleaseTime}
+            onChange={(e) =>
+              handleNewTicketChange("ticketReleaseTime", e.target.value)
+            }
+            className="input-field"
+          />
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => setIsAdding(false)}
+              className="p-1 px-3 text-gray-500 border border-gray-500 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={addTicketType}
+              className="p-1 px-3 text-green-500 border border-green-500 rounded-lg"
+            >
+              Save
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex justify-center">
@@ -467,7 +621,7 @@ const Step4 = () => {
 };
 
 // Step 4: Media Uploads
-const Step5 = ({ formData, handleChange }) => (
+const Step5 = ({ formData, handleGalleryChange, handleVideoChange }) => (
   <div className="space-y-2">
     <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center mb-4">
       Event Gallery
@@ -476,7 +630,7 @@ const Step5 = ({ formData, handleChange }) => (
     <input
       type="file"
       name="eventVideo"
-      onChange={handleChange}
+      onChange={handleVideoChange}
       className="input-field"
     />
 
@@ -485,7 +639,7 @@ const Step5 = ({ formData, handleChange }) => (
       type="file"
       name="gallery"
       multiple
-      onChange={handleChange}
+      onChange={handleGalleryChange}
       className="input-field"
     />
   </div>

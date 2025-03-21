@@ -29,7 +29,7 @@ function Drawer() {
   const location = useLocation(); // Get current route
   const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { profile } = useSelector((state) => state.profile);
+  const { profile } = useSelector((state: RootState) => state.profile);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // State to control drawer visibility
