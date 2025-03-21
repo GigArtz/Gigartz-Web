@@ -9,10 +9,19 @@ interface ChatProps {
     contact: string;
     messages: Message[];
   };
-  handleSendMessage: (message: string, file?: File | null) => void;
+  handleSendMessage: (
+    message?: string,
+    file?: File | null,
+    e?: React.FormEvent
+  ) => void;
+  handleCloseConversation: () => void; // Callback to close the conversation
 }
 
-const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
+const Chat: React.FC<ChatProps> = ({
+  conversation,
+  handleSendMessage,
+  handleCloseConversation,
+}) => {
   const currentUserId = useSelector((state: RootState) => state.auth.uid);
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -20,7 +29,7 @@ const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation?.messages]);
+  }, [conversation?.messages]); // Automatically scroll when messages update
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp * 1000);
@@ -43,9 +52,25 @@ const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
   const groupMessagesByDate = () => {
     const grouped: { [date: string]: Message[] } = {};
     conversation?.messages.forEach((msg) => {
-      const date = formatDate(msg.timestamp.seconds);
-      if (!grouped[date]) grouped[date] = [];
-      grouped[date].push(msg);
+      if (
+        msg.timestamp &&
+        typeof msg.timestamp === "object" &&
+        "seconds" in msg.timestamp
+      ) {
+        const date = formatDate(msg.timestamp.seconds);
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(msg);
+      } else if (
+        typeof msg.timestamp === "string" &&
+        !isNaN(Date.parse(msg.timestamp))
+      ) {
+        // Handle ISO string timestamps
+        const date = formatDate(new Date(msg.timestamp).getTime() / 1000);
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(msg);
+      } else {
+        console.warn("Invalid timestamp in message:", msg);
+      }
     });
     return grouped;
   };
@@ -55,11 +80,26 @@ const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
 
   const messagesGrouped = groupMessagesByDate();
 
+  const onSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newMessage.trim() || selectedFile) {
+      handleSendMessage(newMessage, selectedFile, e);
+      setNewMessage("");
+      setSelectedFile(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[100%] md:w-full">
       {/* Chat Header */}
-      <div className="hidden p-4 bg-gray-800 text-white md:flex items-center shadow-md sticky top-0 z-10">
+      <div className="hidden p-4 bg-gray-800 text-white md:flex items-center shadow-md sticky top-0 z-10 justify-between">
         <h2 className="text-lg font-semibold">{conversation.contact}</h2>
+        <button
+          onClick={handleCloseConversation}
+          className="text-gray-400 hover:text-red-500 transition"
+        >
+          Close
+        </button>
       </div>
 
       {/* Messages Area */}
@@ -67,22 +107,24 @@ const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
         {Object.entries(messagesGrouped).map(([date, messages]) => (
           <div key={date}>
             <div className="text-center text-xs text-gray-500 my-2">{date}</div>
-            {messages.map((msg) => (
+            {messages?.map((msg) => (
               <div
                 key={msg.timestamp.seconds}
                 className={`flex ${
-                  msg.senderId === currentUserId ? "justify-end" : "justify-start"
+                  msg.senderId === currentUserId
+                    ? "justify-end"
+                    : "justify-start"
                 } mb-2`}
               >
                 <div
-                  className={`p-3 rounded-lg max-w-xs shadow-md ${
+                  className={`px-3  max-w-xs shadow-md ${
                     msg.senderId === currentUserId
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-300 text-black"
+                      ? "bg-blue-500 text-white p-1 rounded-2xl rounded-tr-none"
+                      : "bg-gray-300 text-black p-1 rounded-2xl rounded-tl-none"
                   }`}
                 >
-                  <p>{msg.message}</p>
-                  <div className="text-xs text-gray-600 mt-1 text-right">
+                  <p className="text-[0.8em] ">{msg.message}</p>
+                  <div className="text-[0.6em] text-gray-600 text-right">
                     {formatTime(msg.timestamp.seconds)}
                   </div>
                 </div>
@@ -94,7 +136,10 @@ const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 flex items-center border-t sticky bottom-0">
+      <form
+        onSubmit={onSendMessage}
+        className="p-4 flex items-center border-t sticky bottom-0"
+      >
         <label className="cursor-pointer mr-2">
           <FaPaperclip size={20} />
           <input
@@ -108,22 +153,15 @@ const Chat: React.FC<ChatProps> = ({ conversation, handleSendMessage }) => {
           placeholder="Type a message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 p-2 border rounded-3xl bg-gray-100"
+          className="input-field flex-1"
         />
-        {selectedFile && <span className="text-sm ml-2">{selectedFile.name}</span>}
-        <button
-          className="ml-2 text-blue-500"
-          onClick={() => {
-            if (newMessage.trim() || selectedFile) {
-              handleSendMessage(newMessage, selectedFile);
-              setNewMessage("");
-              setSelectedFile(null);
-            }
-          }}
-        >
+        {selectedFile && (
+          <span className="text-sm ml-2">{selectedFile.name}</span>
+        )}
+        <button type="submit" className="ml-2 text-blue-500">
           <FaPaperPlane size={20} />
         </button>
-      </div>
+      </form>
     </div>
   );
 };

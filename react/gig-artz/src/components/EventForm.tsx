@@ -20,6 +20,13 @@ const initialState = {
   ticketsAvailable: [{}],
   eventVideo: null,
   gallery: [],
+  // Add missing fields here
+  ticketReleaseDate: "",
+  ticketReleaseTime: "",
+  info: "",
+  price: "",
+  quantity: "",
+  type: "",
 };
 
 // Reducer function
@@ -28,16 +35,12 @@ const formReducer = (state, action) => {
     return { ...state, [action.name]: action.value };
   }
   if (action.type === "updateNested") {
-    return {
-      ...state,
-      ticketsAvailable: {
-        ...state.ticketsAvailable,
-        [action.ticketType]: {
-          ...state.ticketsAvailable[action.ticketType],
-          [action.name]: action.value,
-        },
-      },
+    const updatedTickets = [...state.ticketsAvailable];
+    updatedTickets[action.index] = {
+      ...updatedTickets[action.index],
+      [action.name]: action.value,
     };
+    return { ...state, ticketsAvailable: updatedTickets };
   }
   if (action.type === "updateArray") {
     const updatedArray = [...state.artistLineUp];
@@ -51,6 +54,17 @@ const formReducer = (state, action) => {
     const updatedArray = [...state.artistLineUp];
     updatedArray.splice(action.index, 1);
     return { ...state, artistLineUp: updatedArray };
+  }
+  if (action.type === "addTicket") {
+    return {
+      ...state,
+      ticketsAvailable: [...state.ticketsAvailable, action.ticket],
+    };
+  }
+  if (action.type === "removeTicket") {
+    const updatedTickets = [...state.ticketsAvailable];
+    updatedTickets.splice(action.index, 1);
+    return { ...state, ticketsAvailable: updatedTickets };
   }
   return state;
 };
@@ -150,7 +164,9 @@ const AddEventForm: React.FC = () => {
 // Step 1: Basic Event Details
 const Step1 = ({ formData, handleChange }) => (
   <div className="space-y-2">
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">Event Details</label>
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
+      Event Details
+    </label>
     <label className="block text-white">Event Name</label>
     <input
       type="text"
@@ -195,7 +211,9 @@ const Step1 = ({ formData, handleChange }) => (
 // Step 2: Artist Lineup
 const Step2 = ({ formData, handleArtistChange, dispatch }) => (
   <div className="space-y-2">
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-5 text-center">Artist Line Up</label>
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-5 text-center">
+      Artist Line Up
+    </label>
     {formData.artistLineUp.map((artist, index) => (
       <div key={index} className="flex">
         <input
@@ -227,8 +245,9 @@ const Step2 = ({ formData, handleArtistChange, dispatch }) => (
 // Step 3: Event Schedule
 const Step3 = ({ formData, handleChange }) => (
   <div className="space-y-2">
-    
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">Event Date and Time</label>
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
+      Event Date and Time
+    </label>
     <label className="block text-white">Select Date</label>
     <input
       type="date"
@@ -288,7 +307,7 @@ const Step4 = () => {
       newTicket.price &&
       newTicket.ticketReleaseDate &&
       newTicket.ticketReleaseTime &&
-      newTicket.info 
+      newTicket.info
     ) {
       setTickets([...tickets, newTicket]);
 
@@ -316,8 +335,9 @@ const Step4 = () => {
 
   return (
     <div className="space-y-2">
-      
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">Event Tickets</label>
+      <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
+        Event Tickets
+      </label>
       {/* Existing Tickets List */}
       {tickets.map((ticket, index) => (
         <div key={index} className="space-y-2 border-b border-gray-500 pb-4">
@@ -336,8 +356,7 @@ const Step4 = () => {
       {/* Add New Ticket Section */}
       {isAdding ? (
         <div className="space-y-2">
-          {!isTypeSelected && ( <h3 className="text-white">Add New Ticket</h3>)}
-         
+          {!isTypeSelected && <h3 className="text-white">Add New Ticket</h3>}
 
           {!isTypeSelected ? (
             <div>
@@ -450,8 +469,9 @@ const Step4 = () => {
 // Step 4: Media Uploads
 const Step5 = ({ formData, handleChange }) => (
   <div className="space-y-2">
-    
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center mb-4">Event Gallery</label>
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center mb-4">
+      Event Gallery
+    </label>
     <label className="block text-white">Event Video</label>
     <input
       type="file"
@@ -474,7 +494,9 @@ const Step5 = ({ formData, handleChange }) => (
 // Step 5: Confirmation
 const Step6 = ({ formData }) => (
   <div className="space-y-4">
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center">Event Summary</label>
+    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 text-center">
+      Event Summary
+    </label>
     <pre className="text-white">{JSON.stringify(formData, null, 2)}</pre>
   </div>
 );

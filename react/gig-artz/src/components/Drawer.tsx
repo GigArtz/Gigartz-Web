@@ -38,9 +38,22 @@ function Drawer() {
     dispatch(fetchUserProfile(user?.uid));
   }, [user, dispatch]);
 
+  useEffect(() => {
+    const persistedUser = localStorage.getItem("authUser");
+    if (persistedUser) {
+      dispatch(fetchUserProfile(JSON.parse(persistedUser).uid)); // Fetch profile for persisted user
+    }
+  }, [dispatch]);
+
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+
+  const handleLogout = () => {
+    // Clear token and redirect to login
+    localStorage.removeItem("authToken");
+    navigate("/login");
+  };
 
   const navItems = [
     { icon: FaHome, label: "Home", link: "/home" },
@@ -55,7 +68,7 @@ function Drawer() {
     { icon: FaDollarSign, label: "Monetization", link: "/monetization" },
     { icon: FaCog, label: "Settings", link: "/settings" },
     { icon: FaUser, label: "Profile", link: "/profile" },
-    { icon: FaSignOutAlt, label: "Sign Out", link: "/sign-out" },
+    { icon: FaSignOutAlt, label: "Sign Out", action: handleLogout },
   ];
 
   return (
@@ -64,15 +77,12 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:hidden border-b border-gray-500 fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+      <div className="md:hidden  border-gray-500 fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
         <div className="p-2 px-2 bg-[#060512] shadow-sm flex justify-between items-center">
           <div className="flex flex-row text-center gap-4 px-2">
             <div className="flex align-middle p-2">
               <FaArrowLeft className="text-white " />
             </div>
-          </div>
-
-          <div>
             <p className="text-white text-xl font-semibold capitalize text-center">
               {location.pathname.split("/")}
             </p>
@@ -92,13 +102,13 @@ function Drawer() {
       {/* Responsive Sidebar */}
       <div
         id="drawer-navigation"
-        className={`fixed top-20 md:top-[25%] lg:top-[20%] left-0 w-[65%] md:w-[20%] lg:w-[15%] min-h-screen z-10 bg-[#060512] shadow-md transition-all duration-300 ${
+        className={`fixed top-20 md:top-[23%] lg:top-[20%] left-0 w-[65%] md:w-[20%] lg:w-[15%] min-h-screen z-10 bg-[#060512] shadow-md transition-all duration-300 ${
           isDrawerOpen ? "block" : "hidden"
         } md:block`}
       >
         {/* Profile Section */}
-        <div className="fixed items-center top-0 px-3 left-0 w-[65%] md:w-[20%] lg:w-[15%] h-[10%] md:h-[20%] bg-[#060512] shadow-md">
-          <div className="md:block border-b md:border-b-0 md:justify-items-center p-2">
+        <div className="fixed h-auto items-center top-0 px-3 left-0 w-[65%] md:w-[20%] lg:w-[15%]  bg-[#060512] shadow-md">
+          <div className="md:block justify-items-center p-2">
             <img
               src={profile?.photoURL || avatar}
               alt="Profile"
@@ -112,9 +122,8 @@ function Drawer() {
               {profile?.bio || "brooke lines"}
             </p>
           </div>
+          <hr />
         </div>
-
-        <hr className="mx-3 hidden md:block" />
 
         {/* Navigation Links */}
         <nav className="py-4 mt-14 md:mt-1 overflow-y-auto max-h-[75vh] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-800">
@@ -126,8 +135,12 @@ function Drawer() {
                 <li key={index}>
                   <a
                     onClick={() => {
-                      navigate(item.link);
-                      setIsDrawerOpen(false); // Close drawer on navigation
+                      if (item.action) {
+                        item.action(); // Call action if defined (e.g., handleLogout)
+                      } else {
+                        navigate(item.link);
+                        setIsDrawerOpen(false); // Close drawer on navigation
+                      }
                     }}
                     className={`flex items-center p-2 rounded-2xl text-sm cursor-pointer transition ${
                       isActive

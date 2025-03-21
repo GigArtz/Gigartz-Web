@@ -37,11 +37,14 @@ export interface RegistrationData {
   phoneNumber: string;
 }
 
+// Load user from localStorage during initialization
+const persistedUser = localStorage.getItem("authUser");
+
 // Initial state
 const initialState: AuthState = {
-  user: null,
+  user: persistedUser ? JSON.parse(persistedUser) : null,
   current_user: null,
-  uid: null,
+  uid: persistedUser ? JSON.parse(persistedUser).uid : null,
   loading: false,
   error: null,
 };
@@ -68,12 +71,14 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.uid = action.payload.uid; // Ensure uid is set
       state.error = null;
+      localStorage.setItem("authUser", JSON.stringify(action.payload.user)); // Persist user
     },
     registerSuccess(state, action: PayloadAction<{ user: User; uid: string }>) {
       state.loading = false;
       state.user = action.payload.user;
       state.uid = action.payload.uid; // Ensure uid is set
       state.error = null;
+      localStorage.setItem("authUser", JSON.stringify(action.payload.user)); // Persist user
     },
     loginFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -92,8 +97,7 @@ const authSlice = createSlice({
       state.user = null;
       state.uid = null;
       state.error = null;
-      // Clear local storage
-      localStorage.removeItem("user");
+      localStorage.removeItem("authUser"); // Clear persisted user
     },
     resetError(state) {
       state.error = null;
@@ -170,9 +174,6 @@ export const loginUser = (credentials: { email: string; password: string }) => a
       }));
 
       console.log("Login Successful!");
-
-      // Save user data to local storage
-      localStorage.setItem("user", JSON.stringify(response.data.user));
     }
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

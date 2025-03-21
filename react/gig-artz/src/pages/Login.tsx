@@ -30,13 +30,20 @@ const Login = () => {
       return;
     }
 
-     await dispatch(loginUser(formData));
-    
-     if (!error) {
+    await dispatch(loginUser(formData));
+
+    if (!error) {
       toast.success("Login Successful! Welcome back!");
       navigate("/home");
     }
   };
+
+  useEffect(() => {
+    const persistedUser = localStorage.getItem("authUser");
+    if (persistedUser) {
+      navigate("/home"); // Redirect if user is already logged in
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (error) {
@@ -47,7 +54,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
       {loading && <Loader message="Loading ..." />}
-      
+
       {/* Logo Section */}
       <div className="flex justify-center md:w-1/3">
         <img src={logo} alt="Logo" className="w-32 md:w-2/3" />
@@ -58,7 +65,9 @@ const Login = () => {
         <form className="space-y-6" onSubmit={handleLogin}>
           {/* Email Input */}
           <div className="space-y-2">
-            <label htmlFor="email" className="text-white">Email</label>
+            <label htmlFor="email" className="text-white">
+              Email
+            </label>
             <input
               type="email"
               id="email"
@@ -73,7 +82,9 @@ const Login = () => {
 
           {/* Password Input */}
           <div className="space-y-2 relative">
-            <label htmlFor="password" className="text-white">Password</label>
+            <label htmlFor="password" className="text-white">
+              Password
+            </label>
             <input
               type={showPassword ? "text" : "password"}
               id="password"
@@ -89,7 +100,11 @@ const Login = () => {
               className="absolute right-3 top-10 text-white"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <MdVisibilityOff size={24} /> : <MdVisibility size={24} />}
+              {showPassword ? (
+                <MdVisibilityOff size={24} />
+              ) : (
+                <MdVisibility size={24} />
+              )}
             </button>
           </div>
 
@@ -103,17 +118,17 @@ const Login = () => {
               />
               <span>Remember Me</span>
             </label>
-            <button type="button" onClick={() => navigate("/reset-password")} className="text-teal-500 hover:underline">
+            <button
+              type="button"
+              onClick={() => navigate("/reset-password")}
+              className="text-teal-500 hover:underline"
+            >
               Forgot Password?
             </button>
           </div>
 
           {/* Login Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary"
-            >
+          <button type="submit" disabled={loading} className="btn-primary">
             {loading ? "Logging in..." : "Login"}
           </button>
 
@@ -122,14 +137,25 @@ const Login = () => {
 
           {/* Social Login */}
           <div className="flex justify-center space-x-6">
-            <FaFacebook size="2rem" className="text-teal-500 cursor-pointer" onClick={() => dispatch(socialLogin("facebook"))} />
-            <FaGoogle size="2rem" className="text-teal-500 cursor-pointer" onClick={() => dispatch(socialLogin("google"))} />
+            <FaFacebook
+              size="2rem"
+              className="text-teal-500 cursor-pointer"
+              onClick={() => dispatch(socialLogin("facebook"))}
+            />
+            <FaGoogle
+              size="2rem"
+              className="text-teal-500 cursor-pointer"
+              onClick={() => dispatch(socialLogin("google"))}
+            />
           </div>
 
           {/* Sign Up Link */}
           <div className="text-center text-white">
             Don't have an account?{" "}
-            <span className="text-teal-500 cursor-pointer" onClick={() => navigate("/register")}>
+            <span
+              className="text-teal-500 cursor-pointer"
+              onClick={() => navigate("/register")}
+            >
               Sign Up
             </span>
           </div>
