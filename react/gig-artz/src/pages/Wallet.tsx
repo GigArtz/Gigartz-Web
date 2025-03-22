@@ -3,6 +3,7 @@ import WalletTabs from '../components/WalletTabs';
 import { RootState } from '../store/store';
 import React from 'react'
 import { useSelector } from 'react-redux';
+import Header from '../components/Header';
 
 function Wallet() {
 
@@ -14,8 +15,9 @@ function Wallet() {
 
   
   return (
-    <div className='main-content'>
+    <div className='main-content p-2'>
         <div>
+          <Header title='Wallet' />
           <WalletTabs uid={userProfile?.id}/>
         </div>
     </div>

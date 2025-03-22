@@ -5,8 +5,8 @@ import { fetchAllProfiles } from "../store/profileSlice";
 import UserCard from "./UserCard";
 import { AppDispatch } from "../store/store";
 import { fetchAllEvents } from "../store/eventsSlice";
-import SearchBar from "./SearchBar";
 import { FaSpinner } from "react-icons/fa";
+import ScrollableEventRow from "./ScrollableEventRow";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
@@ -149,20 +149,28 @@ function ExploreTabs() {
                   <h2 className="text-xl text-white font-semibold mb-4">
                     Trending
                   </h2>
+                  <ScrollableEventRow
+                    events={eventList}
+                    loading={loading}
+                    error={error}
+                  />
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {userList.length > 0 ? (
-                    userList.map((user) => (
-                      <div className="mb-2">
-                        <UserCard user={user} />
+                <div className="mt-2 w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-4">
+                    People
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {userList?.length > 0 ? (
+                      userList?.map((user) => (
+                        <UserCard key={user.id} user={user} />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center">
+                        <p className="text-gray-400 mt-4">No users found.</p>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400 text-center mt-4">
-                      No users found.
-                    </p>
-                  )}
+                    )}
+                  </div>
                 </div>
               </>
             )}

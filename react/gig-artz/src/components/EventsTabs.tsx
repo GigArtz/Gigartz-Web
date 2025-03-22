@@ -36,7 +36,6 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
   return (
     <div className="">
-
       {/* Trending Events Section */}
       <div className="mt-2 w-full p-2 rounded-xl">
         <h2 className="text-xl text-white font-semibold mb-4">Trending</h2>
@@ -66,7 +65,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
         {/* Scrollable Row */}
         <ScrollableEventRow
-          events={getFilteredEvents}
+          events={getFilteredEvents()}
           loading={loading}
           error={error}
         />
@@ -104,7 +103,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
         {/* Scrollable Row */}
         <ScrollableEventRow
-          events={getFilteredEvents}
+          events={getFilteredEvents()}
           loading={loading}
           error={error}
         />

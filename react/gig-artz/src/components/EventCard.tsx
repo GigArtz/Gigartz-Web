@@ -24,7 +24,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
   
 
   return (
-    <Link to={`/events/?eventId=${event.id}`} className="block w-full h-full">
+    <Link to={`/events/?eventId=${event?.id}`} className="block w-full h-full">
       <div className="w-[100%] h-full flex flex-col flex-1 min-w-0 rounded-xl shadow-lg border border-gray-800 cursor-pointer transition-transform">
         {/* Image */}
         <img
@@ -62,7 +62,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
                 {/* Likes */}
                 <p className="text-gray-400 flex items-center text-sm">
                   <FaHeart className="w-4 h-4 text-gray-500 mr-2 hover:text-red-500" />
-                  {event.likes || 0}
+                  {event?.likes || 0}
                 </p>
               </div>
             )}
@@ -70,7 +70,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
 
           {/* Date */}
           <p className="mb-3 text-gray-400 flex items-center text-xs md:text-sm">
-            {new Date(event.date).toLocaleDateString("en-US", {
+            {new Date(event?.date).toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
