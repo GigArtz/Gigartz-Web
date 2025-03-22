@@ -6,6 +6,7 @@ import UserCard from "./UserCard";
 import { AppDispatch } from "../store/store";
 import { fetchAllEvents } from "../store/eventsSlice";
 import SearchBar from "./SearchBar";
+import { FaSpinner } from "react-icons/fa";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
@@ -113,13 +114,13 @@ function ExploreTabs() {
         </ul>
       </div>
 
-      <div className="p-4">
-        {loading &&  (
-        <div className="flex mt-8 justify-center items-center">
-          <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
-        </div>
+      <div className="py-4">
+        {loading && (
+          <div className="flex mt-8 justify-center items-center">
+            <FaSpinner className="text-teal-500 text-4xl animate-spin" />
+          </div>
         )}
-        
+
         {error && <p className="text-red-500">Error: {error}</p>}
         {!loading && !error && (
           <>

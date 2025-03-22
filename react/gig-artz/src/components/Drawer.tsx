@@ -77,7 +77,7 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:hidden  border-gray-500 fixed z-20 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+      <div className="md:hidden  border-gray-500 fixed z-30 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
         <div className="p-2 px-2 bg-[#060512] shadow-sm flex justify-between items-center">
           <div className="flex flex-row text-center gap-4 px-2">
             <div className="flex align-middle p-2">
@@ -102,7 +102,7 @@ function Drawer() {
       {/* Responsive Sidebar */}
       <div
         id="drawer-navigation"
-        className={`fixed top-20 md:top-[23%] lg:top-[20%] left-0 w-[65%] md:w-[20%] lg:w-[15%] min-h-screen z-10 bg-[#060512] shadow-md transition-all duration-300 ${
+        className={`fixed top-20 md:top-[23%] lg:top-[20%] left-0 w-[65%] md:w-[20%] lg:w-[15%] min-h-screen z-40 bg-[#060512] shadow-md transition-all duration-300 ${
           isDrawerOpen ? "block" : "hidden"
         } md:block`}
       >

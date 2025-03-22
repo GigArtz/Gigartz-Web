@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaSpinner } from "react-icons/fa";
 
 interface User {
   uid?: string;
@@ -31,16 +32,13 @@ const CommentForm: React.FC<CommentFormProps> = ({ user, onSubmit }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full p-4 bg-gray-800 rounded-lg shadow-md"
-    >
+    <form onSubmit={handleSubmit} className="w-full py-4">
       {/* Comment Input */}
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Write your comment..."
-        className="w-full p-2 text-sm text-white bg-gray-700 rounded-lg border border-gray-600 focus:ring-2 focus:ring-teal-400 focus:outline-none"
+        className="input-field"
         rows={3}
         required
       />
@@ -65,9 +63,15 @@ const CommentForm: React.FC<CommentFormProps> = ({ user, onSubmit }) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full mt-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg px-4 py-2 text-center transition"
+        className="btn-primary mt-2 rounded-3xl transition"
       >
-        {loading ? "Submitting..." : "Post Comment"}
+        {loading ? (
+          <div className="flex items-center justify-center bg-opacity-50 z-50">
+          <FaSpinner className="text-teal-500 text-4xl animate-spin" />
+        </div>
+        ) : (
+          "Post Comment"
+        )}
       </button>
     </form>
   );

@@ -17,6 +17,7 @@ import React from "react";
 import CommentsModal from "../components/CommentsModal";
 import ShareModal from "../components/ShareModal";
 import CRUDModal from "../components/CRUDModal";
+import EditEventModal from "../components/EditEventModal";
 
 interface Event {
   id: string;
@@ -60,6 +61,10 @@ const EventDetails = () => {
 
   // CRUD Modal
   const [isCRUDVisible, setIsCRUDVisible] = useState(false);
+
+  // Edit Event Modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
 
   useEffect(() => {
     const foundEvent = eventData.find((e) => e.id === eventId);
@@ -145,19 +150,37 @@ const EventDetails = () => {
     setIsCRUDVisible(true);
   };
 
-  const editEvent = (event: Event) => {
-    
-   };
-  const deleteEvent = (event: Event) => { };
+  const handleEditEvent = (event: Event) => {
+    setEventToEdit(event);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEventToEdit(null);
+  };
 
   return (
     <div className="main-content px-4 md:px-8 mb-3">
+      {/* Edit Event Modal */}
+      {isEditModalOpen && (
+        <EditEventModal
+          isModalOpen={isEditModalOpen}
+          closeModal={closeEditModal}
+          event={eventToEdit}
+        />
+      )}
+
       {/* CRUD Modal */}
       {isCRUDVisible && (
         <CRUDModal
           setIsCRUDVisible={setIsCRUDVisible}
-          onEdit={() => console.log("Edit event")}
-          onDelete={() => console.log("Delete event")}
+          onEdit={handleEditEvent}
+          onDelete={() => {
+            console.log("Delete event");
+            setIsCRUDVisible(false); // Close modal after deleting
+          }}
+          event={event}
         />
       )}
 

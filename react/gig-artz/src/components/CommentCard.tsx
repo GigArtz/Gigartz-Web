@@ -30,7 +30,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
   };
 
   return (
-    <div className="flex w-full  items-start p-4 bg-gray-800 rounded-lg shadow-md">
+    <div className="flex w-full  items-start p-4 bg-[#060512] rounded-lg shadow-md">
       {/* Profile Picture */}
       <img
         src={comment.user.profilePicUrl || "/avatar.png"}

@@ -5,6 +5,7 @@ import { getMessages, sendMessage, Message } from "../store/messageSlice";
 import Loader from "../components/Loader";
 import Chat from "../components/Chat";
 import Header from "../components/Header";
+import { FaTimes, FaTimesCircle } from "react-icons/fa";
 
 const Messages: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -254,9 +255,17 @@ const Messages: React.FC = () => {
 
       {/* New Message Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-[#060512] bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-[#060512] z-30 bg-opacity-50 flex justify-center items-center">
           <div className="bg-white dark:bg-[#1F1C29] border border-gray-700 p-5 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-semibold mb-3">New Message</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold mb-3">New Message</h3>
+              <button
+                  onClick={() => setIsModalOpen(false)}
+                  className=" px-3 py-1 rounded-full hover:bg-red-400"
+                >
+                  <FaTimesCircle className="w-5 h-5" />
+                </button>
+            </div>
             <select
               value={selectedContact || ""}
               onChange={(e) => setSelectedContact(e.target.value)}
@@ -277,14 +286,8 @@ const Messages: React.FC = () => {
             />
             <div className="flex justify-end space-x-2">
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="bg-red-300 px-3 py-1 rounded-lg hover:bg-red-400"
-              >
-                Cancel
-              </button>
-              <button
                 onClick={(e) => handleSendMessage(newMessage, null, e)}
-                className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
+                className="w-28 rounded-3xl btn-primary"
               >
                 Send
               </button>

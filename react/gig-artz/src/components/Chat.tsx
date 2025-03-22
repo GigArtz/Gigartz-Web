@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { Message } from "../store/messageSlice";
-import { FaPaperclip, FaPaperPlane } from "react-icons/fa";
+import { FaPaperclip, FaPaperPlane, FaTimesCircle } from "react-icons/fa";
 
 interface ChatProps {
   conversation?: {
@@ -92,13 +92,13 @@ const Chat: React.FC<ChatProps> = ({
   return (
     <div className="flex flex-col h-[100%] md:w-full">
       {/* Chat Header */}
-      <div className="hidden p-4 bg-gray-800 text-white md:flex items-center shadow-md sticky top-0 z-10 justify-between">
-        <h2 className="text-lg font-semibold">{conversation.contact}</h2>
+      <div className=" p-4 bg-gray-800 text-white flex items-center shadow-md sticky top-0 z-10 justify-between">
+        <h2 className="text-lg text-teal-500 font-semibold">{conversation.contact}</h2>
         <button
           onClick={handleCloseConversation}
           className="text-gray-400 hover:text-red-500 transition"
         >
-          Close
+          <FaTimesCircle className="w-5 h-5" />
         </button>
       </div>
 
@@ -138,7 +138,7 @@ const Chat: React.FC<ChatProps> = ({
       {/* Chat Input */}
       <form
         onSubmit={onSendMessage}
-        className="p-4 flex items-center border-t sticky bottom-0"
+        className="p-4 flex items-center sticky bottom-0 bg-gray-900"
       >
         <label className="cursor-pointer mr-2">
           <FaPaperclip size={20} />
