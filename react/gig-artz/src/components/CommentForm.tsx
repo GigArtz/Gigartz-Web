@@ -1,10 +1,18 @@
 import React, { useState } from "react";
 
+interface User {
+  uid?: string;
+  name?: string;
+  userName?: string;
+  profilePicUrl?: string;
+}
+
 interface CommentFormProps {
+  user: User;
   onSubmit: (comment: string, rating: number) => void;
 }
 
-const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
+const CommentForm: React.FC<CommentFormProps> = ({ user, onSubmit }) => {
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -19,11 +27,14 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
       setComment("");
       setRating(0);
       setLoading(false);
-    }, 1000); // Simulate submission delay
+    }, 1000);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full p-4 bg-gray-800 rounded-lg shadow-md">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full p-4 bg-gray-800 rounded-lg shadow-md"
+    >
       {/* Comment Input */}
       <textarea
         value={comment}

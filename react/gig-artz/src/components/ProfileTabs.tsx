@@ -13,8 +13,8 @@ function ProfileTabs({ uid }) {
 
   return (
     <div>
-      <div className="text-sm font-medium text-center border-b text-gray-400 border-gray-700 flex flex-col">
-        <ul className="flex flex-wrap justify-items-stretch -mb-px">
+      <div className="text-sm font-medium text-center  text-gray-500 border-b border-gray-700">
+        <ul className="flex flex-wrap justify-self-stretch -mb-px">
           <li className="me-2">
             <button
               onClick={() => setActiveTab("gigGuide")}
@@ -56,7 +56,7 @@ function ProfileTabs({ uid }) {
         {!loading && !error && (
           <>
             {activeTab === "gigGuide" && (
-              <div className="flex flex-row gap-2">
+              <div className="snap-start flex-shrink-0 w-[100%] p-1">
                 {userEvents.length > 0 ? (
                   userEvents.map((event) => (
                     <div className="mb-2">

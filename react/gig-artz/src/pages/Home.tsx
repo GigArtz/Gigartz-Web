@@ -14,7 +14,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     dispatch(fetchAllEvents());
-  }, [dispatch]);
+  }, []);
 
   return (
     <div className="main-content">

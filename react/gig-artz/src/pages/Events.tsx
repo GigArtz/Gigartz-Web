@@ -5,6 +5,7 @@ import {
   FaCalendar,
   FaClock,
   FaComment,
+  FaEllipsisV,
   FaHeart,
   FaLocationArrow,
   FaShare,
@@ -14,6 +15,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { addLike, buyTicket } from "../store/eventsSlice";
 import React from "react";
 import CommentsModal from "../components/CommentsModal";
+import ShareModal from "../components/ShareModal";
+import CRUDModal from "../components/CRUDModal";
 
 interface Event {
   id: string;
@@ -47,12 +50,16 @@ const EventDetails = () => {
   );
   const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.auth);
+  const { profile } = useSelector((state: RootState) => state.profile);
 
   // Comments Modal
-  const [isVisible, setIsVisible] = React.useState(false);
+  const [isCommentsVisible, setIsCommentsVisible] = useState(false);
 
   // Share Modal
-  const [isShareVisible, setIsShareVisible] = React.useState(false);
+  const [isShareVisible, setIsShareVisible] = useState(false);
+
+  // CRUD Modal
+  const [isCRUDVisible, setIsCRUDVisible] = useState(false);
 
   useEffect(() => {
     const foundEvent = eventData.find((e) => e.id === eventId);
@@ -92,13 +99,15 @@ const EventDetails = () => {
   };
 
   // Show comments
-  const showComments = (eventId: string) => {
-    console.log("Show comments", eventId);
+  const showComments = () => {
+    console.log("show comments");
+    setIsCommentsVisible(true);
   };
 
   // Show comments
-  const shareEvent = (eventId: string) => {
+  const shareEvent = () => {
     console.log("Show comments", eventId);
+    setIsShareVisible(true);
   };
 
   if (!event) {
@@ -132,11 +141,59 @@ const EventDetails = () => {
     navigate(`/people/${event.promoterId}`);
   };
 
+  const handleCRUD = () => {
+    setIsCRUDVisible(true);
+  };
+
+  const editEvent = (event: Event) => {
+    
+   };
+  const deleteEvent = (event: Event) => { };
+
   return (
     <div className="main-content px-4 md:px-8 mb-3">
-      <EventGalleryCarousel event={event} />
+      {/* CRUD Modal */}
+      {isCRUDVisible && (
+        <CRUDModal
+          setIsCRUDVisible={setIsCRUDVisible}
+          onEdit={() => console.log("Edit event")}
+          onDelete={() => console.log("Delete event")}
+        />
+      )}
 
-      <CommentsModal user={undefined} eventId={""} />
+      {/* Comments Modal */}
+      {isCommentsVisible && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
+          <CommentsModal
+            user={profile}
+            event={event}
+            isCommentsVisible={isCommentsVisible}
+            onClose={() => setIsCommentsVisible(false)}
+          />
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {isShareVisible && (
+        <ShareModal
+          isVisible={isShareVisible}
+          shareUrl={`https://example.com/events/${eventId}`}
+          onClose={() => setIsShareVisible(false)}
+        />
+      )}
+
+      <div className="">
+        {uid === event?.promoterId && (
+          <div className="z-20 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10">
+            <FaEllipsisV
+              onClick={handleCRUD}
+              className="z-10 w-4 h-4 text-white"
+            />
+          </div>
+        )}
+
+        <EventGalleryCarousel event={event} />
+      </div>
 
       <div className="flex flex-row md:flex-row justify-between gap-4">
         <div>
@@ -147,11 +204,8 @@ const EventDetails = () => {
         </div>
 
         <div className="flex gap-4 text-gray-400 text-sm md:text-base">
-          <p className="flex items-center">
-            <FaComment
-              onClick={() => showComments}
-              className="w-5 h-5 hover:text-teal-500 mr-2"
-            />{" "}
+          <p className="flex items-center" onClick={showComments}>
+            <FaComment className="w-5 h-5 hover:text-teal-500 mr-2" />{" "}
             {event.comments.length}
           </p>
           <p className="flex items-center">
@@ -161,8 +215,9 @@ const EventDetails = () => {
             />{" "}
             {event.likes}
           </p>
+
           <p className="flex items-center">
-            <FaShare onClick={() => shareEvent} className="w-5 h-5 mr-2" />
+            <FaShare onClick={shareEvent} className="w-5 h-5 mr-2" />
           </p>
         </div>
       </div>

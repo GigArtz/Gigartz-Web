@@ -21,6 +21,8 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
+  
+
   return (
     <Link to={`/events/?eventId=${event.id}`} className="block w-full h-full">
       <div className="w-[100%] h-full flex flex-col flex-1 min-w-0 rounded-xl shadow-lg border border-gray-800 cursor-pointer transition-transform">
@@ -47,6 +49,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
               : "text-lg"
           }`}>
               {event.title}
+
             </h5>
 
             {cardSize === "lg" && (

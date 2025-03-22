@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import AddEventForm from "./EventForm";
+import { FaTimesCircle } from "react-icons/fa";
 
 function Modal({
   isModalOpen,
@@ -25,7 +26,7 @@ function Modal({
           id="authentication-modal"
           tabIndex={-1}
           aria-hidden={!isModalOpen} // Accessibility improvement for screen readers
-          className="fixed top-0 left-0 right-0 z-20 flex justify-center items-center px-2  w-full h-full bg-[#1F1C29] bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
+          className="fixed top-0 left-0 right-0 z-10 flex justify-center items-center px-5 md:px-2  w-full h-full bg-[#1F1C29] bg-opacity-70 backdrop-blur-sm transition-all duration-300 ease-in-out"
         >
           <div
             className="relative p-4 w-full md:w-[50%] max-w-lg rounded-lg shadow-lg bg-[#1F1C29] transform transition-all duration-300 ease-in-out"
@@ -35,27 +36,12 @@ function Modal({
           >
             {/* Modal Header */}
             <div className="flex items-end justify-end p-2 md:p-5 rounded-t">
-            <button
-                onClick={closeModal}
-                type="button"
-                className="text-gray-400 bg-transparent hover:bg-red-300 hover:text-red-900 rounded-full inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
+              {/* Close Button */}
+              <button
+                onClick={() => closeModal()}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
               >
-                <svg
-                  className="w-4 h-4"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 14 14"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                  />
-                </svg>
-                <span className="sr-only">Close modal</span>
+                <FaTimesCircle className="w-6 h-6" />
               </button>
             </div>
 

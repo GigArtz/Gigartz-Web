@@ -77,7 +77,7 @@ function Drawer() {
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
       {/* Profile Section */}
-      <div className="md:hidden  border-gray-500 fixed z-10 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+      <div className="md:hidden  border-gray-500 fixed z-20 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
         <div className="p-2 px-2 bg-[#060512] shadow-sm flex justify-between items-center">
           <div className="flex flex-row text-center gap-4 px-2">
             <div className="flex align-middle p-2">

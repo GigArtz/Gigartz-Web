@@ -5,7 +5,7 @@ import { FaArrowLeft } from "react-icons/fa";
 function Notifications() {
   return (
     <div className="main-content">
-      <div>
+      <div className="p-2">
         <div className="md:flex hidden items-center mb-6 p-4 gap-5 bg-gray-800 text-white rounded-3xl shadow-md">
           <FaArrowLeft />
           <h1 className="text-lg font-semibold text-teal-500">Notifications</h1>

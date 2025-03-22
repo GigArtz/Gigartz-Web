@@ -1,7 +1,13 @@
 import { RootState } from "../store/store";
 import { addEvent } from "../store/eventsSlice";
 import React, { useState, useReducer, useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaCircle, FaTrash } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaArrowRight,
+  FaCircle,
+  FaTrash,
+  FaSpinner,
+} from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -94,6 +100,7 @@ const AddEventForm: React.FC = () => {
   const [formData, dispatch] = useReducer(formReducer, initialState);
   const { profile } = useSelector((state: RootState) => state.profile);
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(false); // Loader state
 
   const localUser = (() => {
     const storedAuthUser = localStorage.getItem("authUser");
@@ -112,7 +119,6 @@ const AddEventForm: React.FC = () => {
     });
 
     return () => unsubscribe();
-    console.log(profile);
   }, []); // Dependency array ensures this runs only once on mount
 
   useEffect(() => {
@@ -127,7 +133,6 @@ const AddEventForm: React.FC = () => {
       });
     }
   }, [profile?.id, currentUser?.uid, localUser?.uid, formData.promoterId]);
-  // Ensure dependencies are stable and avoid unnecessary re-renders
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -135,14 +140,10 @@ const AddEventForm: React.FC = () => {
     dispatch({ type: "update", name, value: finalValue });
   };
 
-  const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    dispatch({ type: "update", name, value });
-  };
-
   const handleGalleryChange = async (e) => {
     const files = Array.from(e.target.files); // Convert file list to array
     const uploadedImages = [];
+    setLoading(true); // Show loader during upload
 
     for (const file of files) {
       const storageRef = ref(storage, `eventImages/${Date.now()}_${file.name}`);
@@ -160,12 +161,14 @@ const AddEventForm: React.FC = () => {
     }
 
     dispatch({ type: "update", name: "gallery", value: uploadedImages });
+    setLoading(false); // Hide loader after upload
   };
 
   const handleVideoChange = async (e) => {
     const file = e.target.files[0]; // Only one video file selected
     if (!file) return;
 
+    setLoading(true); // Show loader during upload
     const storageRef = ref(storage, `eventVideos/${Date.now()}_${file.name}`);
 
     try {
@@ -176,12 +179,9 @@ const AddEventForm: React.FC = () => {
       console.error("Error uploading video: ", error.message); // Log error message
       alert("Failed to upload the video. Please check your permissions.");
     }
+    setLoading(false); // Hide loader after upload
   };
 
-  const handleTicketChange = (e, ticketType) => {
-    const { name, value } = e.target;
-    dispatch({ type: "updateNested", ticketType, name, value });
-  };
 
   const handleArtistChange = (index, value) => {
     dispatch({ type: "updateArray", index, value });
@@ -196,6 +196,14 @@ const AddEventForm: React.FC = () => {
       alert("User ID is missing. Please ensure you are logged in.");
       return;
     }
+
+    // Validate required fields
+    if (!formData.title || !formData.date || !formData.venue) {
+      alert("Please fill in all required fields (Title, Date, Venue).");
+      return;
+    }
+
+    setLoading(true); // Show loader during submission
 
     // Validate ticketsAvailable
     const ticketsAvailable = Object.keys(formData.ticketsAvailable).reduce(
@@ -227,6 +235,7 @@ const AddEventForm: React.FC = () => {
 
     if (Object.keys(ticketsAvailable).length === 0) {
       alert("Please ensure all ticket types have complete information.");
+      setLoading(false); // Hide loader if validation fails
       return;
     }
 
@@ -258,11 +267,19 @@ const AddEventForm: React.FC = () => {
     console.log("Submitting eventObject:", eventObject); // Debugging log to verify ticket information
 
     // Dispatch to Redux or submit to your backend
-    dispatchRedux(addEvent(eventObject));
+    await dispatchRedux(addEvent(eventObject));
+    setLoading(false); // Hide loader after submission
+    alert("Event submitted successfully!");
   };
 
   return (
     <div className="justify-center items-center z-30">
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <FaSpinner className="text-teal-500 text-4xl animate-spin" />
+        </div>
+        
+      )}
       <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
         <div className="rounded-lg">
           {step === 1 && (
@@ -276,7 +293,7 @@ const AddEventForm: React.FC = () => {
             />
           )}
           {step === 3 && (
-            <Step3 formData={formData} handleDateChange={handleDateChange} />
+            <Step3 formData={formData} handleDateChange={handleChange} />
           )}
           {step === 4 && <Step4 formData={formData} dispatch={dispatch} />}
           {step === 5 && (

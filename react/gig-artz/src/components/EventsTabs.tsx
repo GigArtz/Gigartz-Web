@@ -4,6 +4,8 @@ import UserCard from "./UserCard";
 import { AppDispatch, RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProfiles } from "../store/profileSlice";
+import ScrollableEventRow from "./ScrollableEventRow";
+import { FaSpinner } from "react-icons/fa";
 
 interface EventsTabsProps {
   events: any[];
@@ -27,20 +29,13 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
   if (loading)
     return (
-      <div className="flex mt-8 justify-center items-center">
-        <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <FaSpinner className="text-teal-500 text-4xl animate-spin" />
       </div>
     );
 
   return (
     <div className="">
-      {/* Spinner */}
-
-      {loading && (
-        <div className="flex justify-center">
-          <div className="animate-spin h-7 w-7 border-4 border-teal-500 border-t-transparent rounded-full"></div>
-        </div>
-      )}
 
       {/* Trending Events Section */}
       <div className="mt-2 w-full p-2 rounded-xl">
@@ -70,26 +65,15 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
         <h2 className="text-xl text-white font-semibold mb-4">For You</h2>
 
         {/* Scrollable Row */}
-        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-2 md:space-x-4 pb-4 rounded-xl w-full justify-evenly">
-          {error && <p className="text-red-500">Error: {error}</p>}
-
-          {getFilteredEvents().length === 0 && !loading && !error && (
-            <p className="text-white text-center w-full">No events found.</p>
-          )}
-
-          {getFilteredEvents().map((event) => (
-            <div
-              key={event.id}
-              className="snap-start flex-shrink-0 w-[49%] p-1"
-            >
-              <EventCard event={event} cardSize="md" />
-            </div>
-          ))}
-        </div>
+        <ScrollableEventRow
+          events={getFilteredEvents}
+          loading={loading}
+          error={error}
+        />
       </div>
 
       {/* Freelancers */}
-      <div className="mt-8">
+      <div className="mt-8 px-4">
         <h2 className="text-xl text-white font-semibold mb-4">
           Popular Freelancers
         </h2>
@@ -119,22 +103,11 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
         </h2>
 
         {/* Scrollable Row */}
-        <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full justify-evenly">
-          {error && <p className="text-red-500">Error: {error}</p>}
-
-          {getFilteredEvents().length === 0 && !loading && !error && (
-            <p className="text-white text-center w-full">No events found.</p>
-          )}
-
-          {getFilteredEvents().map((event) => (
-            <div
-              key={event.id}
-              className="snap-start flex-shrink-0 w-[49%] p-1"
-            >
-              <EventCard event={event} cardSize="md" />
-            </div>
-          ))}
-        </div>
+        <ScrollableEventRow
+          events={getFilteredEvents}
+          loading={loading}
+          error={error}
+        />
       </div>
     </div>
   );
