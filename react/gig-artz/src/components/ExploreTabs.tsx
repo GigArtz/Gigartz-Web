@@ -31,7 +31,7 @@ function ExploreTabs() {
 
   return (
     <div className="px-2">
-      <div className="mt-2">
+      <div className="my-2">
         <div className="relative rounded-lg border border-gray-700 dark:border-gray-700 bg-[#060512] dark:bg-gray-700">
           <form>
             <input
@@ -59,58 +59,27 @@ function ExploreTabs() {
         </div>
       </div>
 
-      <div className="text-sm font-medium text-center  text-gray-500 border-b border-gray-700">
-        <ul className="flex flex-wrap justify-between -mb-px">
-          <li className="me-2">
-            <button
-              onClick={() => setActiveTab("top")}
-              className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                activeTab === "top"
-                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
-                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-              }`}
-            >
-              Top
-            </button>
-          </li>
-          <li className="me-2">
-            <button
-              onClick={() => setActiveTab("latest")}
-              className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                activeTab === "latest"
-                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
-                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-              }`}
-            >
-              Latest
-            </button>
-          </li>
-
-          <li className="me-2">
-            <button
-              onClick={() => setActiveTab("events")}
-              className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                activeTab === "events"
-                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
-                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-              }`}
-            >
-              Events
-            </button>
-          </li>
-
-          <li className="me-2">
-            <button
-              onClick={() => setActiveTab("people")}
-              className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                activeTab === "people"
-                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
-                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-              }`}
-            >
-              People
-            </button>
-          </li>
+      <div className="tabs">
+        <ul className="flex flex-nowrap justify-between overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+          {[
+            { key: "top", label: "Top" },
+            { key: "latest", label: "Latest" },
+            { key: "events", label: "Events" },
+            { key: "people", label: "People" },
+          ].map(({ key, label }) => (
+            <li key={key}>
+              <button
+                onClick={() => setActiveTab(key)}
+                className={`px-4 py-2 rounded-t-lg transition-all duration-200 ${
+                  activeTab === key
+                    ? " border-teal-500 text-lg text-white bg-teal-900"
+                    : "border-transparent hover:text-gray-400 hover:border-gray-400 dark:hover:text-gray-300"
+                }`}
+              >
+                {label}
+              </button>
+            </li>
+          ))}
         </ul>
       </div>
 
@@ -176,7 +145,7 @@ function ExploreTabs() {
             )}
 
             {activeTab === "people" && (
-              <div className="flex flex-row gap-2 overflow-auto">
+              <div className="flex flex-col gap-2 overflow-auto">
                 {userList.length > 0 ? (
                   userList.map((user) => (
                     <div className="mb-2">
@@ -193,6 +162,19 @@ function ExploreTabs() {
 
             {activeTab === "reviews" && (
               <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
+            )}
+
+            {activeTab === "events" && (
+              <div className="mt-2 w-full p-2 rounded-xl">
+                <h2 className="text-xl text-white font-semibold mb-4">
+                  Trending
+                </h2>
+                <ScrollableEventRow
+                  events={eventList}
+                  loading={loading}
+                  error={error}
+                />
+              </div>
             )}
           </>
         )}

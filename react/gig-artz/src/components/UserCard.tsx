@@ -24,7 +24,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
 
   return (
     <div
-    className="flex w-auto items-center p-2 rounded-lg cursor-pointer hover:bg-gray-700 transition shadow-md"
+    className="flex w-auto items-center p-2 rounded-lg cursor-pointer hover:bg-gray-900 delay-150 duration-300 ease-in-out shadow-md"
     onClick={handleClick}
   >
     {/* Profile Info */}
@@ -46,7 +46,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
     </div>
   
     {/* Follow Button */}
-    <button className="bg-blue-500 text-white px-4 py-2 rounded-3xl hover:bg-blue-600 transition">
+    <button className="border text-teal-500 border-teal-500 px-4 py-1 rounded-3xl hover:-translate-y-1 hover:font-semibold hover:scale-110 transition">
       Follow
     </button>
   </div>

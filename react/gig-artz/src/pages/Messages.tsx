@@ -6,8 +6,13 @@ import Loader from "../components/Loader";
 import Chat from "../components/Chat";
 import Header from "../components/Header";
 import { FaTimes, FaTimesCircle } from "react-icons/fa";
+import { useLocation } from "react-router-dom"; // Import useLocation
 
 const Messages: React.FC = () => {
+  const location = useLocation(); // Get the current location
+  const queryParams = new URLSearchParams(location.search);
+  const contactFromQuery = queryParams.get("contact"); // Extract contact from query
+
   const dispatch = useDispatch<AppDispatch>();
   const { contacts, conversations, loading, error } = useSelector(
     (state: RootState) => state.messages
@@ -43,6 +48,13 @@ const Messages: React.FC = () => {
       console.warn("Active conversation is no longer valid.");
     }
   }, [conversations, activeConversation]);
+
+  useEffect(() => {
+    if (contactFromQuery) {
+      setActiveConversation(contactFromQuery); // Open chat with the specified contact
+      setSelectedContact(contactFromQuery);
+    }
+  }, [contactFromQuery]);
 
   const handleSendMessage = (
     newMessage: string,
@@ -118,7 +130,9 @@ const Messages: React.FC = () => {
     <div className="main-content flex h-screen">
       {/* Sidebar - Conversations List */}
       <div className="md:w-[30%] w-full md:border-r border-gray-700 p-4">
-        <h2 className="text-xl font-semibold text-white-800 mb-4">Messages</h2>
+        <h2 className="hidden md:block text-xl font-semibold text-white-800 mb-4">
+          Messages
+        </h2>
 
         {/* Show loader only in the conversations list */}
         {loading && !conversations?.length ? (
@@ -260,11 +274,11 @@ const Messages: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold mb-3">New Message</h3>
               <button
-                  onClick={() => setIsModalOpen(false)}
-                  className=" px-3 py-1 rounded-full hover:bg-red-400"
-                >
-                  <FaTimesCircle className="w-5 h-5" />
-                </button>
+                onClick={() => setIsModalOpen(false)}
+                className=" px-3 py-1 rounded-full hover:bg-red-400"
+              >
+                <FaTimesCircle className="w-5 h-5" />
+              </button>
             </div>
             <select
               value={selectedContact || ""}

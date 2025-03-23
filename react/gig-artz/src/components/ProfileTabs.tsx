@@ -1,46 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EventCard from "./EventCard";
 import { useSelector } from "react-redux";
 
-function ProfileTabs({ uid }) {
-  const { loading, error } = useSelector((state) => state.profile);
-  const events = useSelector((state) => state.events);
+function ProfileTabs() {
+  const { profile, loading, error } = useSelector((state) => state.profile);
+  const [userEvents, setUserEvents] = useState([]);
 
-  const userEvents = events?.events.filter((event) => event.promoterId === uid);
+  useEffect(() => {
+    if (profile?.userEvents) {
+      setUserEvents(profile.userEvents);
+    }
+  }, [profile]);
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("gigGuide");
 
   return (
     <div>
-      <div className="text-sm font-medium text-center  text-gray-500 border-b border-gray-700">
-        <ul className="flex flex-wrap justify-self-stretch -mb-px">
-          <li className="me-2">
-            <button
-              onClick={() => setActiveTab("gigGuide")}
-              className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                activeTab === "gigGuide"
-                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
-                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-              }`}
-            >
-              Gig Guide
-            </button>
-          </li>
-          <li className="me-2">
-            <button
-              onClick={() => setActiveTab("reviews")}
-              className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                activeTab === "reviews"
-                  ? "text-blue-600 border-blue-600 dark:text-blue-500 dark:border-blue-500"
-                  : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-              }`}
-            >
-              Reviews
-            </button>
-          </li>
+       {/* Tabs */}
+       <div className="tabs">
+        <ul className="flex flex-nowrap justify-between overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+          {[
+            { key: "events", label: "Events" },
+            { key: "gigGuide", label: "Gig Guide" },
+            { key: "reviews", label: "Reviews" },
+            { key: "likes", label: "Likes" },
+          ].map(({ key, label }) => (
+            <li key={key}>
+              <button
+                onClick={() => setActiveTab(key)}
+                className={`px-4 py-2 rounded-t-lg transition-all duration-200 ${
+                  activeTab === key
+                    ? " border-teal-500 text-lg text-white bg-teal-900"
+                    : "border-transparent hover:text-gray-400 hover:border-gray-400 dark:hover:text-gray-300"
+                }`}
+              >
+                {label}
+              </button>
+            </li>
+          ))}
         </ul>
       </div>
+
 
       <div className="p-4">
         {/* Spinner */}

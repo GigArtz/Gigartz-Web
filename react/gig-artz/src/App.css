@@ -17,7 +17,7 @@ text {
   }
 
   .btn-primary {
-    @apply w-full py-3 bg-gradient-to-r from-teal-400 to-pink-500 text-white font-bold rounded-lg;
+    @apply w-full py-3 bg-gradient-to-r from-teal-400 to-pink-500 text-white font-bold rounded-3xl cursor-pointer hover:bg-gray-900 delay-150 duration-300 ease-in-out;
   }
 
   .auth-bg {
@@ -35,13 +35,18 @@ text {
   .main-content {
     @apply lg:w-[60%] sm:w-[100%] md:w-[80%] relative lg:border-t-0 md:border-r md:border-l border-gray-700 lg:left-[15%] md:left-[20%]  min-h-screen text-white md:p-2 mt-20 md:mt-1 md:px-1 lg:px-5;
   }
+
+  .tabs {
+    @apply text-sm font-medium text-center text-gray-500 border-b border-gray-700 
+           overflow-hidden sticky top-[9%] md:top-0 pt-2 bg-[#060512] z-10;
+  }
 }
 
 /* Define color variables */
 @layer base {
   :root {
     --color-dark: #060512;
-    --color-secondary: #1F1C29;
+    --color-secondary: #1f1c29;
     --color-primary: #060512;
   }
 }
@@ -51,11 +56,11 @@ text {
   .bg-dark {
     background-color: var(--color-dark);
   }
-  
+
   .bg-secondary {
     background-color: var(--color-secondary);
   }
-  
+
   .bg-primary {
     background-color: var(--color-primary);
   }
@@ -66,8 +71,6 @@ text {
   width: 0.2rem;
   height: 0.2rem;
 }
-
-
 
 /* Track */
 ::-webkit-scrollbar-track {
@@ -82,4 +85,28 @@ text {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* Hide scrollbar in IE & Edge */
+  scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+
+/* Toast */
+.toast {
+  animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

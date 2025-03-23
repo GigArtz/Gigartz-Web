@@ -8,6 +8,7 @@ import Header from '../components/Header';
 function Wallet() {
 
   const userList = useSelector((state: RootState) => state.profile);
+  const uid = useSelector((state: RootState) => state.profile);
 
   const userProfile = userList?.userList?.find(
     (user: UserProfile) => user?.id === uid

@@ -52,7 +52,7 @@ function Drawer() {
   const handleLogout = () => {
     // Clear token and redirect to login
     localStorage.removeItem("authToken");
-    navigate("/login");
+    navigate("/");
   };
 
   const goBack = () => {

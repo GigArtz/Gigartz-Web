@@ -14,21 +14,21 @@ function WalletTabs({ uid }) {
   return (
     <div className=" rounded-lg shadow-md">
       {/* Tabs */}
-      <div className="text-sm font-medium text-center border-b text-gray-400 border-gray-700">
-        <ul className="flex flex-wrap justify-between -mb-px">
+      <div className="tabs">
+        <ul className="flex flex-nowrap justify-between overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
             { key: "walletOverview", label: "Overview" },
             { key: "earnings", label: "Earnings" },
             { key: "payouts", label: "Payouts" },
             { key: "bookings", label: "Bookings" },
           ].map(({ key, label }) => (
-            <li key={key} className="me-2">
+            <li key={key}>
               <button
                 onClick={() => setActiveTab(key)}
-                className={`inline-block p-4 border-b-2 rounded-t-lg transition ${
+                className={`px-4 py-2 rounded-t-lg transition-all duration-200 ${
                   activeTab === key
-                    ? "text-blue-500 border-blue-500"
-                    : "border-transparent hover:text-gray-300 hover:border-gray-600"
+                    ? " border-teal-500 text-lg text-white bg-teal-900"
+                    : "border-transparent hover:text-gray-400 hover:border-gray-400 dark:hover:text-gray-300"
                 }`}
               >
                 {label}

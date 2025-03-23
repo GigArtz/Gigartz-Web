@@ -24,8 +24,9 @@ import Monetization from './pages/Monetization';
 import People from './pages/People';
 import Wallet from './pages/Wallet';
 import GuestList from './pages/GuestList';
-import Scan from './pages/Scan';
+import Scanner from './pages/Scan';
 import Bookings from './pages/Bookings';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
           <Route path="/checkout" element={<><Drawer /><Payment /><SideBar /></>} />
           <Route path="/notifications" element={<><Drawer /><Notifications /><SideBar /></>} />
           <Route path="/tickets" element={<><Drawer /><Tickets /><SideBar /></>} />
-          <Route path="/scanner" element={<><Drawer /><Scan /><SideBar /></>} />
+          <Route path="/scanner" element={<><Drawer /><Scanner /><SideBar /></>} />
           <Route path="/bookings" element={<><Drawer /><Bookings /><SideBar /></>} />
           <Route path="/events" element={<><Drawer /><EventManager /><SideBar /></>} />
           <Route path="/explore" element={<><Drawer /><Explore /><SideBar /></>} />
@@ -52,6 +53,7 @@ function App() {
           <Route path="/notifications" element={<><Drawer /><Notifications /><SideBar /></>} />
           <Route path="/guest-list" element={<><Drawer /><GuestList /><SideBar /></>} />
           <Route path="/home" element={<><Drawer /><Home /><SideBar /></>} />
+          <Route path="/settings" element={<><Drawer /><Settings /><SideBar /></>} />
           <Route path="/reset-password" element={<Forgot />} />
         </Routes>
          

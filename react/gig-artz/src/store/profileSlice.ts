@@ -190,21 +190,32 @@ export const fetchDrawerUserProfile =
   };
 
 // Fetch user profile
-export const fetchUserProfile =
-  (uid: string) => async (dispatch: AppDispatch) => {
-    dispatch(profileSlice.actions.fetchProfileStart());
+export const fetchUserProfile = (uid: string) => async (dispatch: AppDispatch) => {
+  dispatch(profileSlice.actions.fetchProfileStart());
 
-    try {
-      console.log("Fetching user profile with user id:", uid);
-      const response = await axios.get(
-        `https://gigartz.onrender.com/user/${uid}`
-      );
-      console.log("User profile response:", response.data.userProfile);
-      dispatch(profileSlice.actions.fetchProfileSuccess(response.data.userProfile));
-    } catch (error: unknown) {
-      handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
+  try {
+    console.log("Fetching all user profiles...");
+    const response = await axios.get(`https://gigartz.onrender.com/users/`);
+    
+    console.log("All user profiles response:", response.data);
+    
+    const allProfiles = response.data;
+    
+    // Find the profile matching the given UID
+    const userProfile = allProfiles.find((profile) => profile.id === uid);
+    
+    if (userProfile) {
+      console.log("User profile found:", userProfile);
+      dispatch(profileSlice.actions.fetchProfileSuccess(userProfile));
+    } else {
+      console.error("User profile not found for UID:", uid);
+      dispatch(profileSlice.actions.fetchProfileFailure("User profile not found"));
     }
-  };
+  } catch (error: unknown) {
+    handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
+  }
+};
+
 
 // Fetch all user profiles
 export const fetchAllProfiles = () => async (dispatch: AppDispatch) => {
