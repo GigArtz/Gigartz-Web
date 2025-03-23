@@ -20,9 +20,11 @@ function ScrollableEventRow({ events = [], loading = false, error = null }) {
   }
 
   return (
-    <div className="flex flex-row scrollbar-hide scroll-smooth snap-x space-x-4 pb-4 overflow-x-auto flex-shrink-0 w-[100%] scrollbar-hide ">
-      {events.map((event) => (
-        <EventCard key={event.id} event={event} cardSize="sm" />
+    <div className="flex flex-row scrollbar-hide scroll-smooth snap-x space-x-4 pb-4 overflow-x-auto scrollbar-hide ">
+       {events.map((event) => (
+        <div key={event.id} className="snap-start flex-shrink-0 w-[49%] p-1">
+          <EventCard event={event} cardSize="lg" />
+        </div>
       ))}
     </div>
 

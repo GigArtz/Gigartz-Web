@@ -2,17 +2,17 @@ import React from "react";
 import EventCard from "./EventCard";
 import { FaSpinner } from "react-icons/fa";
 
-function LgScrollableEventRow({ events = [], loading = false, error = null }) {
+function ScrollableEventCol({ events = [], loading = false, error = null }) {
   if (loading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center h-64">
         <FaSpinner className="text-teal-500 text-4xl animate-spin" />
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-red-500">Error: {error}</p>;
+    return <p className="text-red-500 text-center">Error: {error}</p>;
   }
 
   if (events.length === 0) {
@@ -20,14 +20,14 @@ function LgScrollableEventRow({ events = [], loading = false, error = null }) {
   }
 
   return (
-    <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full">
-
+    <div className="flex flex-col space-y-4 w-full pb-4">
       {events.map((event) => (
-        <div key={event.id} className="snap-start flex-shrink-0 w-[100%] p-1">
+        <div key={event.id} className="w-full">
           <EventCard event={event} cardSize="lg" />
         </div>
       ))}
     </div>
   );
 }
-export default LgScrollableEventRow;
+
+export default ScrollableEventCol;

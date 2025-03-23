@@ -8,6 +8,7 @@ import { fetchAllEvents } from "../store/eventsSlice";
 import { FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
+import ScrollableEventCol from "./ScrollableEventCol";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
@@ -120,15 +121,17 @@ function ExploreTabs() {
                   <h2 className="text-xl text-white font-semibold mb-4">
                     People
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                    {userList?.length > 0 ? (
-                      userList?.map((user) => (
-                        <UserCard key={user.id} user={user} />
+                  <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
+                    {userList.length > 0 ? (
+                      userList.map((user) => (
+                        <div className="mb-2">
+                          <UserCard user={user} />
+                        </div>
                       ))
                     ) : (
-                      <div className="col-span-full text-center">
-                        <p className="text-gray-400 mt-4">No users found.</p>
-                      </div>
+                      <p className="text-gray-400 text-center mt-4">
+                        No users found.
+                      </p>
                     )}
                   </div>
                 </div>
@@ -136,7 +139,7 @@ function ExploreTabs() {
             )}
 
             {activeTab === "people" && (
-              <div className="flex flex-col gap-2 overflow-auto">
+              <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
                 {userList.length > 0 ? (
                   userList.map((user) => (
                     <div className="mb-2">
@@ -157,10 +160,17 @@ function ExploreTabs() {
 
             {activeTab === "events" && (
               <div className="mt-2 w-full p-2 rounded-xl">
-                <h2 className="text-xl text-white font-semibold mb-4">
-                  Trending
-                </h2>
-                <ScrollableEventRow
+                <ScrollableEventCol
+                  events={eventList}
+                  loading={loading}
+                  error={error}
+                />
+              </div>
+            )}
+
+            {activeTab === "latest" && (
+              <div className="mt-2 w-full p-2 rounded-xl">
+                <ScrollableEventCol
                   events={eventList}
                   loading={loading}
                   error={error}
