@@ -7,6 +7,7 @@ import { AppDispatch } from "../store/store";
 import { fetchAllEvents } from "../store/eventsSlice";
 import { FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
+import LgScrollableEventRow from "./LgScrollableEventRow";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
@@ -95,23 +96,13 @@ function ExploreTabs() {
           <>
             {activeTab === "top" && (
               <>
-                <div className="flex flex-row gap-2 overflow-y-auto">
+                <div className="mt-2 w-full p-2 rounded-xl">
                   {/* Scrollable Row */}
-
-                  {eventList?.length === 0 && !loading && !error && (
-                    <p className="text-white text-center w-full">
-                      No events found.
-                    </p>
-                  )}
-
-                  {eventList?.map((event) => (
-                    <div
-                      key={event.id}
-                      className="snap-start flex-shrink-0 w-[100%] p-1"
-                    >
-                      <EventCard event={event} cardSize="lg" />
-                    </div>
-                  ))}
+                  <LgScrollableEventRow
+                    events={eventList}
+                    loading={loading}
+                    error={error}
+                  />
                 </div>
 
                 <div className="mt-2 w-full p-2 rounded-xl">

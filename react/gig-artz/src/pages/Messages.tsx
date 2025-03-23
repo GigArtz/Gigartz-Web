@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 import { getMessages, sendMessage, Message } from "../store/messageSlice";
 import Loader from "../components/Loader";
 import Chat from "../components/Chat";
-import Header from "../components/Header";
-import { FaTimes, FaTimesCircle } from "react-icons/fa";
+import { FaTimesCircle } from "react-icons/fa";
 import { useLocation } from "react-router-dom"; // Import useLocation
 
 const Messages: React.FC = () => {
@@ -14,7 +13,7 @@ const Messages: React.FC = () => {
   const contactFromQuery = queryParams.get("contact"); // Extract contact from query
 
   const dispatch = useDispatch<AppDispatch>();
-  const { contacts, conversations, loading, error } = useSelector(
+  const { contacts, conversations, loading } = useSelector(
     (state: RootState) => state.messages
   );
   const currentUserId = useSelector((state: RootState) => state.auth.uid);
@@ -23,50 +22,48 @@ const Messages: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [activeConversation, setActiveConversation] = useState<string | null>(
-    null
+    contactFromQuery || null
   );
 
-  // Function to fetch conversations
+  // Memoize local conversations to avoid recalculating on every render
+  const localConversations = useMemo(() => {
+    if (!conversations) return [];
+    return conversations.map((conv) => {
+      if (conv.contact === activeConversation) {
+        return { ...conv }; // Ensure active conversation is preserved
+      }
+      return conv;
+    });
+  }, [conversations, activeConversation]);
+
+  // Fetch conversations on component mount
   const fetchConversations = useCallback(() => {
     if (currentUserId) {
       dispatch(getMessages(currentUserId));
     }
   }, [dispatch, currentUserId]);
 
-  // Fetch conversations on component mount
+  // Refresh conversations and merge new messages
+  const refreshConversations = useCallback(() => {
+    if (currentUserId) {
+      dispatch(getMessages(currentUserId));
+    }
+  }, [dispatch, currentUserId]);
+
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
-
-  // Synchronize `activeConversation` with Redux store data
-  useEffect(() => {
-    if (
-      activeConversation &&
-      !conversations?.some((c) => c.contact === activeConversation)
-    ) {
-      // If the active conversation is no longer valid, do not reset it
-      console.warn("Active conversation is no longer valid.");
-    }
-  }, [conversations, activeConversation]);
-
-  useEffect(() => {
-    if (contactFromQuery) {
-      setActiveConversation(contactFromQuery); // Open chat with the specified contact
-      setSelectedContact(contactFromQuery);
-    }
-  }, [contactFromQuery]);
+    const interval = setInterval(() => {
+      refreshConversations();
+    }, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, [fetchConversations, refreshConversations]);
 
   const handleSendMessage = (
     newMessage: string,
     selectedFile: File | null,
     e?: React.FormEvent | null
   ) => {
-    console.log("sending message...", newMessage, selectedContact);
-
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
-
+    if (e && e.preventDefault) e.preventDefault();
     if (!newMessage || !selectedContact) {
       console.error("Message or selected contact is missing.");
       return;
@@ -79,51 +76,28 @@ const Messages: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    // Optimistically update the Redux store
-    const existingConversation = conversations?.find(
-      (conversation) => conversation.contact === selectedContact
-    );
+    // Optimistically update Redux store and refresh conversations
+    dispatch(sendMessage(messageData)).then(() => {
+      refreshConversations();
+    });
 
-    if (!existingConversation) {
-      // If no conversation exists, create a new one
-      console.log("Creating a new conversation for the message.");
-      const newConversation = {
-        contact: selectedContact,
-        messages: [messageData],
-      };
-      dispatch({
-        type: "messages/addConversation",
-        payload: newConversation,
-      });
-    } else {
-      // Add the new message to the existing conversation
-      dispatch({
-        type: "messages/addMessageToConversation",
-        payload: { contact: selectedContact, message: messageData },
-      });
-    }
-
-    // Dispatch the sendMessage action to sync with the server
-    dispatch(sendMessage(messageData));
-
-    // Clear the input field
-    setNewMessage("");
+    setNewMessage(""); // Clear input field
   };
 
   const handleConversationClick = (contactId: string) => {
-    setActiveConversation(contactId); // Set the active conversation using contactId
-    setSelectedContact(contactId); // Set the selected contact using contactId
+    setActiveConversation(contactId);
+    setSelectedContact(contactId);
   };
 
   const getConversation = (contactId: string) => {
-    return conversations?.find(
-      (conversation) => conversation.contact === contactId // Match using the contact property
+    return localConversations.find(
+      (conversation) => conversation.contact === contactId
     );
   };
 
   const handleCloseConversation = () => {
-    setActiveConversation(null); // Reset the active conversation
-    setSelectedContact(null); // Reset the selected contact
+    setActiveConversation(null);
+    setSelectedContact(null);
   };
 
   return (
@@ -134,34 +108,20 @@ const Messages: React.FC = () => {
           Messages
         </h2>
 
-        {/* Show loader only in the conversations list */}
         {loading && !conversations?.length ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, index) => (
-              <div
-                key={index}
-                className="p-3 rounded-lg bg-gray-700 animate-pulse"
-              >
-                <div className="h-4 bg-gray-500 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-500 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
+          <Loader />
         ) : (
           <div className="max-h-[100vh] overflow-y-auto space-y-3">
-            {!conversations || conversations.length === 0 ? (
+            {localConversations.length === 0 ? (
               <p className="text-gray-500">No messages yet</p>
             ) : (
-              conversations.map((conversation) => {
-                // Match the conversation contact with the contact in the contacts array
+              localConversations.map((conversation) => {
                 const contact = contacts?.find(
                   (c) =>
                     c.userName === conversation.contact ||
                     c.id === conversation.contact
                 );
-                const lastMessage = conversation.messages.length
-                  ? conversation.messages[conversation.messages.length - 1]
-                  : null;
+                const lastMessage = conversation.messages.at(-1);
 
                 return (
                   <div
@@ -191,7 +151,6 @@ const Messages: React.FC = () => {
           </div>
         )}
 
-        {/* New Conversation Button */}
         <button
           onClick={() => setIsModalOpen(true)}
           className="fixed bottom-5 right-4 md:hidden text-white w-40 rounded-3xl btn-primary"
@@ -225,7 +184,6 @@ const Messages: React.FC = () => {
       {activeConversation && (
         <div className="fixed z-10 inset-0 bg-black bg-opacity-70 flex md:hidden">
           <div className="bg-[#060512] h-full w-full flex flex-col relative">
-            {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-[#060512] sticky top-0 z-10">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
                 {contacts?.find(
@@ -238,24 +196,10 @@ const Messages: React.FC = () => {
                 onClick={() => setActiveConversation(null)}
                 className="text-gray-500 hover:text-red-500 transition"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FaTimesCircle className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Chat Component (Scrollable) */}
             <div className="flex-1 overflow-y-auto">
               <Chat
                 conversation={getConversation(activeConversation)}
@@ -275,7 +219,7 @@ const Messages: React.FC = () => {
               <h3 className="text-lg font-semibold mb-3">New Message</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className=" px-3 py-1 rounded-full hover:bg-red-400"
+                className="px-3 py-1 rounded-full hover:bg-red-400"
               >
                 <FaTimesCircle className="w-5 h-5" />
               </button>
