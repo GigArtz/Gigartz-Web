@@ -36,6 +36,7 @@ interface ProfileState {
   profile: UserProfile | null;
   userList: UserProfile[] | null;
   loading: boolean;
+  loadingProfile: boolean;
   error: string | null;
   success: string | null;
 }
@@ -44,6 +45,7 @@ const initialState: ProfileState = {
   profile: null,
   userList: null,
   loading: false,
+  loadingProfile: false,
   error: null,
   success: null,
 };
@@ -194,6 +196,7 @@ export const fetchUserProfile = (uid: string) => async (dispatch: AppDispatch) =
   dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
+    
     console.log("Fetching all user profiles...");
     const response = await axios.get(`https://gigartz.onrender.com/users/`);
     
@@ -219,7 +222,7 @@ export const fetchUserProfile = (uid: string) => async (dispatch: AppDispatch) =
 
 // Fetch all user profiles
 export const fetchAllProfiles = () => async (dispatch: AppDispatch) => {
-  dispatch(profileSlice.actions.fetchProfileStart());
+ // dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
     console.log("Fetching user profiles");

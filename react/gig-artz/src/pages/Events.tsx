@@ -40,11 +40,6 @@ interface Event {
   likes: number;
 }
 
-interface Ticket {
-  ticketType: string;
-  price: number;
-  quantity: number;
-}
 
 const EventDetails = () => {
   const navigate = useNavigate();
@@ -187,6 +182,7 @@ const EventDetails = () => {
         eventDate: event.date,
         image: event.gallery[0], // replace with actual image if available
       };
+
 
       console.log(ticketDetails);
 

@@ -53,7 +53,7 @@ function ProfileTabs({ uid }) {
             <li key={key}>
               <button
                 onClick={() => setActiveTab(key)}
-                className={`px-4 py-2 rounded-t-lg transition-all duration-200 ${
+                className={`px-4 py-2 rounded-t-lg text-nowrap transition-all duration-200 ${
                   activeTab === key
                     ? "border-teal-500 text-lg text-white bg-teal-900"
                     : "border-transparent hover:text-gray-400 hover:border-gray-400"

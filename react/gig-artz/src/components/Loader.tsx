@@ -1,10 +1,11 @@
 import React from "react";
+import { FaSpinner } from "react-icons/fa";
 
 const Loader = ({ message }: { message?: string }) => {
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-50">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-dark backdrop-blur-md z-50">
       {/* Spinner */}
-      <div className="animate-spin h-12 w-12 border-4 border-gray-200 border-t-transparent rounded-full"></div>
+      <FaSpinner className="text-teal-500 text-4xl animate-spin" />
 
       {/* Loading Message */}
       <p className="mt-4 text-white text-lg font-semibold">

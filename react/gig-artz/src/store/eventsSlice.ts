@@ -392,7 +392,7 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
   dispatch(eventsSlice.actions.createLikeStart());
 
   try {
-    console.log("Adding like...", eventId, userId );
+    console.log("Adding like...", eventId, userId);
     const response = await axios.post(
       `https://gigartz.onrender.com/addLike`,
       { eventId, userId }
@@ -436,29 +436,30 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
   }
 };
 
+type EventBooking = {
+  eventId: string;
+  customerUid: string;
+  customerName: string;
+  customerEmail: string;
+  ticketTypes: TicketType[];
+  location: string;
+  eventName: string;
+  eventDate: string;
+  image: string;
+};
+
 // Buy a ticket for an event
 export const buyTicket = (
-  eventId: string,
-  ticketData: {
-    customerUid: string;
-    customerName: string;
-    customerEmail: string;
-    amount: number;
-    ticketType: string;
-    location: string;
-    eventName: string;
-    eventDate: string;
-    description: string;
-    image: string;
-  }
+  ticketData: EventBooking
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.buyTicketStart());
 
   try {
     console.log("Purchasing ticket...");
+    console.log(ticketData)
     const response = await axios.post(
       `https://gigartz.onrender.com/buy-ticket`,
-      { eventId, ...ticketData }
+      { ticketData }
     );
     console.log("Ticket purchased successfully:", response.data);
 

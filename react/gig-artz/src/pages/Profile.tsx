@@ -5,11 +5,14 @@ import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import ProfileTabs from "../components/ProfileTabs";
 import { AppDispatch } from "../store/store";
+import FollowersModal from "../components/FollowersModal";
 
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
   const { uid } = useSelector((state) => state.auth);
   const [userProfile, setUserProfile] = useState({});
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
+  const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [userName, setUserName] = useState("");
@@ -24,9 +27,9 @@ export default function Profile() {
     }
   }, [uid, dispatch]);
 
-  const { profile } = useSelector((state) => state.profile);
-  
-  console.log(profile)
+  const { userList, profile } = useSelector((state) => state.profile);
+
+  console.log(profile);
 
   useEffect(() => {
     if (profile) {
@@ -63,7 +66,6 @@ export default function Profile() {
   }
   return (
     <div className="main-content">
-      
       <div className="relative">
         <img
           src={profile?.coverProfile || blueBackground}
@@ -79,46 +81,71 @@ export default function Profile() {
 
       <div className="p-5">
         <div className="flex justify-end">
-          <button onClick={() => setModalVisible(true)} className="border border-teal-400 px-2 py-1 rounded-2xl">Edit Profile</button>
+          <button
+            onClick={() => setModalVisible(true)}
+            className="border border-teal-400 px-2 py-1 rounded-2xl"
+          >
+            Edit Profile
+          </button>
         </div>
-        <h1 className="text-2xl font-bold">
-          {profile?.name || "Name"}
-        </h1>
+        <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
         <p className="text-sm text-gray-400">
           @{profile?.userName || "username"}
         </p>
         <p className="mt-2">{profile?.bio || "Add a bio"}</p>
         <div className="flex flex-row justify-between">
           <div className="flex-row gap-4 mt-2">
-            <div className="flex gap-2">
-              <p>
+            <div className="flex gap-2 mb-2 text-gray-500">
+              <p
+                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                onClick={() => setIsFollowingModalOpen(true)}
+              >
                 <span className="font-bold text-teal-400">
                   {profile?.following || 0}
                 </span>{" "}
                 Following
               </p>
-              <p>
+              <p
+                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                onClick={() => setIsFollowersModalOpen(true)}
+              >
                 <span className="font-bold text-teal-400">
                   {profile?.followers || 0}
                 </span>{" "}
                 Followers
               </p>
             </div>
+
             <div className="flex">
               <div className="flex gap-2 my-2">
                 {(profile?.genre || [])
                   .slice(0, 4) // Only take the first 3 items
                   .map((genre, index) => (
                     <div key={index}>
-                      <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">{genre || genre.name}</p>
+                      <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
+                        {genre || genre.name}
+                      </p>
                     </div>
                   ))}
               </div>
-             
             </div>
           </div>
         </div>
       </div>
+
+      <FollowersModal
+        title="Followers"
+        isOpen={isFollowersModalOpen}
+        onClose={() => setIsFollowersModalOpen(false)}
+        users={userList}
+      />
+
+      <FollowersModal
+        title="Following"
+        isOpen={isFollowingModalOpen}
+        onClose={() => setIsFollowingModalOpen(false)}
+        users={userList}
+      />
 
       {modalVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -194,8 +221,7 @@ export default function Profile() {
       )}
 
       {/* Profile Tabs */}
-      <ProfileTabs uid={profile?.id}/>
-    
+      <ProfileTabs uid={profile?.id} />
     </div>
   );
 }

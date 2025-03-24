@@ -28,21 +28,18 @@ const TippingModal: React.FC<TippingModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-dark rounded-lg shadow-lg w-11/12 max-w-md p-4">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        >
-          &times;
-        </button>
         <form onSubmit={handleSubmit} className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold mb-4">Tip Freelancer</h2>
+          {/* Modal Header */}
+          <div className="flex items-center justify-between mb-4 pb-1">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Tip Freelancer
+            </h3>
             <button
               type="button"
               onClick={onClose}
-              className="px-2 py-2 rounded hover:bg-red-500"
+              className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
             >
-              <FaTimesCircle className="w-4 h-4" />
+              <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
             </button>
           </div>
           <div className="mb-4">

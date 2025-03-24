@@ -23,13 +23,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
 import { fetchUserProfile } from "../store/profileSlice"; // Import fetchDrawerUserProfile
+import Loader from "./Loader";
 
 function Drawer() {
   const navigate = useNavigate();
   const location = useLocation(); // Get current route
   const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { profile } = useSelector((state: RootState) => state.profile);
+  const { profile, loading } = useSelector((state: RootState) => state.profile);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // State to control drawer visibility
@@ -86,6 +87,7 @@ function Drawer() {
 
       {/* Profile Section */}
       <div className="md:hidden border-gray-500 fixed z-20 top-0 left-0 w-full md:w-[20%] lg:w-[15%] shadow-md transition-all duration-300">
+        {loading && <Loader />}
         <div className="p-2 px-2 bg-[#060512] shadow-sm flex justify-between items-center">
           <div className="flex flex-row text-center gap-4 px-2">
             <div className="flex align-middle p-2">
@@ -155,7 +157,7 @@ function Drawer() {
                     }}
                     className={`flex items-center p-2 rounded-2xl text-sm cursor-pointer transition ${
                       isActive
-                        ? "border-teal-500 text-[1.2rem] text-white bg-teal-900"
+                        ? "border-teal-500 text-lg text-white bg-teal-900"
                         : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >

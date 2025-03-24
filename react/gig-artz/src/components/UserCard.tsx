@@ -19,7 +19,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
 
   const handleClick = () => { // Fetch user profile
    
-    navigate(`/people/${user.id}`);
+    navigate(`/people/${user?.id || user?.id}`);
   };
 
   return (

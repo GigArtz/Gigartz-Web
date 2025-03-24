@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaCalendarPlus,
   FaEnvelope,
@@ -8,9 +8,11 @@ import {
 import GuestListModal from "./GuestListModal";
 import TippingModal from "./TippingModal";
 import BookingModal from "./BookingModal";
-import avatar from "../../public/avatar.png";
+import avatar from "/avatar.png";
 import cover from "../../src/assets/blue.jpg";
 import Tooltip from "./Tooltip";
+import { useSelector } from "react-redux";
+import FollowersModal from "./FollowersModal";
 
 interface UserProfile {
   name?: string;
@@ -47,9 +49,21 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
   const [isTippingModalOpen, setIsTippingModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
+  const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
 
   const isFreelancer = userProfile?.roles?.freelancer || false;
+  const { profile, userList } = useSelector((state) => state.profile);
   const [currentUser, setCurrentUser] = useState();
+
+  useEffect(() => {
+    setCurrentUser(profile);
+  }, [profile]);
+
+  // Get Followers
+  useEffect(() => {
+    console.log("in profile", profile);
+  }, [profile]);
 
   return (
     <div className="">
@@ -125,14 +139,20 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         <p className="mt-2">{userProfile?.bio || "No bio available"}</p>
         <div className="flex flex-row justify-between">
           <div className="flex-row gap-4 mt-2">
-            <div className="flex gap-2">
-              <p>
+            <div className="flex gap-2 mb-2 text-gray-500">
+              <p
+                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                onClick={() => setIsFollowingModalOpen(true)}
+              >
                 <span className="font-bold text-teal-400">
                   {userProfile?.following || 0}
                 </span>{" "}
                 Following
               </p>
-              <p>
+              <p
+                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                onClick={() => setIsFollowersModalOpen(true)}
+              >
                 <span className="font-bold text-teal-400">
                   {userProfile?.followers || 0}
                 </span>{" "}
@@ -171,6 +191,20 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         onSubmit={onBook}
+      />
+
+      <FollowersModal
+        title="Followers"
+        isOpen={isFollowersModalOpen}
+        onClose={() => setIsFollowersModalOpen(false)}
+        users={userList}
+      />
+
+      <FollowersModal
+        title="Following"
+        isOpen={isFollowingModalOpen}
+        onClose={() => setIsFollowingModalOpen(false)}
+        users={userList}
       />
     </div>
   );

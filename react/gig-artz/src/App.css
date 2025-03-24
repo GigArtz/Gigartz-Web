@@ -33,7 +33,7 @@ text {
   }
 
   .main-content {
-    @apply lg:w-[60%] sm:w-[100%] md:w-[80%] relative lg:border-t-0 md:border-r md:border-l border-gray-700 lg:left-[15%] md:left-[20%]  min-h-screen text-white md:p-2 mt-20 md:mt-1 md:px-1 lg:px-5;
+    @apply lg:w-[60%] sm:w-[100%] md:w-[80%] pb-20 relative lg:border-t-0 md:border-r md:border-l border-gray-700 lg:left-[15%] md:left-[20%]  min-h-screen text-white md:p-2 mt-20 md:mt-1 md:px-1 lg:px-5;
   }
 
   .tabs {

@@ -48,8 +48,8 @@ const CommentsModal: React.FC<CommentsProps> = ({
   if (!isCommentsVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-black bg-opacity-50">
-      <div className="p-4 w-11/12 md:max-w-2xl bg-gray-900 rounded-lg shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-black bg-opacity-70">
+      <div className="p-4 w-11/12 md:max-w-2xl bg-dark rounded-lg shadow-lg">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-500 ">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
