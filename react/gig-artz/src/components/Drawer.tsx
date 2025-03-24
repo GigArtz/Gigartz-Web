@@ -75,6 +75,10 @@ function Drawer() {
     { icon: FaSignOutAlt, label: "Sign Out", action: handleLogout },
   ];
 
+  const activeLink =
+    navItems.find((item) => location.pathname.startsWith(item.link))?.link ||
+    "/explore"; // Default to "Explore" if no match
+
   return (
     <div className="flex">
       {/* Modal */}
@@ -136,7 +140,7 @@ function Drawer() {
         <nav className="py-4 mt-14 md:mt-1 overflow-y-auto max-h-[75vh] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-800">
           <ul className="space-y-2 font-medium lg:pt-3 px-4">
             {navItems.map((item, index) => {
-              const isActive = location.pathname.includes(item.link); // Check if current route matches
+              const isActive = activeLink === item.link; // Check if the current route matches or defaults
 
               return (
                 <li key={index}>
@@ -151,13 +155,13 @@ function Drawer() {
                     }}
                     className={`flex items-center p-2 rounded-2xl text-sm cursor-pointer transition ${
                       isActive
-                        ? "bg-gray-800 text-teal-400 font-semibold"
+                        ? "border-teal-500 text-[1.2rem] text-white bg-teal-900"
                         : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <item.icon
                       className={`w-5 h-5 ${
-                        isActive ? "text-teal-400" : "text-white-400"
+                        isActive ? "text-white" : "text-white"
                       }`}
                     />
                     <span className="ml-3">{item.label}</span>

@@ -194,7 +194,7 @@ export default function Profile() {
       )}
 
       {/* Profile Tabs */}
-      <ProfileTabs uid={uid} />
+      <ProfileTabs uid={profile?.id}/>
     
     </div>
   );

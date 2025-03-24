@@ -8,7 +8,8 @@ import {
   FaEllipsisV,
   FaHeart,
   FaLocationArrow,
-  FaShare,
+  FaRandom,
+  FaShareAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -18,6 +19,7 @@ import CommentsModal from "../components/CommentsModal";
 import ShareModal from "../components/ShareModal";
 import CRUDModal from "../components/CRUDModal";
 import EditEventModal from "../components/EditEventModal";
+import EventActions from "../components/EventActions";
 
 interface Event {
   id: string;
@@ -36,6 +38,12 @@ interface Event {
   hostName: string;
   comments: string[];
   likes: number;
+}
+
+interface Ticket {
+  ticketType: string;
+  price: number;
+  quantity: number;
 }
 
 const EventDetails = () => {
@@ -96,12 +104,46 @@ const EventDetails = () => {
     0
   );
 
+  // Handle users liked events
+  const [likedEvents, setLikedEvents] = useState<string[]>([]);
+  useEffect(() => {
+    if (profile) {
+      const likedEventIds =
+        profile?.likedEvents?.map((event) => event.eventId) || [];
+      setLikedEvents(likedEventIds); // Extract eventId from likedEvents and set it
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (eventId && !likedEvents.includes(eventId)) {
+      const isLiked = profile?.likedEvents?.some(
+        (event) => event.eventId === eventId
+      );
+      if (isLiked) {
+        setLikedEvents((prevLikedEvents) => [...prevLikedEvents, eventId]);
+      }
+    }
+  }, [eventId, profile, likedEvents]);
+
   // Handle like
   const handleLike = (uid: string, eventId: string) => {
-    dispatch(addLike(eventId, uid));
-
-    console.log("Liked", eventId);
+    if (!likedEvents.includes(eventId)) {
+      dispatch(addLike(eventId, profile?.id || uid));
+      setLikedEvents((prevLikedEvents) => [...prevLikedEvents, eventId]);
+    } else {
+      console.log("Event already liked");
+    }
   };
+
+  // Update likes after click
+  useEffect(() => {
+    if (eventId) {
+      const updatedEvent = eventData.find((e) => e.id === eventId);
+      if (updatedEvent) {
+        setEvent(updatedEvent);
+      }
+    }
+  }, [eventData, eventId]);
 
   // Show comments
   const showComments = () => {
@@ -126,18 +168,28 @@ const EventDetails = () => {
   // Buy ticket
   const handlePurchase = () => {
     if (eventId) {
+      const ticketTypes = Object.entries(ticketQuantities)
+        .filter(([_, quantity]) => quantity > 0)
+        .map(([type, quantity]) => ({
+          ticketType: type,
+          price: event?.ticketsAvailable[type].price || 0,
+          quantity,
+        }));
+
       const ticketDetails = {
-        customerUid: "exampleUid", // replace with actual customer UID
-        customerName: "exampleName", // replace with actual customer name
-        customerEmail: "exampleEmail", // replace with actual customer email
-        amount: totalTicketPrice,
-        ticketType: "exampleType", // replace with actual ticket type
+        eventId,
+        customerUid: profile?.id, // replace with actual customer UID
+        customerName: profile?.name, // replace with actual customer name
+        customerEmail: profile?.emailAddress, // replace with actual customer email
+        ticketTypes,
         location: event.venue,
         eventName: event.title,
         eventDate: event.date,
-        description: event.description,
         image: event.gallery[0], // replace with actual image if available
       };
+
+      console.log(ticketDetails);
+
       dispatch(buyTicket(ticketDetails));
     }
   };
@@ -200,7 +252,7 @@ const EventDetails = () => {
       {isShareVisible && (
         <ShareModal
           isVisible={isShareVisible}
-          shareUrl={`https://example.com/events/${eventId}`}
+          shareUrl={window.location.href} // Gets the current URL
           onClose={() => setIsShareVisible(false)}
         />
       )}
@@ -227,21 +279,36 @@ const EventDetails = () => {
         </div>
 
         <div className="flex gap-4 text-gray-400 text-sm md:text-base">
-          <p className="flex items-center" onClick={showComments}>
-            <FaComment className="w-5 h-5 hover:text-teal-500 mr-2" />{" "}
+          <EventActions
+            event={event}
+            profile={profile}
+            uid={profile.id}
+            showComments={showComments}
+            shareEvent={shareEvent}
+            handleLike={handleLike}
+          />
+          {/* <p className="flex items-center" onClick={showComments}>
+            <FaComment className="w-4 h-4 hover:text-teal-500 mr-2" />{" "}
             {event.comments.length}
           </p>
           <p className="flex items-center">
             <FaHeart
-              onClick={() => handleLike(uid, event.id)}
-              className="w-5 h-5 hover:text-red-500 mr-2"
-            />{" "}
+              onClick={() => handleLike(profile?.id || uid, event.id)}
+              className={`w-4 h-4 mr-2 cursor-pointer ${
+                likedEvents.includes(event.id)
+                  ? "text-red-500"
+                  : "hover:text-red-500"
+              }`}
+            />
             {event.likes}
           </p>
 
           <p className="flex items-center">
-            <FaShare onClick={shareEvent} className="w-5 h-5 mr-2" />
-          </p>
+            <FaShareAlt
+              onClick={shareEvent}
+              className="w-4 h-4 hover:text-teal-500  mr-2"
+            />
+          </p> */}
         </div>
       </div>
 
@@ -272,7 +339,7 @@ const EventDetails = () => {
             <FaClock className="w-5 h-5 text-white mr-2" /> {event.time}
           </p>
           <p className="flex items-center">
-            <FaClock className="w-5 h-5 text-white mr-2 mt-2" />{" "}
+            <FaRandom className="w-5 h-5 text-white mr-2 mt-2" />{" "}
             {event.category}
           </p>
         </div>
@@ -294,7 +361,7 @@ const EventDetails = () => {
         {Object.entries(event.ticketsAvailable).map(([type, ticket]) => (
           <div
             key={type}
-            className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center mt-2"
+            className="bg-gray-900 p-4 rounded-lg flex flex-row justify-between items-center mt-2"
           >
             <div className="text-left">
               <p className="text-lg font-bold capitalize">{type} Ticket</p>
@@ -302,7 +369,7 @@ const EventDetails = () => {
             </div>
             <div className="flex items-center mt-2 sm:mt-0">
               <button
-                className="bg-blue-500 px-3 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
+                className="bg-teal-500 px-3 py-1 rounded-lg hover:bg-teal-600 disabled:bg-gray-600"
                 onClick={() => handleQuantityChange(type, -1)}
                 disabled={ticketQuantities[type] <= 0}
               >
@@ -310,7 +377,7 @@ const EventDetails = () => {
               </button>
               <p className="px-4">{ticketQuantities[type]}</p>
               <button
-                className="bg-blue-500 px-3 py-1 rounded-lg hover:bg-blue-600 disabled:bg-gray-600"
+                className="bg-teal-500 px-3 py-1 rounded-lg hover:bg-teal-600 disabled:bg-gray-600"
                 onClick={() => handleQuantityChange(type, 1)}
                 disabled={ticketQuantities[type] >= ticket.quantity}
               >
@@ -324,7 +391,7 @@ const EventDetails = () => {
           <p className="text-lg font-bold">Total: R {totalTicketPrice}</p>
           <button
             onClick={handlePurchase}
-            className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600 mt-2 sm:mt-0"
+            className="bg-teal-500 px-4 py-2 rounded-lg hover:bg-teal-600 mt-2 sm:mt-0"
           >
             Get Tickets
           </button>

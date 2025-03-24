@@ -122,8 +122,8 @@ function ExploreTabs() {
                     People
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
-                    {userList.length > 0 ? (
-                      userList.map((user) => (
+                    {userList?.length > 0 ? (
+                      userList?.map((user) => (
                         <div className="mb-2">
                           <UserCard user={user} />
                         </div>
