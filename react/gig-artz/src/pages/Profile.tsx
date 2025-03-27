@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserProfile, updateUserProfile } from "../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
-import ProfileTabs from "../components/ProfileTabs";
+import MyProfileTabs from "../components/MyProfileTabs";
 import { AppDispatch } from "../store/store";
 import FollowersModal from "../components/FollowersModal";
 
@@ -27,7 +27,7 @@ export default function Profile() {
     }
   }, [uid, dispatch]);
 
-  const { userList, profile } = useSelector((state) => state.profile);
+  const { userList, profile, userFollowers, userFollowing,  } = useSelector((state) => state.profile);
 
   console.log(profile);
 
@@ -101,7 +101,7 @@ export default function Profile() {
                 onClick={() => setIsFollowingModalOpen(true)}
               >
                 <span className="font-bold text-teal-400">
-                  {profile?.following || 0}
+                  {userFollowing?.length || 0}
                 </span>{" "}
                 Following
               </p>
@@ -110,7 +110,7 @@ export default function Profile() {
                 onClick={() => setIsFollowersModalOpen(true)}
               >
                 <span className="font-bold text-teal-400">
-                  {profile?.followers || 0}
+                  {userFollowers?.length  || 0}
                 </span>{" "}
                 Followers
               </p>
@@ -137,14 +137,14 @@ export default function Profile() {
         title="Followers"
         isOpen={isFollowersModalOpen}
         onClose={() => setIsFollowersModalOpen(false)}
-        users={userList}
+        users={userFollowers}
       />
 
       <FollowersModal
         title="Following"
         isOpen={isFollowingModalOpen}
         onClose={() => setIsFollowingModalOpen(false)}
-        users={userList}
+        users={userFollowing}
       />
 
       {modalVisible && (
@@ -221,7 +221,7 @@ export default function Profile() {
       )}
 
       {/* Profile Tabs */}
-      <ProfileTabs uid={profile?.id} />
+      <MyProfileTabs uid={profile?.id} />
     </div>
   );
 }

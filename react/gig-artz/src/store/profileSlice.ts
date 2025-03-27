@@ -34,7 +34,19 @@ export interface UserProfile {
 
 interface ProfileState {
   profile: UserProfile | null;
+  userProfile: UserProfile | null;
   userList: UserProfile[] | null;
+  likedEvents: null;
+  userBookings: null;
+  userBookingsRequests: null;
+  userEventProfit: null;
+  userEvents: null;
+  userFollowers: null;
+  userFollowing: null;
+  userGuestList: null;
+  userReviews: null;
+  userTickets: null;
+  userTipsProfit: null;
   loading: boolean;
   loadingProfile: boolean;
   error: string | null;
@@ -43,6 +55,18 @@ interface ProfileState {
 
 const initialState: ProfileState = {
   profile: null,
+  userProfile: null,
+  likedEvents: null,
+  userBookings: null,
+  userBookingsRequests: null,
+  userEventProfit: null,
+  userEvents: null,
+  userFollowers: null,
+  userFollowing: null,
+  userGuestList: null,
+  userReviews: null,
+  userTickets: null,
+  userTipsProfit: null,
   userList: null,
   loading: false,
   loadingProfile: false,
@@ -58,13 +82,34 @@ const profileSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
+    fetchAProfileStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
     updateProfileStart(state) {
       state.loading = true;
       state.error = null;
     },
+    fetchAProfileSuccess(state, action: PayloadAction<UserProfile>) {
+      state.loading = false;
+      state.userProfile = action.payload;
+      state.error = null;
+    },
+   
     fetchProfileSuccess(state, action: PayloadAction<UserProfile>) {
       state.loading = false;
-      state.profile = action.payload;
+      state.profile = action.payload.userProfile;
+      state.likedEvents = action.payload.likedEvents;
+      state.userBookings = action.payload.userBookings;
+      state.userBookingsRequests = action.payload.userBookingsRequests;
+      state.userEventProfit = action.payload.userEventProfit;
+      state.userEvents = action.payload.userEvents;
+      state.userFollowers = action.payload.userFollowers;
+      state.userFollowing = action.payload.userFollowing;
+      state.userGuestList = action.payload.userGuestList;
+      state.userReviews = action.payload.userReviews;
+      state.userTickets = action.payload.userTickets;
+      state.userTipsProfit = action.payload.userTipsProfit;
       state.error = null;
     },
     createBookingStart(state) {
@@ -101,6 +146,10 @@ const profileSlice = createSlice({
       state.error = null;
     },
     fetchProfileFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchAProfileFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
     },
@@ -191,31 +240,38 @@ export const fetchDrawerUserProfile =
     }
   };
 
+
 // Fetch user profile
 export const fetchUserProfile = (uid: string) => async (dispatch: AppDispatch) => {
   dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
+    console.log(`Fetching user profile for UID: ${uid}...`);
     
-    console.log("Fetching all user profiles...");
-    const response = await axios.get(`https://gigartz.onrender.com/users/`);
+    const response = await axios.get(`https://gigartz.onrender.com/user/${uid}`);
     
-    console.log("All user profiles response:", response.data);
-    
-    const allProfiles = response.data;
-    
-    // Find the profile matching the given UID
-    const userProfile = allProfiles.find((profile) => profile.id === uid);
-    
-    if (userProfile) {
-      console.log("User profile found:", userProfile);
-      dispatch(profileSlice.actions.fetchProfileSuccess(userProfile));
-    } else {
-      console.error("User profile not found for UID:", uid);
-      dispatch(profileSlice.actions.fetchProfileFailure("User profile not found"));
-    }
+    console.log("User profile response:", response.data);
+
+    dispatch(profileSlice.actions.fetchProfileSuccess(response.data));
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
+  }
+};
+
+// Fetch user profile
+export const fetchAUserProfile = (uid: string) => async (dispatch: AppDispatch) => {
+  dispatch(profileSlice.actions.fetchAProfileStart());
+
+  try {
+    console.log(`Fetching user profile for UID: ${uid}...`);
+    
+    const response = await axios.get(`https://gigartz.onrender.com/user/${uid}`);
+    
+    console.log("User profile response:", response.data);
+
+    dispatch(profileSlice.actions.fetchAProfileSuccess(response.data));
+  } catch (error: unknown) {
+    handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileAFailure);
   }
 };
 

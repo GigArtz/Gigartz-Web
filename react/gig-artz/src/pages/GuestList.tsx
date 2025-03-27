@@ -8,10 +8,14 @@ import { addGuestList } from "../store/eventsSlice";
 import GuestListModal from "../components/GuestListModal";
 
 function GuestList() {
-  const [guestLists, setGuestLists] = useState(() => {
-    const savedLists = localStorage.getItem("guestLists");
-    return savedLists ? JSON.parse(savedLists) : [];
-  });
+  const dispatch: AppDispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { profile, userList, userGuestList } = useSelector(
+    (state: RootState) => state.profile
+  );
+
+  // Removed local state for guestLists
+  const guestLists = userGuestList || []; // Use userGuestList from the slice
 
   const [selectedList, setSelectedList] = useState(null);
   const [newGuestEmail, setNewGuestEmail] = useState("");
@@ -20,21 +24,15 @@ function GuestList() {
   const [showListModal, setShowListModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
-
-  const dispatch: AppDispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { profile } = useSelector((state: RootState) => state.profile);
-  const { userList } = useSelector((state: RootState) => state.profile);
   const { addGuestListStatus, addGuestListMessage } = useSelector(
     (state: RootState) => state.events
   );
 
   useEffect(() => {
-    localStorage.setItem("guestLists", JSON.stringify(guestLists));
     console.log(profile);
     console.log(userList);
-    console.log(user);
-  }, [guestLists, profile]);
+    console.log(guestLists);
+  }, [profile]);
 
   useEffect(() => {
     if (addGuestListStatus === "success") {
@@ -59,10 +57,12 @@ function GuestList() {
 
     if (editingList) {
       // Update existing list
-      setGuestLists((prevLists) =>
-        prevLists.map((list) =>
-          list.id === editingList.id ? { ...list, name: newListName } : list
-        )
+      dispatch(
+        addGuestList({
+          userId: user.uid,
+          guestListName: newListName,
+          guests: editingList.guests,
+        })
       );
       showToast("List updated successfully!", "success");
     } else {
@@ -73,7 +73,13 @@ function GuestList() {
         guests: [],
       };
 
-      setGuestLists((prevLists) => [...prevLists, newList]);
+      dispatch(
+        addGuestList({
+          userId: user.uid,
+          guestListName: newList.name,
+          guests: [],
+        })
+      );
       showToast(
         "New list created successfully! Add guests to finalize.",
         "info"
@@ -86,7 +92,15 @@ function GuestList() {
   };
 
   const deleteList = (id) => {
-    setGuestLists(guestLists.filter((list) => list.id !== id));
+    // Dispatch action to remove the list from the slice
+    const updatedLists = guestLists.filter((list) => list.id !== id);
+    dispatch(
+      addGuestList({
+        userId: user.uid,
+        guestListName: null,
+        guests: updatedLists,
+      })
+    );
     setSelectedList(null);
     showToast("List deleted!", "info");
   };
@@ -97,7 +111,6 @@ function GuestList() {
       return;
     }
 
-    // Ensure the email exists in the userList
     const guest = userList?.find((user) => user.emailAddress === newGuestEmail);
 
     if (!guest) {
@@ -119,7 +132,6 @@ function GuestList() {
       phoneNumber: guest.phoneNumber,
     };
 
-    // Check if the guest is already in the selected list
     const isGuestAlreadyAdded = selectedList.guests.some(
       (existingGuest) => existingGuest.email === guestInfo.email
     );
@@ -129,24 +141,15 @@ function GuestList() {
       return;
     }
 
-    setGuestLists((prevLists) =>
-      prevLists.map((list) =>
-        list.id === selectedList.id
-          ? { ...list, guests: [...list.guests, guestInfo] }
-          : list
-      )
-    );
+    const updatedGuests = [...selectedList.guests, guestInfo];
 
-    // Dispatch when guests are added to a new list
-    if (!editingList) {
-      dispatch(
-        addGuestList({
-          userId: user.uid,
-          guestListName: selectedList.name,
-          guests: [...selectedList.guests, guestInfo],
-        })
-      );
-    }
+    dispatch(
+      addGuestList({
+        userId: user.uid,
+        guestListName: selectedList.name,
+        guests: updatedGuests,
+      })
+    );
 
     showToast("Guest added successfully!", "success");
     setNewGuestEmail("");
@@ -154,16 +157,19 @@ function GuestList() {
 
   const deleteGuest = (guestEmail) => {
     if (!selectedList) return;
-    setGuestLists(
-      guestLists.map((list) =>
-        list.id === selectedList.id
-          ? {
-              ...list,
-              guests: list.guests.filter((guest) => guest.email !== guestEmail),
-            }
-          : list
-      )
+
+    const updatedGuests = selectedList.guests.filter(
+      (guest) => guest.email !== guestEmail
     );
+
+    dispatch(
+      addGuestList({
+        userId: user.uid,
+        guestListName: selectedList.name,
+        guests: updatedGuests,
+      })
+    );
+
     showToast("Guest removed!", "info");
   };
 
@@ -228,7 +234,7 @@ function GuestList() {
               onClick={() => setSelectedList(list)}
               className="cursor-pointer border border-teal-500 hover:bg-gray-900 p-4 rounded-lg mb-3 flex justify-between items-center transition"
             >
-              <span className="text-white font-medium">{list.name}</span>
+              <span className="text-white font-medium">{list.guestListName}</span>
               <div className="flex gap-2">
                 <button
                   onClick={(e) => {

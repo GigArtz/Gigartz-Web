@@ -5,6 +5,7 @@ import {
   fetchAllProfiles,
   followUser,
   bookFreelancer,
+  fetchAUserProfile,
 } from "../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
@@ -63,17 +64,16 @@ const People: React.FC = () => {
 
   const userList = useSelector((state: RootState) => state.profile);
 
-  const userProfile = userList.userList.find(
-    (user: UserProfile) => user?.id === uid
-  );
+  const { userProfile } = useSelector((state: RootState) => state.profile);
 
   const [isFreelancer, setIsFreelancer] = useState<boolean>(
     userProfile?.roles?.freelancer || false
   );
 
   useEffect(() => {
+    dispatch(fetchAUserProfile(uid))
     setIsFreelancer(userProfile?.roles?.freelancer || false);
-  }, [userProfile]);
+  }, []);
 
   const handleFollow = () => {
     setIsFollowing((prev) => !prev);
@@ -135,6 +135,7 @@ const People: React.FC = () => {
     <div className="main-content">
       <ProfileSection
         userProfile={userProfile}
+       // uid={userProfile?.userProfile?.id}
         onFollow={handleFollow}
         onMessage={handleMessageClick}
         onAddGuest={handleAddGuestToList}

@@ -64,11 +64,11 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
       </div>
 
       {/* Freelancers */}
-      <div className="mt-8 px-4">
+      <div className="mt-8 px-4 w-full">
         <h2 className="text-xl text-white font-semibold mb-4">
           Popular Freelancers
         </h2>
-        <div className="flex flex-row gap-2 overflow-auto">
+        <div className="flex flex-row w-full gap-2 overflow-auto">
           {userList && userList.length > 0 ? (
             userList
               .filter((user) => user.roles?.freelancer) // ✅ Filter first
@@ -76,7 +76,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
                 (
                   user // ✅ Then map
                 ) => (
-                  <div key={user.uid} className="mb-2">
+                  <div key={user.uid} className="mb-2 w-full flex flex-row">
                     <UserCard user={user} />
                   </div>
                 )

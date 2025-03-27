@@ -459,8 +459,10 @@ export const buyTicket = (
     console.log(ticketData)
     const response = await axios.post(
       `https://gigartz.onrender.com/buy-ticket`,
-      { ticketData }
+      ticketData,  // ✅ No extra object wrapping
+      { headers: { "Content-Type": "application/json" } }  // ✅ Ensure JSON format
     );
+    
     console.log("Ticket purchased successfully:", response.data);
 
     dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));

@@ -1,29 +1,21 @@
 import Header from "../components/Header";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 
 function Tickets() {
   const [menuOpen, setMenuOpen] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [tickets, setTickets] = useState([]);
   const [email, setEmail] = useState("");
+  const { profile, userTickets  } = useSelector((state) => state.profile);
 
-  const tickets = [
-    {
-      id: 1,
-      title: "Concert Night",
-      location: "Madison Square Garden, NY",
-      date: "2023-12-15",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      id: 2,
-      title: "Art Exhibition",
-      location: "Louvre Museum, Paris",
-      date: "2024-01-10",
-      image: "https://via.placeholder.com/150",
-    },
-  ];
+  useEffect(() => {
+    if (profile){
+      setTickets(userTickets)
+    }
+  }, [profile, userTickets])
 
   const toggleMenu = (id) => {
     setMenuOpen(menuOpen === id ? null : id);
@@ -59,17 +51,17 @@ function Tickets() {
             {/* Event Image */}
             <img
               src={ticket.image}
-              alt={ticket.title}
+              alt={ticket.eventName}
               className="w-16 h-16 rounded-md border-2 border-teal-400"
             />
 
             {/* Event Details */}
             <div className="flex-grow">
               <h2 className="text-lg font-semibold text-white">
-                {ticket.title}
+                {ticket.eventName}
               </h2>
               <p className="text-sm text-gray-400">{ticket.location}</p>
-              <p className="text-xs text-gray-300">{ticket.date}</p>
+              <p className="text-xs text-gray-300">{ticket.eventDate}</p>
             </div>
 
             {/* Options Button */}

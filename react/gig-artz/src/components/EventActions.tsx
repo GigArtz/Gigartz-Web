@@ -1,6 +1,7 @@
 import { FaComment, FaHeart, FaShareAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { UserProfile } from "../store/profileSlice";
+import { useSelector } from "react-redux";
 
 interface EventActionsProps {
   event: Event;
@@ -20,12 +21,14 @@ const EventActions: React.FC<EventActionsProps> = ({
   handleLike,
 }) => {
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
+  const { likedEvents: profileLikedEvents } = useSelector((state) => state.profile);
+
 
   // Load liked events from profile
   useEffect(() => {
     if (profile) {
       const likedEventIds =
-        profile?.likedEvents?.map((event) => event.eventId) || [];
+      profileLikedEvents?.map((event) => event.eventId) || [];
       setLikedEvents(likedEventIds);
     }
   }, [profile]);

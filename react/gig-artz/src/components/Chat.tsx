@@ -98,7 +98,7 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Chat Input */}
-      <form onSubmit={onSendMessage} className="p-4 flex items-center sticky bottom-0 bg-gray-800 shadow-md">
+      <form onSubmit={onSendMessage} className="p-4 flex items-center sticky bottom-0 input-field bg-gray-900">
         <label className="cursor-pointer mr-2">
           <FaPaperclip size={20} />
           <input
@@ -112,7 +112,7 @@ const Chat: React.FC<ChatProps> = ({
           placeholder="Type a message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 border p-2 rounded-lg bg-gray-700 text-white outline-none"
+          className="flex-1 p-2 rounded-lg bg-gray-900 text-white outline-none"
         />
         {selectedFile && <span className="text-sm ml-2 text-gray-400">{selectedFile.name}</span>}
         <button type="submit" className="ml-2 text-blue-400 hover:text-blue-300">

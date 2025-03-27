@@ -173,7 +173,7 @@ const EventDetails = () => {
 
       const ticketDetails = {
         eventId,
-        customerUid: profile?.id, // replace with actual customer UID
+        customerUid: profile?.id || uid, // replace with actual customer UID
         customerName: profile?.name, // replace with actual customer name
         customerEmail: profile?.emailAddress, // replace with actual customer email
         ticketTypes,
