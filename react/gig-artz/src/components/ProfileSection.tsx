@@ -127,7 +127,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           <Tooltip text={isFollowingUser ? "Unfollow" : "Follow"}>
             <button
               onClick={onFollow}
-              className={`border px-4 py-1 rounded-2xl ${
+              className={`border sm:text-xs px-4 py-1 rounded-2xl ${
                 isFollowingUser
                   ? "border-teal-400 text-teal-400"
                   : "border-teal-400 text-teal-400"
@@ -170,19 +170,20 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               </p>
             </div>
             <div className="flex">
-            {userProfile?.userProfile?.genre?.length > 0 && (
-  <div className="flex gap-2 my-2">
-    {userProfile.userProfile.genre.slice(0, 3).map((genre, index) => (
-      <p
-        key={index}
-        className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400"
-      >
-        {genre.name || genre}
-      </p>
-    ))}
-  </div>
-)}
-
+              {userProfile?.userProfile?.genre?.length > 0 && (
+                <div className="flex gap-2 my-2">
+                  {userProfile.userProfile.genre
+                    .slice(0, 3)
+                    .map((genre, index) => (
+                      <p
+                        key={index}
+                        className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400"
+                      >
+                        {genre.name || genre}
+                      </p>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

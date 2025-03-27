@@ -1,20 +1,29 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
-import { getMessages, sendMessage, Message } from "../store/messageSlice";
+import {
+  getMessages,
+  sendMessage,
+  Message,
+  addConversation, // Import action to add a new conversation
+} from "../store/messageSlice";
 import Loader from "../components/Loader";
 import Chat from "../components/Chat";
 import { FaTimesCircle } from "react-icons/fa";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Messages: React.FC = () => {
-  const location = useLocation(); // Get the current location
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
-  const contactFromQuery = queryParams.get("contact"); // Extract contact from query
+  const contactFromQuery = queryParams.get("contact");
 
   const dispatch = useDispatch<AppDispatch>();
   const { contacts, conversations, loading } = useSelector(
     (state: RootState) => state.messages
+  );
+  const { userList} = useSelector(
+    (state: RootState) => state.profile
   );
   const currentUserId = useSelector((state: RootState) => state.auth.uid);
 
@@ -25,26 +34,12 @@ const Messages: React.FC = () => {
     contactFromQuery || null
   );
 
-  // Memoize local conversations to avoid recalculating on every render
+  // Memoized local conversations
   const localConversations = useMemo(() => {
-    if (!conversations) return [];
-    return conversations.map((conv) => {
-      if (conv.contact === activeConversation) {
-        return { ...conv }; // Ensure active conversation is preserved
-      }
-      return conv;
-    });
-  }, [conversations, activeConversation]);
+    return conversations || [];
+  }, [conversations]);
 
-  // Fetch conversations on component mount
   const fetchConversations = useCallback(() => {
-    if (currentUserId) {
-      dispatch(getMessages(currentUserId));
-    }
-  }, [dispatch, currentUserId]);
-
-  // Refresh conversations and merge new messages
-  const refreshConversations = useCallback(() => {
     if (currentUserId) {
       dispatch(getMessages(currentUserId));
     }
@@ -52,22 +47,36 @@ const Messages: React.FC = () => {
 
   useEffect(() => {
     fetchConversations();
-    const interval = setInterval(() => {
-      refreshConversations();
-    }, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchConversations, 5000);
     return () => clearInterval(interval);
-  }, [fetchConversations, refreshConversations]);
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    if (contactFromQuery) {
+      const existingConversation = localConversations.find(
+        (conversation) => conversation.contact === contactFromQuery
+      );
+
+      if (!existingConversation) {
+        // Persistently create a new conversation if it doesn't exist
+        dispatch(addConversation({ contact: contactFromQuery, messages: [] }));
+      }
+
+      setActiveConversation(contactFromQuery);
+      setSelectedContact(contactFromQuery);
+    } else {
+      setActiveConversation(null);
+      setSelectedContact(null);
+    }
+  }, [contactFromQuery, localConversations, dispatch]);
 
   const handleSendMessage = (
     newMessage: string,
     selectedFile: File | null,
-    e?: React.FormEvent | null
+    e?: React.FormEvent
   ) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!newMessage || !selectedContact) {
-      console.error("Message or selected contact is missing.");
-      return;
-    }
+    if (e) e.preventDefault();
+    if (!newMessage || !selectedContact) return;
 
     const messageData: Message = {
       senderId: currentUserId!,
@@ -76,33 +85,32 @@ const Messages: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    // Optimistically update Redux store and refresh conversations
-    dispatch(sendMessage(messageData)).then(() => {
-      refreshConversations();
-    });
-
-    setNewMessage(""); // Clear input field
+    dispatch(sendMessage(messageData)).then(fetchConversations);
+    setNewMessage("");
   };
 
   const handleConversationClick = (contactId: string) => {
-    setActiveConversation(contactId);
-    setSelectedContact(contactId);
-  };
-
-  const getConversation = (contactId: string) => {
-    return localConversations.find(
+    const existingConversation = localConversations.find(
       (conversation) => conversation.contact === contactId
     );
+
+    if (!existingConversation) {
+      dispatch(addConversation({ contact: contactId, messages: [] }));
+    }
+
+    setActiveConversation(contactId);
+    setSelectedContact(contactId);
+    navigate(`/messages?contact=${contactId}`);
   };
 
   const handleCloseConversation = () => {
     setActiveConversation(null);
     setSelectedContact(null);
+    navigate("/messages");
   };
 
   return (
     <div className="main-content flex h-screen">
-      {/* Sidebar - Conversations List */}
       <div className="md:w-[30%] w-full md:border-r border-gray-700 p-4">
         <h2 className="hidden md:block text-xl font-semibold text-white-800 mb-4">
           Messages
@@ -159,11 +167,12 @@ const Messages: React.FC = () => {
         </button>
       </div>
 
-      {/* Desktop Chat Panel */}
       <div className="hidden md:flex flex-1 items-center justify-center">
         {activeConversation ? (
           <Chat
-            conversation={getConversation(activeConversation)}
+            conversation={localConversations.find(
+              (c) => c.contact === activeConversation
+            )}
             handleSendMessage={handleSendMessage}
             handleCloseConversation={handleCloseConversation}
           />
@@ -180,38 +189,6 @@ const Messages: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile Chat Modal */}
-      {activeConversation && (
-        <div className="fixed z-10 inset-0 bg-black bg-opacity-70 flex md:hidden">
-          <div className="bg-[#060512] h-full w-full flex flex-col relative">
-            <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-[#060512] sticky top-0 z-10">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                {contacts?.find(
-                  (c) =>
-                    c.userName === activeConversation ||
-                    c.id === activeConversation
-                )?.userName || "Unknown"}
-              </h3>
-              <button
-                onClick={() => setActiveConversation(null)}
-                className="text-gray-500 hover:text-red-500 transition"
-              >
-                <FaTimesCircle className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <Chat
-                conversation={getConversation(activeConversation)}
-                handleSendMessage={handleSendMessage}
-                handleCloseConversation={handleCloseConversation}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Message Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-[#060512] z-30 bg-opacity-50 flex justify-center items-center">
           <div className="bg-white dark:bg-[#1F1C29] border border-gray-700 p-5 rounded-lg shadow-lg w-96">

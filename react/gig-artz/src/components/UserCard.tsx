@@ -17,7 +17,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/people/${user?.uid}`);
+    navigate(`/people/${user?.id}`);
   };
 
   return (
