@@ -22,9 +22,7 @@ const Messages: React.FC = () => {
   const { contacts, conversations, loading } = useSelector(
     (state: RootState) => state.messages
   );
-  const { userList} = useSelector(
-    (state: RootState) => state.profile
-  );
+  const { userList } = useSelector((state: RootState) => state.profile);
   const currentUserId = useSelector((state: RootState) => state.auth.uid);
 
   const [newMessage, setNewMessage] = useState("");
@@ -111,63 +109,73 @@ const Messages: React.FC = () => {
 
   return (
     <div className="main-content flex h-screen">
-      <div className="md:w-[30%] w-full md:border-r border-gray-700 p-4">
-        <h2 className="hidden md:block text-xl font-semibold text-white-800 mb-4">
-          Messages
-        </h2>
+      {!activeConversation || window.innerWidth >= 768 ? (
+        <div className="md:w-[30%] w-full md:border-r border-gray-700 p-4">
+          <h2 className="hidden md:block text-xl font-semibold text-white-800 mb-4">
+            Messages
+          </h2>
 
-        {loading && !conversations?.length ? (
-          <Loader />
-        ) : (
-          <div className="max-h-[100vh] overflow-y-auto space-y-3">
-            {localConversations.length === 0 ? (
-              <p className="text-gray-500">No messages yet</p>
-            ) : (
-              localConversations.map((conversation) => {
-                const contact = contacts?.find(
-                  (c) =>
-                    c.userName === conversation.contact ||
-                    c.id === conversation.contact
-                );
-                const lastMessage = conversation.messages.at(-1);
+          {loading && !conversations?.length ? (
+            <Loader />
+          ) : (
+            <div className="max-h-[100vh] overflow-y-auto space-y-3">
+              {localConversations.length === 0 ? (
+                <p className="text-gray-500">No messages yet</p>
+              ) : (
+                localConversations.map((conversation) => {
+                  const contact = contacts?.find(
+                    (c) =>
+                      c.userName === conversation.contact ||
+                      c.id === conversation.contact
+                  );
+                  const lastMessage = conversation.messages.at(-1);
 
-                return (
-                  <div
-                    key={conversation.contact}
-                    className={`p-3 rounded-lg cursor-pointer transition ${
-                      activeConversation === conversation.contact
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-800 hover:bg-gray-700"
-                    }`}
-                    onClick={() =>
-                      handleConversationClick(conversation.contact)
-                    }
-                  >
-                    <h3 className="font-semibold">
-                      {contact?.userName || "Unknown"}
-                    </h3>
-                    {lastMessage && (
-                      <p className="text-sm text-gray-300 truncate">
-                        {lastMessage.senderId === currentUserId ? "You: " : ""}
-                        {lastMessage.message}
-                      </p>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
+                  return (
+                    <div
+                      key={conversation.contact}
+                      className={`p-3 rounded-lg cursor-pointer transition ${
+                        activeConversation === conversation.contact
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-800 hover:bg-gray-700"
+                      }`}
+                      onClick={() =>
+                        handleConversationClick(conversation.contact)
+                      }
+                    >
+                      <h3 className="font-semibold">
+                        {contact?.userName || "Unknown"}
+                      </h3>
+                      {lastMessage && (
+                        <p className="text-sm text-gray-300 truncate">
+                          {lastMessage.senderId === currentUserId
+                            ? "You: "
+                            : ""}
+                          {lastMessage.message}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-5 right-4 md:hidden text-white w-40 rounded-3xl btn-primary"
-        >
-          New Message
-        </button>
-      </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="fixed bottom-5 right-4 md:hidden text-white w-40 rounded-3xl btn-primary"
+          >
+            New Message
+          </button>
+        </div>
+      ) : null}
 
-      <div className="hidden md:flex flex-1 items-center justify-center">
+      <div
+        className={`${
+          activeConversation && window.innerWidth < 768
+            ? "flex"
+            : "hidden md:flex"
+        } flex-1 items-center justify-center`}
+      >
         {activeConversation ? (
           <Chat
             conversation={localConversations.find(

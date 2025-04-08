@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import CommentCard from "./CommentCard";
 import CommentForm from "./CommentForm";
-import { Event } from "../store/eventsSlice"; // Assuming Event type is defined here
+import { Event, addReview } from "../store/eventsSlice"; // Assuming Event type is defined here
 import { FaTimesCircle } from "react-icons/fa";
 
 interface User {
@@ -33,6 +34,8 @@ const CommentsModal: React.FC<CommentsProps> = ({
   onClose,
 }) => {
   const [comments, setComments] = useState<Comment[]>(event.comments || []);
+  const dispatch = useDispatch();
+  const { uid } = useSelector((state) => state.auth);
 
   const handleCommentSubmit = (commentText: string, rating: number) => {
     const newComment: Comment = {
@@ -43,6 +46,16 @@ const CommentsModal: React.FC<CommentsProps> = ({
       rating,
     };
     setComments([...comments, newComment]);
+
+    // Dispatch the addReview function
+    dispatch(
+      addReview(event.id, {
+        userId: uid || user?.id,
+        title: "User Review", // Example title
+        reviewText: commentText,
+        rating,
+      })
+    );
   };
 
   if (!isCommentsVisible) return null;

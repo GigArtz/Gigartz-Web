@@ -2,7 +2,7 @@ import { FaTimesCircle, FaEdit, FaTrash } from "react-icons/fa";
 
 const CRUDModal = ({ setIsCRUDVisible, onEdit, onDelete, event }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex justify-center items-center">
       <div className="bg-dark p-6 rounded-lg shadow-lg relative w-80 animate-fadeIn">
         {/* Modal Header */}
         <div className="flex items-center justify-between mb-4 pb-1 border-b border-gray-500 ">

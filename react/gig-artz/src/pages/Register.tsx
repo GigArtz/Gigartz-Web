@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../store/authSlice";
 import { ToastContainer, toast } from "react-toastify";
@@ -58,10 +58,12 @@ const Register = () => {
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const [userName, setUserName] = useState("");
+  const [name, setName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
+  const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
 
@@ -71,10 +73,11 @@ const Register = () => {
   const handleRegister = () => {
     if (
       !userName ||
+      !name ||
       !emailAddress ||
+      !city ||
       !password ||
-      !confirmPassword ||
-      !phoneNumber
+      !confirmPassword
     ) {
       toast.error("Please fill in all fields");
       return;
@@ -83,30 +86,32 @@ const Register = () => {
       toast.error("Passwords do not match");
       return;
     }
-    if (phoneNumber.length < 10) {
-      toast.error("Invalid phone number");
-      return;
-    }
+
     if (!/^[\w.-]+@[\w.-]+\.\w{2,3}$/.test(emailAddress)) {
       toast.error("Invalid email address");
       return;
     }
+
     dispatch(
       registerUser({
         userName,
+        name,
         emailAddress,
+        city,
         password,
         confirmPassword,
-        phoneNumber,
         fcmToken: "12345678",
       })
     );
-    if (error) {
-      toast.error(`Sign up Failed! ${error}`);
-      navigate("login");
-      toast.success("Registration Successful!");
-    }
   };
+
+  // Handle successful registration
+  useEffect(() => {
+    if (!loading && !error) {
+      toast.success("Registration Successful!");
+      navigate("/");
+    }
+  }, [loading, error, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
@@ -119,7 +124,6 @@ const Register = () => {
 
       {/* Form Section */}
       <div className="w-full max-w-md bg-[#1F1C29] rounded-lg p-6 space-y-6 shadow-lg">
-        
         <form className="space-y-6">
           <InputField
             label="Username"
@@ -129,18 +133,26 @@ const Register = () => {
             onChange={(e) => setUserName(e.target.value)}
           />
           <InputField
-            label="Phone Number"
+            label="Name"
             type="text"
-            placeholder="Enter phone number"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="Enter name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
+
           <InputField
             label="Email"
             type="email"
             placeholder="Enter email"
             value={emailAddress}
             onChange={(e) => setEmailAddress(e.target.value)}
+          />
+          <InputField
+            label="City"
+            type="text"
+            placeholder="Enter city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
           />
           <InputField
             label="Password"
@@ -167,11 +179,12 @@ const Register = () => {
             onClick={handleRegister}
             disabled={loading}
           />
+
           <p className="text-center text-white mt-4">
             Already have an account?{" "}
             <span
               className="text-teal-400 cursor-pointer"
-              onClick={() => navigation.navigate("/")}
+              onClick={() => navigate("/")}
             >
               Sign In
             </span>

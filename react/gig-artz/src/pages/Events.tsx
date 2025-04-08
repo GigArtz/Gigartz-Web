@@ -13,13 +13,14 @@ import {
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { addLike, buyTicket } from "../store/eventsSlice";
+import { addLike, buyTicket, fetchAllEvents } from "../store/eventsSlice";
 import React from "react";
 import CommentsModal from "../components/CommentsModal";
 import ShareModal from "../components/ShareModal";
 import CRUDModal from "../components/CRUDModal";
 import EditEventModal from "../components/EditEventModal";
 import EventActions from "../components/EventActions";
+import Payment from "../components/Payment";
 
 interface Event {
   id: string;
@@ -39,7 +40,6 @@ interface Event {
   comments: string[];
   likes: number;
 }
-
 
 const EventDetails = () => {
   const navigate = useNavigate();
@@ -69,6 +69,9 @@ const EventDetails = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
 
+  // Payment Modal
+  const [isPaymentVisible, setIsPaymentVisible] = useState(false);
+
   useEffect(() => {
     const foundEvent = eventData.find((e) => e.id === eventId);
     if (foundEvent) {
@@ -83,6 +86,10 @@ const EventDetails = () => {
       setTicketQuantities(initialQuantities);
     }
   }, [eventId, eventData]);
+
+  useEffect(() => {
+    dispatch(fetchAllEvents());
+  }, [dispatch]);
 
   const handleQuantityChange = (type: string, delta: number) => {
     setTicketQuantities((prevQuantities) => {
@@ -102,12 +109,16 @@ const EventDetails = () => {
   // Handle users liked events
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
   useEffect(() => {
-    if (profile) {
-      const likedEventIds =
-        profile?.likedEvents?.map((event) => event.eventId) || [];
-      setLikedEvents(likedEventIds); // Extract eventId from likedEvents and set it
+    if (!profile) {
+     // alert("Invalid user profile. Please log in to continue.");
+      navigate("/"); // Redirect to login page
+      return;
     }
-  }, [profile]);
+
+    const likedEventIds =
+      profile?.likedEvents?.map((event) => event.eventId) || [];
+    setLikedEvents(likedEventIds); // Extract eventId from likedEvents and set it
+  }, [profile, navigate]);
 
   useEffect(() => {
     if (eventId && !likedEvents.includes(eventId)) {
@@ -121,9 +132,10 @@ const EventDetails = () => {
   }, [eventId, profile, likedEvents]);
 
   // Handle like
-  const handleLike = (uid: string, eventId: string) => {
+  const handleLike = (eventId: string, uid: string) => {
     if (!likedEvents.includes(eventId)) {
-      dispatch(addLike(eventId, profile?.id || uid));
+      console.log(uid);
+      dispatch(addLike(eventId, uid));
       setLikedEvents((prevLikedEvents) => [...prevLikedEvents, eventId]);
     } else {
       console.log("Event already liked");
@@ -162,6 +174,12 @@ const EventDetails = () => {
 
   // Buy ticket
   const handlePurchase = () => {
+    if (!profile) {
+      alert("You must be logged in to purchase tickets.");
+      navigate("/"); // Redirect to login page
+      return;
+    }
+
     if (eventId) {
       const ticketTypes = Object.entries(ticketQuantities)
         .filter(([_, quantity]) => quantity > 0)
@@ -171,23 +189,36 @@ const EventDetails = () => {
           quantity,
         }));
 
+      if (ticketTypes.length === 0) {
+        alert("Please select at least one ticket type.");
+        return;
+      }
+
       const ticketDetails = {
         eventId,
         customerUid: profile?.id || uid, // replace with actual customer UID
         customerName: profile?.name, // replace with actual customer name
         customerEmail: profile?.emailAddress, // replace with actual customer email
         ticketTypes,
-        location: event.venue,
+        location: event.venue || "Unknown",
         eventName: event.title,
         eventDate: event.date,
-        image: event.gallery[0], // replace with actual image if available
+        image: event.gallery[0] || "Unknown", // replace with actual image if available
       };
 
-
-      console.log(ticketDetails);
-
+      setIsPaymentVisible(true);
       dispatch(buyTicket(ticketDetails));
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentVisible(false);
+    console.log("Payment successful!");
+  };
+
+  const handlePaymentFailure = () => {
+    setIsPaymentVisible(false);
+    console.error("Payment failed!");
   };
 
   const viewHostProfile = () => {
@@ -221,20 +252,30 @@ const EventDetails = () => {
 
       {/* CRUD Modal */}
       {isCRUDVisible && (
-        <CRUDModal
-          setIsCRUDVisible={setIsCRUDVisible}
-          onEdit={handleEditEvent}
-          onDelete={() => {
-            console.log("Delete event");
-            setIsCRUDVisible(false); // Close modal after deleting
-          }}
-          event={event}
-        />
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
+          onClick={() => setIsCRUDVisible(false)} // Close on backdrop click
+        >
+          <div
+            className="bg-white rounded-lg p-6 shadow-lg relative"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            <CRUDModal
+              setIsCRUDVisible={setIsCRUDVisible}
+              onEdit={handleEditEvent}
+              onDelete={() => {
+                console.log("Delete event");
+                setIsCRUDVisible(false); // Close modal after deleting
+              }}
+              event={event}
+            />
+          </div>
+        </div>
       )}
 
       {/* Comments Modal */}
       {isCommentsVisible && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
           <CommentsModal
             user={profile}
             event={event}
@@ -246,20 +287,45 @@ const EventDetails = () => {
 
       {/* Share Modal */}
       {isShareVisible && (
-        <ShareModal
-          isVisible={isShareVisible}
-          shareUrl={window.location.href} // Gets the current URL
-          onClose={() => setIsShareVisible(false)}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+          <ShareModal
+            isVisible={isShareVisible}
+            shareUrl={window.location.href} // Gets the current URL
+            onClose={() => setIsShareVisible(false)}
+          />
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {isPaymentVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+          <Payment
+            amount={totalTicketPrice}
+            ticketDetails={{
+              eventId,
+              customerUid: profile?.id || uid,
+              ticketTypes: Object.entries(ticketQuantities).map(
+                ([type, quantity]) => ({
+                  ticketType: type,
+                  price: event?.ticketsAvailable[type].price || 0,
+                  quantity,
+                })
+              ),
+            }}
+            onSuccess={handlePaymentSuccess}
+            onFailure={handlePaymentFailure}
+            onClose={() => setIsPaymentVisible(false)}
+          />
+        </div>
       )}
 
       <div className="">
         {uid === event?.promoterId && (
-          <div className="z-20 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10">
-            <FaEllipsisV
-              onClick={handleCRUD}
-              className="z-10 w-4 h-4 text-white"
-            />
+          <div
+            className="z-50 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10 cursor-pointer"
+            onClick={handleCRUD}
+          >
+            <FaEllipsisV className="w-4 h-4 text-white" />
           </div>
         )}
 
@@ -278,33 +344,11 @@ const EventDetails = () => {
           <EventActions
             event={event}
             profile={profile}
-            uid={profile.id}
+            uid={uid || profile.id}
             showComments={showComments}
             shareEvent={shareEvent}
             handleLike={handleLike}
           />
-          {/* <p className="flex items-center" onClick={showComments}>
-            <FaComment className="w-4 h-4 hover:text-teal-500 mr-2" />{" "}
-            {event.comments.length}
-          </p>
-          <p className="flex items-center">
-            <FaHeart
-              onClick={() => handleLike(profile?.id || uid, event.id)}
-              className={`w-4 h-4 mr-2 cursor-pointer ${
-                likedEvents.includes(event.id)
-                  ? "text-red-500"
-                  : "hover:text-red-500"
-              }`}
-            />
-            {event.likes}
-          </p>
-
-          <p className="flex items-center">
-            <FaShareAlt
-              onClick={shareEvent}
-              className="w-4 h-4 hover:text-teal-500  mr-2"
-            />
-          </p> */}
         </div>
       </div>
 

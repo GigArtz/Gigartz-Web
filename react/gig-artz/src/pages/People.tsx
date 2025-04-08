@@ -73,7 +73,7 @@ const People: React.FC = () => {
   useEffect(() => {
     dispatch(fetchAUserProfile(uid))
     setIsFreelancer(userProfile?.roles?.freelancer || false);
-  }, []);
+  }, [dispatch]);
 
   const handleFollow = () => {
     setIsFollowing((prev) => !prev);

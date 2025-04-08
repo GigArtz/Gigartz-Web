@@ -1,21 +1,33 @@
+import { fetchAUserProfile } from "../store/profileSlice";
+import { reassignTicket } from "../store/eventsSlice";
 import Header from "../components/Header";
 import React, { useEffect, useState } from "react";
-import { FaEllipsisV } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
+import { FaEllipsisV, FaEye } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../store/store";
 
 function Tickets() {
   const [menuOpen, setMenuOpen] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [tickets, setTickets] = useState([]);
-  const [email, setEmail] = useState("");
-  const { profile, userTickets  } = useSelector((state) => state.profile);
+  const [email, setEmail] = useState(""); // Add this line
+  const dispatch = useDispatch<AppDispatch>();
+  const { userList, profile, userTickets } = useSelector(
+    (state) => state.profile
+  );
+  const { uid } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (profile){
-      setTickets(userTickets)
+    if (profile) {
+      setTickets(userTickets);
     }
-  }, [profile, userTickets])
+  }, [profile, userTickets]);
+
+  useEffect(() => {
+    dispatch(fetchAUserProfile(profile?.id));
+  }, [dispatch, profile?.id]);
 
   const toggleMenu = (id) => {
     setMenuOpen(menuOpen === id ? null : id);
@@ -35,7 +47,28 @@ function Tickets() {
 
   const handleSubmit = () => {
     if (!email) return alert("Please enter an email.");
-    console.log(`Ticket "${selectedTicket.title}" ${modalType} to ${email}`);
+
+    const existingUser = userList.find((user) => user.emailAddress === email);
+
+    if (modalType === "reassigned") {
+      if (existingUser) {
+        // Assign ticket to existing user
+        dispatch(
+          reassignTicket(
+            uid || profile?.id, // Current user ID
+            existingUser.id, // Existing user's ID
+            selectedTicket.id // Ticket ID
+          )
+        );
+      } else {
+        // Send invitation to new user
+        console.log(`Sending invitation to ${email} to reassign ticket.`);
+        alert(`User not found. Invitation sent to ${email}.`);
+      }
+    } else {
+      console.log(`Ticket "${selectedTicket.title}" ${modalType} to ${email}`);
+    }
+
     closeModal();
   };
 
@@ -66,22 +99,26 @@ function Tickets() {
 
             {/* Options Button */}
             <div className="relative">
-              <button
-                onClick={() => toggleMenu(ticket.id)}
-                className="text-gray-400 hover:text-white"
-              >
-                <FaEllipsisV />
-              </button>
+              <div className="flex ">
+                <a
+                  href={ticket.pdfURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:underline"
+                >
+                  <FaEye className="w-4 h-4" />
+                </a>
+                <button
+                  onClick={() => toggleMenu(ticket.id)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <FaEllipsisV />
+                </button>
+              </div>
 
               {/* Dropdown Menu */}
               {menuOpen === ticket.id && (
-                <div className="absolute right-0 mt-2 w-32 bg-gray-800 shadow-lg rounded-md">
-                  <button
-                    className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700"
-                    onClick={() => openModal("shared", ticket)}
-                  >
-                    Share Ticket
-                  </button>
+                <div className="absolute right-0 mt-2 w-32 bg-gray-800 shadow-lg rounded-md z-10">
                   <button
                     className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700"
                     onClick={() => openModal("reassigned", ticket)}
@@ -89,7 +126,7 @@ function Tickets() {
                     Reassign Ticket
                   </button>
                   <button className="block w-full text-left px-4 py-2 text-red-400 hover:bg-gray-700">
-                    Delete Ticket
+                    Claim Refund
                   </button>
                 </div>
               )}
@@ -100,8 +137,8 @@ function Tickets() {
 
       {/* Modal for Sharing/Reassigning Ticket */}
       {modalType && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-gray-900 p-6 rounded-lg w-96 shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+          <div className="bg-gray-900  p-6 rounded-lg w-96 shadow-lg">
             <h2 className="text-lg font-semibold text-white mb-4">
               {modalType === "shared" ? "Share Ticket" : "Reassign Ticket"}
             </h2>

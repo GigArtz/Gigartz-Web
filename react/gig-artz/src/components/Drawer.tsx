@@ -51,9 +51,18 @@ function Drawer() {
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   const handleLogout = () => {
-    // Clear token and redirect to login
-    localStorage.removeItem("authToken");
-    navigate("/");
+    // Check if the key exists
+    const authUser = localStorage.getItem("authUser");
+    if (authUser) {
+      console.log("Logging out user:", JSON.parse(authUser));
+      localStorage.removeItem("authUser"); // Remove the key
+      console.log("Auth user removed from local storage.");
+    } else {
+      console.log("No auth user found in local storage.");
+    }
+
+    // Navigate to the login page
+    navigate("/", { replace: true }); // Use replace to prevent back navigation
   };
 
   const goBack = () => {
@@ -158,7 +167,7 @@ function Drawer() {
                     className={`flex items-center p-2 rounded-2xl text-sm cursor-pointer transition ${
                       isActive
                         ? "border-teal-500 text-lg text-white bg-teal-900"
-                        : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                        : "text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <item.icon

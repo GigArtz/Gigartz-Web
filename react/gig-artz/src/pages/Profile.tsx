@@ -20,6 +20,8 @@ export default function Profile() {
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [name, setName] = useState("");
+  
+
 
   useEffect(() => {
     if (uid) {
@@ -148,7 +150,7 @@ export default function Profile() {
       />
 
       {modalVisible && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-3/4 max-w-md">
             <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
             <div className="space-y-4">

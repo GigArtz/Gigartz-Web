@@ -27,10 +27,6 @@ const Chat: React.FC<ChatProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation?.messages]);
-
   // Convert timestamps efficiently
   const parseTimestamp = (msg: Message): number | null => {
     if (msg.timestamp && typeof msg.timestamp === "object" && "seconds" in msg.timestamp) {
@@ -72,7 +68,7 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full md:w-full bg-dark text-white">
+    <div className="flex-1 flex flex-col h-full bg-dark text-white">
       {/* Chat Header */}
       <div className="p-4 bg-gray-800 flex items-center shadow-md sticky top-0 z-10 justify-between">
         <h2 className="text-lg text-teal-400 font-semibold">{conversation.contact}</h2>
@@ -85,7 +81,7 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 p-4 overflow-y-auto space-y-4 mb-16">
         {Object.entries(messagesGrouped).map(([date, messages]) => (
           <div key={date}>
             <div className="text-center text-xs text-gray-500 my-2">{date}</div>
@@ -98,7 +94,7 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Chat Input */}
-      <form onSubmit={onSendMessage} className="p-4 flex items-center sticky bottom-0 input-field bg-gray-900">
+      <form onSubmit={onSendMessage} className="p-4 flex items-center sticky bottom-0 bg-gray-900 z-10">
         <label className="cursor-pointer mr-2">
           <FaPaperclip size={20} />
           <input

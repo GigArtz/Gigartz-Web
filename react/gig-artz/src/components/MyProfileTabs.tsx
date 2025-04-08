@@ -21,7 +21,7 @@ function MyProfileTabs({ uid }) {
       const gigGuide =
         Array.from(
           new Set(
-            (userTickets || [])
+            (userTickets || userEvents || [])
               .map((ticket) => {
                 const matchedEvent = (events || []).find(
                   (event) => event.title === ticket.eventName

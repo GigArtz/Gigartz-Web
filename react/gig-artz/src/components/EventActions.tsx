@@ -54,7 +54,7 @@ const EventActions: React.FC<EventActionsProps> = ({
       {/* Likes */}
       <p className="flex items-center cursor-pointer">
         <FaHeart
-          onClick={() => handleLike(profile?.id || uid, event.id)}
+          onClick={() => handleLike(event?.id, uid || profile?.id)}
           className={`w-4 h-4 mr-2 ${
             likedEvents?.includes(event.id)
               ? "text-red-500"

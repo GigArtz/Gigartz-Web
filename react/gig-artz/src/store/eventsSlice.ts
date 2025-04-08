@@ -462,7 +462,7 @@ export const buyTicket = (
       ticketData,  // ✅ No extra object wrapping
       { headers: { "Content-Type": "application/json" } }  // ✅ Ensure JSON format
     );
-    
+
     console.log("Ticket purchased successfully:", response.data);
 
     dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));
@@ -546,6 +546,55 @@ export const scanTicket = (
   }
 };
 
+// Reassign a ticket to a new user
+export const reassignTicket = (
+  currentUserId: string,
+  newUserId: string,
+  ticketId: string
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.scanTicketStart()); // Reusing scanTicketStart for loading state
+
+  console.log(currentUserId,newUserId, ticketId)
+  try {
+    console.log("Reassigning ticket...");
+    const response = await axios.post(
+      `https://gigartz.onrender.com/reassign-ticket`,
+      { currentUserId, newUserId, ticketId }
+    );
+    console.log("Ticket reassigned successfully:", response.data);
+
+    dispatch(eventsSlice.actions.scanTicketSuccess("Ticket reassigned successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.response?.data?.error || "Failed to reassign ticket"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(eventsSlice.actions.scanTicketFailure("Unexpected error occurred"));
+    }
+  }
+};
 
 export const {
   fetchEventsStart,

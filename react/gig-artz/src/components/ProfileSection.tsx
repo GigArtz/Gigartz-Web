@@ -62,7 +62,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     if (uid) {
       dispatch(fetchAUserProfile(uid));
     }
-    console.log(userProfile?.userProfile?.genre);
   }, [uid, dispatch]);
 
   const isFreelancer = userProfile?.userProfile?.roles?.freelancer || false;
@@ -127,7 +126,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           <Tooltip text={isFollowingUser ? "Unfollow" : "Follow"}>
             <button
               onClick={onFollow}
-              className={`border sm:text-xs px-4 py-1 rounded-2xl ${
+              className={`border text-xs px-4 py-1 rounded-2xl ${
                 isFollowingUser
                   ? "border-teal-400 text-teal-400"
                   : "border-teal-400 text-teal-400"

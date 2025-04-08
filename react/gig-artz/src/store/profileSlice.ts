@@ -163,6 +163,9 @@ const profileSlice = createSlice({
     updateProfile(state, action: PayloadAction<UserProfile>) {
       state.profile = action.payload;
     },
+    logout(state) {
+      Object.assign(state, initialState);
+    },
   },
 });
 
@@ -639,6 +642,7 @@ export const {
   resetError,
   updateProfile,
   fetchDrawerProfileSuccess,
+  logout,
 } = profileSlice.actions;
 
 export default profileSlice.reducer;
