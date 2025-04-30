@@ -46,18 +46,19 @@ const ShareModal = ({ isVisible, onClose, shareUrl }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-gray-900 p-6 rounded-lg w-80 shadow-lg relative">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-400 hover:text-white"
-        >
-          <FaTimesCircle className="w-6 h-6" />
-        </button>
-
-        <h3 className="text-lg font-semibold text-white text-center mb-4">
-          Share Event
-        </h3>
+      <div className="bg-dark p-6 rounded-lg w-80 shadow-lg relative">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-500 ">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Share Event
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+          >
+            <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
+          </button>
+        </div>
 
         <hr />
 

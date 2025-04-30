@@ -104,7 +104,6 @@ function GuestList() {
         setSelectedList(null);
         showToast("New list created successfully!", "success");
       });
-      
     } else {
       // Create new list with the first guest
       const newList = {
@@ -145,9 +144,6 @@ function GuestList() {
     setSelectedList(null);
     showToast("List deleted!", "info");
   };
-
-  
-  
 
   const addGuest = () => {
     if (!newGuestEmail.trim() || !selectedList) {
@@ -214,7 +210,6 @@ function GuestList() {
       dispatch(fetchAUserProfile(user.uid)); // 👈 Add this
       showToast("Guest removed!", "info");
     });
-    
 
     showToast("Guest removed!", "info");
   };
@@ -310,16 +305,17 @@ function GuestList() {
 
       {selectedList && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-gray-900 p-6 rounded-lg w-[80%] relative animate-fadeIn">
-            <div className="flex flex-row justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-white">
-                {selectedList.name}
+          <div className="p-4 md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Edit Guest List {selectedList.name}
               </h3>
               <button
                 onClick={() => setSelectedList(null)}
-                className="hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
+                className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
               >
-                <FaTimesCircle className="w-5 h-5" />
+                <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
               </button>
             </div>
 
@@ -328,21 +324,26 @@ function GuestList() {
                 selectedList.guests.map((guest, index) => (
                   <li
                     key={`${guest.email}-${index}`}
-                    className="flex justify-between p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2"
+                    className="flex justify-between p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
                   >
-                    <span>
+                    <span className="flex items-center gap-2">
+                      <img
+                        src={guest.profilePicUrl || "/avatar.png"}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
+                      />
                       {guest.name} ({guest.email})
                     </span>
                     <button
                       onClick={() => deleteGuest(guest.email)}
-                      className="text-red-400 hover:text-red-500 text-sm pr-4"
+                      className="text-red-400 hover:text-red-500 text-sm pr-4 transition-colors"
                     >
                       <FaTrash className="w-4 h-4" />
                     </button>
                   </li>
                 ))
               ) : (
-                <p className="text-gray-400">No guests added.</p>
+                <p className="text-gray-400 text-center">No guests added.</p>
               )}
             </ul>
 
@@ -358,6 +359,7 @@ function GuestList() {
                 className="input-field"
                 autoFocus
               />
+
               <ul className="text-gray-300 grid overflow-y-auto max-h-60">
                 {userList &&
                 userList.filter(
@@ -383,16 +385,19 @@ function GuestList() {
                       <li
                         key={user.emailAddress}
                         onClick={() => setNewGuestEmail(user.emailAddress)}
-                        className="cursor-pointer p-1 mr-1 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2"
+                        className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
                       >
                         <div className="flex justify-between items-center">
-                          <p>{user.name}</p>
-                          <span>
+                          <p className="flex items-center gap-2">
                             <img
                               src={user.profilePicUrl || "/avatar.png"}
                               alt="Avatar"
-                              className="w-10 h-10 rounded-full border-2 border-teal-400 object-cover"
+                              className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
                             />
+                            {user.name}
+                          </p>
+                          <span className="text-gray-400 text-sm">
+                            {user.emailAddress}
                           </span>
                         </div>
                       </li>
@@ -403,6 +408,7 @@ function GuestList() {
                   </p>
                 )}
               </ul>
+
               <button onClick={addGuest} className="btn-primary">
                 Add
               </button>
@@ -413,38 +419,87 @@ function GuestList() {
 
       {showListModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-gray-900 p-6 rounded-lg w-11/12 relative animate-fadeIn">
-            <div className="flex flex-row justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-white">
+          <div className="p-4 md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {editingList ? "Edit List" : "Create New List"}
               </h3>
               <button
                 onClick={() => setShowListModal(false)}
-                className="hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
+                className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
               >
-                <FaTimesCircle className="w-5 h-5" />
+                <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
               </button>
             </div>
+
             <input
               type="text"
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
               placeholder="Enter list name"
-              className="p-2 rounded border border-gray-600 bg-gray-800 text-white w-full mb-3"
+              className="input-field mb-3"
               autoFocus
             />
             <input
               type="email"
               value={newGuestEmail}
               onChange={(e) => setNewGuestEmail(e.target.value)}
-              placeholder="Enter guest email"
-              className="p-2 rounded border border-gray-600 bg-gray-800 text-white w-full mb-3"
+              placeholder="Enter guest email or username"
+              className="input-field mb-3"
             />
+
+            <ul className="text-gray-300 grid overflow-y-auto max-h-60">
+              {userList &&
+              userList.filter(
+                (user) =>
+                  user.name
+                    .toLowerCase()
+                    .includes(newGuestEmail.toLowerCase()) ||
+                  user.emailAddress
+                    .toLowerCase()
+                    .includes(newGuestEmail.toLowerCase())
+              ).length > 0 ? (
+                userList
+                  .filter(
+                    (user) =>
+                      user.name
+                        .toLowerCase()
+                        .includes(newGuestEmail.toLowerCase()) ||
+                      user.emailAddress
+                        .toLowerCase()
+                        .includes(newGuestEmail.toLowerCase())
+                  )
+                  .map((user) => (
+                    <li
+                      key={user.emailAddress}
+                      onClick={() => setNewGuestEmail(user.emailAddress)}
+                      className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
+                    >
+                      <div className="flex justify-between items-center">
+                        <p className="flex items-center gap-2">
+                          <img
+                            src={user.profilePicUrl || "/avatar.png"}
+                            alt="Avatar"
+                            className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
+                          />
+                          {user.name}
+                        </p>
+                        <span className="text-gray-400 text-sm">
+                          {user.emailAddress}
+                        </span>
+                      </div>
+                    </li>
+                  ))
+              ) : (
+                <p className="text-gray-400 text-center">
+                  No matching users found.
+                </p>
+              )}
+            </ul>
+
             <div className="flex justify-end">
-              <button
-                onClick={handleSaveList}
-                className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg"
-              >
+              <button onClick={handleSaveList} className="btn-primary">
                 {editingList ? "Update" : "Create"}
               </button>
             </div>
@@ -461,7 +516,7 @@ function GuestList() {
             +
           </button>
           {showFloatingMenu && (
-            <div className="absolute bottom-16 right-0 bg-gray-800 text-white text-nowrap rounded-lg shadow-lg p-2 flex flex-col gap-2">
+            <div className="absolute bottom-16 right-0 bg-dark text-white text-nowrap rounded-lg shadow-lg p-2 flex flex-col gap-2">
               <button
                 onClick={() => {
                   setShowListModal(true);

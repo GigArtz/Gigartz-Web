@@ -65,6 +65,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   }, [uid, dispatch]);
 
   const isFreelancer = userProfile?.userProfile?.roles?.freelancer || false;
+  const isAcceptingBookings = userProfile?.userProfile?.acceptBookings || false;
+  const isAcceptingTips = userProfile?.userProfile?.acceptTips || false;
 
   // Check if user is following current profile
   const isFollowingUser = userFollowing?.some((user) => user.id === uid);
@@ -104,22 +106,26 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
             </Tooltip>
             {isFreelancer && (
               <div className="flex items-center gap-1">
-                <Tooltip text="Tip Freelancer">
-                  <button
-                    onClick={() => setIsTippingModalOpen(true)}
-                    className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
-                  >
-                    <FaMoneyBillAlt className="w-3 h-3" />
-                  </button>
-                </Tooltip>
-                <Tooltip text="Book Freelancer">
-                  <button
-                    onClick={() => setIsBookingModalOpen(true)}
-                    className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
-                  >
-                    <FaCalendarPlus className="w-3 h-3" />
-                  </button>
-                </Tooltip>
+                {isAcceptingTips && (
+                  <Tooltip text="Tip Freelancer">
+                    <button
+                      onClick={() => setIsTippingModalOpen(true)}
+                      className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                    >
+                      <FaMoneyBillAlt className="w-3 h-3" />
+                    </button>
+                  </Tooltip>
+                )}
+                {isAcceptingBookings && (
+                  <Tooltip text="Book Freelancer">
+                    <button
+                      onClick={() => setIsBookingModalOpen(true)}
+                      className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                    >
+                      <FaCalendarPlus className="w-3 h-3" />
+                    </button>
+                  </Tooltip>
+                )}
               </div>
             )}
           </div>

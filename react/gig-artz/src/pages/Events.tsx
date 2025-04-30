@@ -359,7 +359,7 @@ const EventDetails = () => {
 
       <hr className="mt-4" />
 
-      <div className="mt-4 mb-4 grid grid-cols-2 gap-4 sticky top-3">
+      <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
         <div>
           <p className="flex items-center">
             <FaCalendar className="w-5 h-5 text-white mr-2" />{" "}

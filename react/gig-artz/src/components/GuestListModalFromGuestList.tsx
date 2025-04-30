@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
+import { FaTimesCircle } from "react-icons/fa";
 
 interface GuestListModalFromGuestListProps {
   isOpen: boolean;
@@ -28,7 +29,20 @@ const GuestListModalFromGuestList: React.FC<
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-96">
+      <div className="bg-dark p-6 rounded-lg w-96">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Add to Guest List
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+          >
+            <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
+          </button>
+        </div>
+        
         <h3 className="text-lg font-semibold mb-4">Add to Guest List</h3>
         <select
           value={selectedListId || ""}

@@ -26,7 +26,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Bottom Navigation (Only visible on small screens) */}
-      <div className="fixed px-4 bottom-0 w-full block md:hidden">
+      <div className="fixed px-2 bottom-0 w-full block md:hidden">
         <BottomNav />
       </div>
     </div>

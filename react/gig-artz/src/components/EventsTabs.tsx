@@ -68,7 +68,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
         <h2 className="text-xl text-white font-semibold mb-4">
           Popular Freelancers
         </h2>
-        <div className="flex flex-row w-full gap-2 overflow-auto">
+        <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth snap-x space-x-2 ">
           {userList && userList.length > 0 ? (
             userList
               .filter((user) => user.roles?.freelancer) // ✅ Filter first

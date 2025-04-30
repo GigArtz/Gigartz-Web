@@ -7,6 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loader from "../components/Loader";
 import ServicesForm from "../components/ServicesForm";
+import { useNavigate } from "react-router-dom";
 
 const Monetization = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -16,6 +17,7 @@ const Monetization = () => {
   const [isFreelancer, setIsFreelancer] = useState(false);
   const [loading, setLoading] = useState(false); // Loader state
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
 
   const [service, setService] = useState({ name: "", description: "" });
   const [packages, setPackages] = useState([
@@ -71,6 +73,10 @@ const Monetization = () => {
       setAcceptTips(false);
       setAcceptBookings(false);
       setAgreedToTerms(false);
+
+      // nagivate to profile page
+      navigate("/profile");
+
     } catch (error) {
       toast.error("Error switching profile. Try again.");
     } finally {

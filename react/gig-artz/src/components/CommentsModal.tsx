@@ -72,7 +72,7 @@ const CommentsModal: React.FC<CommentsProps> = ({
             onClick={onClose}
             className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
           >
-            <FaTimesCircle className="w-6 h-6" />
+            <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
           </button>
         </div>
 

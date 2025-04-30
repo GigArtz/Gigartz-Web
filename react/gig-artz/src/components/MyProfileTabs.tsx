@@ -9,7 +9,7 @@ function MyProfileTabs({ uid }) {
   const { events } = useSelector((state) => state.events);
 
   const [userGigGuide, setUserGigGuide] = useState([]);
-  const [activeTab, setActiveTab] = useState("events");
+  const [activeTab, setActiveTab] = useState("gigGuide");
 
 
   useEffect(() => {
@@ -44,12 +44,10 @@ function MyProfileTabs({ uid }) {
     <div>
       {/* Tabs */}
       <div className="tabs">
-        <ul className="flex flex-nowrap justify-between overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+        <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
-            { key: "events", label: "Events" },
             { key: "gigGuide", label: "Gig Guide" },
             { key: "reviews", label: "Reviews" },
-            { key: "likes", label: "Likes" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -79,33 +77,12 @@ function MyProfileTabs({ uid }) {
 
         {!loading && !error && (
           <>
-            {activeTab === "events" && (
-              <div className="snap-start flex-shrink-0 w-[100%] p-1">
-                {/* Scrollable Col */}
-                <ScrollableEventCol
-                  events={userEvents}
-                  loading={loading}
-                  error={error}
-                />
-              </div>
-            )}
 
             {activeTab === "gigGuide" && (
               <div className="snap-start flex-shrink-0 w-[100%] p-1">
                 {/* Scrollable Col */}
                 <ScrollableEventCol
                   events={userGigGuide}
-                  loading={loading}
-                  error={error}
-                />
-              </div>
-            )}
-
-            {activeTab === "likes" && (
-              <div className="snap-start flex-shrink-0 w-[100%] p-1">
-                {/* Scrollable Col */}
-                <ScrollableEventCol
-                  events={likedEvents}
                   loading={loading}
                   error={error}
                 />
