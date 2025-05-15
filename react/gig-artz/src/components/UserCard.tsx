@@ -41,7 +41,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
           <img
             src={user.profilePicUrl || "/avatar.png"}
             alt="Avatar"
-            className="w-14 h-14 rounded-full border-2 border-teal-400 object-cover"
+            className="w-12 h-12 rounded-full border-2 border-teal-400 object-cover"
           />
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold text-white">
@@ -58,7 +58,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
         </div>
         {/* Follow Button */}
         <button
-          className={`border text-xs px-4 py-1 rounded-2xl ${
+          className={`border text-xs px-2 flex-shrink-0 py-1 rounded-2xl ${
             isFollowingUser
               ? "border-teal-400 bg-teal-400 text-black"
               : "border-teal-400 text-teal-400"

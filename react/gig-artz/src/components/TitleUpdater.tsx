@@ -23,7 +23,7 @@ export default function TitleUpdater() {
     const activeItem = navItems.find(item =>
       location.pathname.startsWith(item.link)
     );
-    document.title = `GigArtz | ${activeItem?.label || "Explore"}`;
+    document.title = `GigArtz - ${activeItem?.label || "Explore"}`;
   }, [location.pathname]);
 
   return null; // no UI

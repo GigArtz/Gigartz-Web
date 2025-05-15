@@ -507,8 +507,11 @@ export const scanTicket = (
 
   try {
     console.log("Scanning ticket...");
+    console.log(qrCodeData, customerUid)
+    // Ensure qrCodeData is a string and customerUid is a string
+    
     const response = await axios.post(
-      `https://gigartz.onrender.com/scan-ticket`,
+      `https://gigartz.onrender.com/scanTicket`,
       { qrCodeData, customerUid }
     );
     console.log("Ticket scanned successfully:", response.data);

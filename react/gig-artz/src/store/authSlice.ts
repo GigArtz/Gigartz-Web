@@ -44,7 +44,7 @@ const persistedUser = localStorage.getItem("authUser");
 const initialState: AuthState = {
   user: persistedUser ? JSON.parse(persistedUser) : null,
   current_user: null,
-  uid: persistedUser ? JSON.parse(persistedUser).uid : null,
+  uid: persistedUser ? JSON.parse(persistedUser).uid : null, // Ensure uid is extracted from the persisted user
   loading: false,
   error: null,
 };
@@ -64,6 +64,7 @@ const authSlice = createSlice({
     },
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
+      state.uid = action.payload.uid || null; // Ensure uid is set when user is updated
       state.error = null;
     },
     loginSuccess(state, action: PayloadAction<{ user: User; uid: string }>) {
@@ -95,7 +96,7 @@ const authSlice = createSlice({
     },
     logout(state) {
       state.user = null;
-      state.uid = null;
+      state.uid = null; // Clear uid on logout
       state.error = null;
       localStorage.removeItem("authUser"); // Clear persisted user
     },

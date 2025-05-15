@@ -15,6 +15,9 @@ import {
   FaSignOutAlt,
   FaArrowAltCircleLeft,
   FaArrowLeft,
+  FaHamburger,
+  FaEllipsisV,
+  FaEllipsisH,
 } from "react-icons/fa"; // Importing icons from react-icons
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -36,6 +39,7 @@ function Drawer() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUserProfile(user?.uid));
@@ -59,21 +63,40 @@ function Drawer() {
 
   const goBack = () => navigate(-1);
 
-  const navItems = [
+  type NavItem = {
+    icon: React.ComponentType<any>;
+    label: string;
+    link?: string;
+    action?: () => void;
+  };
+
+  const navItems: NavItem[] = [
     { icon: FaHome, label: "Home", link: "/home" },
+    { icon: FaUser, label: "Profile", link: "/profile" },
     { icon: FaUsers, label: "Guest Lists", link: "/guest-list" },
     { icon: FaWallet, label: "Wallet", link: "/wallet" },
-    { icon: FaQrcode, label: "Scan Ticket", link: "/scanner" },
-    { icon: FaTicketAlt, label: "Tickets", link: "/tickets" },
-    { icon: FaCalendar, label: "Bookings", link: "/bookings" },
     { icon: FaSearch, label: "Explore", link: "/explore" },
     { icon: FaBell, label: "Notifications", link: "/notifications" },
     { icon: FaEnvelope, label: "Messages", link: "/messages" },
+  ];
+
+  const moreNavItems: NavItem[] = [
     { icon: FaDollarSign, label: "Monetization", link: "/monetization" },
+    { icon: FaTicketAlt, label: "Tickets", link: "/tickets" },
+    { icon: FaQrcode, label: "Scan Ticket", link: "/scanner" },
+    { icon: FaCalendar, label: "Bookings", link: "/bookings" },
     { icon: FaCog, label: "Settings", link: "/settings" },
-    { icon: FaUser, label: "Profile", link: "/profile" },
     { icon: FaSignOutAlt, label: "Sign Out", action: handleLogout },
   ];
+
+  const isLoading = loading || !profile;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader />
+      </div>
+    );
+  }
 
   const activeLink =
     navItems.find((item) => location.pathname.startsWith(item.link))?.link ||
@@ -87,7 +110,10 @@ function Drawer() {
       {/* Top bar for mobile */}
       <div className="md:hidden fixed top-0 left-0 w-full bg-[#060512] shadow-md z-30 p-2 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <FaArrowLeft className="text-white text-lg cursor-pointer" onClick={goBack} />
+          <FaArrowLeft
+            className="text-white text-lg cursor-pointer"
+            onClick={goBack}
+          />
           <p className="text-white text-lg font-semibold capitalize">
             {location.pathname.split("/")[1] || "Explore"}
           </p>
@@ -102,7 +128,9 @@ function Drawer() {
       {/* Drawer */}
       <div
         className={`fixed top-0 left-0 h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 duration-300 ease-in-out
-        ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        ${
+          isDrawerOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
       >
         {/* Profile */}
         <div className="p-4 border-b border-gray-700 text-center">
@@ -112,10 +140,12 @@ function Drawer() {
             className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full border-2 border-teal-500 cursor-pointer"
             onClick={toggleDrawer}
           />
-          <p className="text-white text-lg font-semibold mt-2">
+          <p className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer" onClick={() => navigate("/profile")}>
             {profile?.userName || "brooke lines"}
           </p>
-          <p className="text-teal-400 text-sm">{profile?.bio || "brooke lines"}</p>
+          <p className="text-teal-400 text-sm">
+            {profile?.bio || "brooke lines"}
+          </p>
         </div>
 
         {/* Navigation */}
@@ -135,7 +165,11 @@ function Drawer() {
                       }
                     }}
                     className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                      ${isActive ? "bg-teal-700 text-white" : "text-white hover:bg-gray-700"}`}
+                      ${
+                        isActive
+                          ? "bg-teal-700 text-white"
+                          : "text-white hover:bg-gray-700"
+                      }`}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.label}</span>
@@ -144,6 +178,41 @@ function Drawer() {
               );
             })}
           </ul>
+
+          {/* More Options Button */}
+          <div className="my-4 border-y border-gray-700 pt-4">
+            <button
+              className="w-full flex items-center px-2 py-2 rounded-2xl text-sm font-semibold text-white bg-dark hover:bg-gray-700 transition mb-2"
+              onClick={() => setShowMoreOptions((prev) => !prev)}
+              type="button"
+            >
+              <FaEllipsisH className="w-5 h-5 me-3" />
+              <span className="text-white hover:bg-gray-700">More</span>
+             </button>
+            {showMoreOptions && (
+              <ul className="space-y-2 my-2 animate-fade-in">
+                {moreNavItems.map((item, index) => (
+                  <li key={index}>
+                    <a
+                      onClick={() => {
+                        if (item.action) {
+                          item.action();
+                        } else {
+                          navigate(item.link);
+                          setIsDrawerOpen(false); // Close drawer on mobile
+                        }
+                      }}
+                      className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
+                        ${item.label === "Sign Out" ? "text-white hover:bg-red-600" : "text-white hover:bg-gray-700"}`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           {/* Create Button */}
           <div className="flex flex-row font-medium px-2 py-1 mt-4 mb-5 justify-center">
