@@ -107,6 +107,11 @@ const Messages: React.FC = () => {
     navigate("/messages");
   };
 
+  const getUsernameById = (userId: string) => {
+    const user = userList?.find((user) => user.id === userId);
+    return user ? user.userName : "Unknown User";
+  };
+
   return (
     <div className="main-content flex h-screen">
       {!activeConversation || window.innerWidth >= 768 ? (
@@ -135,7 +140,7 @@ const Messages: React.FC = () => {
                       key={conversation.contact}
                       className={`p-3 rounded-lg cursor-pointer transition ${
                         activeConversation === conversation.contact
-                          ? "bg-blue-500 text-white"
+                          ? "bg-teal-500 text-white"
                           : "bg-gray-800 hover:bg-gray-700"
                       }`}
                       onClick={() =>
@@ -143,7 +148,7 @@ const Messages: React.FC = () => {
                       }
                     >
                       <h3 className="font-semibold">
-                        {contact?.userName || "Unknown"}
+                        {getUsernameById(conversation?.contact) || contact?.userName || "Unknown"}
                       </h3>
                       {lastMessage && (
                         <p className="text-sm text-gray-300 truncate">

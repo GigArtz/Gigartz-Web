@@ -107,9 +107,14 @@ function ExploreTabs() {
                 </div>
 
                 <div className="mt-2 w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-4">
-                    Trending
-                  </h2>
+                  <div className="flex flex-row justify-between items-center">
+                    <h2 className="text-xl text-white font-semibold mb-4">
+                      Trending
+                    </h2>
+                    <span className="text-teal-500 text-sm hover:underline cursor-pointer">
+                      See All
+                    </span>
+                  </div>
                   <ScrollableEventRow
                     events={eventList}
                     loading={loading}
@@ -118,9 +123,14 @@ function ExploreTabs() {
                 </div>
 
                 <div className="mt-2 w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-4">
-                    People
-                  </h2>
+                  <div className="flex flex-row justify-between items-center">
+                    <h2 className="text-xl text-white font-semibold mb-4">
+                      People
+                    </h2>
+                    <span className="text-teal-500 text-sm hover:underline cursor-pointer">
+                      See All
+                    </span>
+                  </div>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
                     {userList?.length > 0 ? (
                       userList?.map((user) => (

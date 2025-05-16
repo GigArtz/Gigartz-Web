@@ -13,6 +13,9 @@ const injectGoogleMapsScript = () => {
   }&libraries=places`;
   script.async = true;
   script.defer = true;
+  script.onload = () => {
+    window.mapsReady = true;
+  };
   document.head.appendChild(script);
 };
 

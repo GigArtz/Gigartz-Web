@@ -26,12 +26,20 @@ const Chat: React.FC<ChatProps> = ({
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { userList } = useSelector((state: RootState) => state.profile);
 
   // Convert timestamps efficiently
   const parseTimestamp = (msg: Message): number | null => {
-    if (msg.timestamp && typeof msg.timestamp === "object" && "seconds" in msg.timestamp) {
-      return msg.timestamp.seconds * 1000; 
-    } else if (typeof msg.timestamp === "string" && !isNaN(Date.parse(msg.timestamp))) {
+    if (
+      msg.timestamp &&
+      typeof msg.timestamp === "object" &&
+      "seconds" in msg.timestamp
+    ) {
+      return msg.timestamp.seconds * 1000;
+    } else if (
+      typeof msg.timestamp === "string" &&
+      !isNaN(Date.parse(msg.timestamp))
+    ) {
       return new Date(msg.timestamp).getTime();
     }
     return null;
@@ -56,7 +64,9 @@ const Chat: React.FC<ChatProps> = ({
   }, [conversation?.messages]);
 
   if (!conversation)
-    return <div className="flex-1 p-4 text-gray-500">No conversation selected.</div>;
+    return (
+      <div className="flex-1 p-4 text-gray-500">No conversation selected.</div>
+    );
 
   const onSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,11 +77,18 @@ const Chat: React.FC<ChatProps> = ({
     }
   };
 
+  const getUsernameById = (userId: string) => {
+    const user = userList?.find((user) => user.id === userId);
+    return user ? user.userName : "Unknown User";
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-dark text-white">
       {/* Chat Header */}
       <div className="p-4 bg-gray-800 flex items-center shadow-md sticky top-0 z-10 justify-between">
-        <h2 className="text-lg text-teal-400 font-semibold">{conversation.contact}</h2>
+        <h2 className="text-lg text-teal-400 font-semibold">
+          {getUsernameById(conversation?.contact)}
+        </h2>
         <button
           onClick={handleCloseConversation}
           className="text-gray-400 hover:text-red-500 transition"
@@ -86,7 +103,11 @@ const Chat: React.FC<ChatProps> = ({
           <div key={date}>
             <div className="text-center text-xs text-gray-500 my-2">{date}</div>
             {messages.map((msg) => (
-              <MessageBubble key={parseTimestamp(msg) || Math.random()} msg={msg} currentUserId={currentUserId} />
+              <MessageBubble
+                key={parseTimestamp(msg) || Math.random()}
+                msg={msg}
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         ))}
@@ -94,7 +115,10 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Chat Input */}
-      <form onSubmit={onSendMessage} className="p-4 flex items-center sticky bottom-0 bg-gray-900 z-10">
+      <form
+        onSubmit={onSendMessage}
+        className="p-4 flex items-center sticky bottom-0 bg-gray-900 z-10"
+      >
         <label className="cursor-pointer mr-2">
           <FaPaperclip size={20} />
           <input
@@ -110,8 +134,15 @@ const Chat: React.FC<ChatProps> = ({
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-1 p-2 rounded-lg bg-gray-900 text-white outline-none"
         />
-        {selectedFile && <span className="text-sm ml-2 text-gray-400">{selectedFile.name}</span>}
-        <button type="submit" className="ml-2 text-blue-400 hover:text-blue-300">
+        {selectedFile && (
+          <span className="text-sm ml-2 text-gray-400">
+            {selectedFile.name}
+          </span>
+        )}
+        <button
+          type="submit"
+          className="ml-2 text-blue-400 hover:text-blue-300"
+        >
           <FaPaperPlane size={20} />
         </button>
       </form>
@@ -120,26 +151,38 @@ const Chat: React.FC<ChatProps> = ({
 };
 
 // Memoized Message Bubble Component
-const MessageBubble = React.memo(({ msg, currentUserId }: { msg: Message; currentUserId: string }) => {
-  const isSender = msg.senderId === currentUserId;
-  const timestamp = msg.timestamp.seconds ? msg.timestamp.seconds * 1000 : Date.parse(msg.timestamp as string);
+const MessageBubble = React.memo(
+  ({ msg, currentUserId }: { msg: Message; currentUserId: string }) => {
+    const isSender = msg.senderId === currentUserId;
+    const timestamp = msg.timestamp.seconds
+      ? msg.timestamp.seconds * 1000
+      : Date.parse(msg.timestamp as string);
 
-  return (
-    <div className={`flex ${isSender ? "justify-end" : "justify-start"} mb-2`}>
+    return (
       <div
-        className={`px-4 py-2 max-w-xs shadow-md text-sm ${
-          isSender
-            ? "bg-blue-500 text-white rounded-2xl rounded-tr-none"
-            : "bg-gray-300 text-black rounded-2xl rounded-tl-none"
-        }`}
+        className={`flex ${isSender ? "justify-end" : "justify-start"} mb-2`}
       >
-        <p>{msg.message}</p>
-        <div className="text-xs text-gray-400 text-right">
-          {timestamp ? new Date(timestamp).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "Unknown time"}
+        <div
+          className={`px-4 py-2 max-w-xs shadow-md text-sm ${
+            isSender
+              ? "bg-blue-500 text-white rounded-2xl rounded-tr-none"
+              : "bg-gray-300 text-black rounded-2xl rounded-tl-none"
+          }`}
+        >
+          <p>{msg.message}</p>
+          <div className="text-xs text-gray-400 text-right">
+            {timestamp
+              ? new Date(timestamp).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+              : "Unknown time"}
+          </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 export default Chat;

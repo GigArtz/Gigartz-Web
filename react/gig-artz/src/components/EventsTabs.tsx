@@ -39,7 +39,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
     <div className="">
       {/* Trending Events Section */}
       <div className="mt-2 w-full p-2 rounded-xl">
-        <h2 className="text-xl text-white font-semibold mb-4">Trending</h2>
+        <div className="flex flex-row justify-between items-center">
+          <h2 className="text-xl text-white font-semibold mb-4">Trending</h2>
+          <span className="text-teal-500 text-sm hover:underline">See All</span>
+        </div>
 
         {/* Scrollable Row */}
         <LgScrollableEventRow
@@ -47,13 +50,14 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           loading={loading}
           error={error}
         />
-
-        
       </div>
 
       {/* For You Section */}
       <div className="mt-2 w-full p-2 rounded-xl">
-        <h2 className="text-xl text-white font-semibold mb-4">For You</h2>
+        <div className="flex flex-row justify-between items-center">
+          <h2 className="text-xl text-white font-semibold mb-4">For You</h2>
+          <span className="text-teal-500 text-sm hover:underline">See All</span>
+        </div>
 
         {/* Scrollable Row */}
         <ScrollableEventRow
@@ -65,9 +69,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
       {/* Freelancers */}
       <div className="mt-8 px-4 w-full">
-        <h2 className="text-xl text-white font-semibold mb-4">
-          Popular Freelancers
-        </h2>
+        <div className="flex flex-row justify-between items-center">
+          <h2 className="text-xl text-white font-semibold mb-4">Popular Freelancers</h2>
+          <span className="text-teal-500 text-sm hover:underline cursor-pointer">See All</span>
+        </div>
         <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth snap-x space-x-2 ">
           {userList && userList.length > 0 ? (
             userList
@@ -89,9 +94,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
       {/* Events Near You Section */}
       <div className="mt-2 w-full p-2 rounded-xl">
-        <h2 className="text-xl text-white font-semibold mb-4">
-          Events Near You
-        </h2>
+        <div className="flex flex-row justify-between items-center">
+          <h2 className="text-xl text-white font-semibold mb-4">Events Near You</h2>
+          <span className="text-teal-500 text-sm hover:underline cursor-pointer">See All</span>
+        </div>
 
         {/* Scrollable Row */}
         <ScrollableEventRow

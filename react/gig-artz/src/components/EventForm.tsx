@@ -1,5 +1,8 @@
 // @ts-expect-error
-interface Window { google: any; }
+interface Window {
+  google: any;
+  mapsReady?: boolean;
+}
 
 import { RootState } from "../store/store";
 import { addEvent } from "../store/eventsSlice";
@@ -14,6 +17,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import Autocomplete from "react-google-autocomplete";
 
 // Initialize Firebase Storage
 const storage = getStorage();
@@ -358,46 +362,6 @@ const AddEventForm: React.FC = () => {
 
 // Step 1: Basic Event Details
 const Step1 = ({ formData, handleChange }) => {
-  const [suggestions, setSuggestions] = useState([]);
-  const [venueInput, setVenueInput] = useState(formData.venue || "");
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-
-  // Fetch autocomplete suggestions from Google Places REST API
-  const fetchSuggestions = async (input) => {
-    if (!input) {
-      setSuggestions([]);
-      return;
-    }
-    setLoadingSuggestions(true);
-    try {
-      const apiKey = import.meta.env.VITE_MAPS_API_KEY;
-      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=establishment&key=${apiKey}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.status === "OK" && data.predictions) {
-        setSuggestions(data.predictions);
-      } else {
-        setSuggestions([]);
-      }
-    } catch (err) {
-      setSuggestions([]);
-    }
-    setLoadingSuggestions(false);
-  };
-
-  const handleVenueInput = (e) => {
-    const value = e.target.value;
-    setVenueInput(value);
-    handleChange({ target: { name: "venue", value, type: "text" } });
-    fetchSuggestions(value);
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setVenueInput(suggestion.description);
-    handleChange({ target: { name: "venue", value: suggestion.description, type: "text" } });
-    setSuggestions([]);
-  };
-
   return (
     <div className="space-y-2">
       <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
@@ -415,31 +379,21 @@ const Step1 = ({ formData, handleChange }) => {
 
       <label className="block text-white">Event Venue</label>
       <div className="relative">
-        <input
-          type="text"
-          name="venue"
-          value={venueInput}
-          onChange={handleVenueInput}
-          className="input-field"
+        <Autocomplete
+          apiKey={import.meta.env.VITE_MAPS_API_KEY}
+          style={{
+            width: "100%",
+            padding: "0.5rem",
+            borderRadius: "0.5rem",
+            fontSize: "1rem",
+          }}
+          defaultValue={formData.venue}
+          onPlaceSelected={(place) => {
+            const value = place.formatted_address || place.name || "";
+            handleChange({ target: { name: "venue", value, type: "text" } });
+          }}
           placeholder="Search for venue"
-          autoComplete="off"
         />
-        {loadingSuggestions && (
-          <div className="absolute z-10 bg-white text-black w-full border border-gray-300 rounded shadow p-2">Loading...</div>
-        )}
-        {suggestions.length > 0 && !loadingSuggestions && (
-          <ul className="absolute z-10 bg-white text-black w-full border border-gray-300 rounded shadow">
-            {suggestions.map((suggestion, idx) => (
-              <li
-                key={suggestion.place_id || idx}
-                className="p-2 cursor-pointer hover:bg-teal-100"
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                {suggestion.description}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
 
       <label className="block text-white">Event Description</label>

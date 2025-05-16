@@ -27,7 +27,7 @@ const notificationTypes = {
 const Notification = ({ type, data }) => {
   const notification = notificationTypes[type] || notificationTypes.general;
   return (
-    <div className="flex items-center p-4 border border-teal-500 bg-[#060512] shadow-sm rounded-lg">
+    <div className="flex items-center p-4 rounded-3xl border-2 border-teal-500 mb-3 bg-[#060512] shadow-sm">
       <div className="mr-3 text-lg">{notification.icon}</div>
       <div className="text-sm text-white-700">{notification.message(data)}</div>
     </div>

@@ -308,7 +308,7 @@ function GuestList() {
             <div
               key={list.id}
               onClick={() => setSelectedList(list)}
-              className="cursor-pointer border border-teal-500 hover:bg-gray-900 p-4 rounded-3xl mb-3 flex justify-between items-center transition"
+              className="cursor-pointer hover:bg-gray-900 p-4 rounded-3xl border-2 border-teal-500 mb-3 flex justify-between items-center transition"
             >
               <span className="text-white font-medium">
                 {list.guestListName}
@@ -321,7 +321,7 @@ function GuestList() {
                     setNewListName(list.name);
                     setShowListModal(true);
                   }}
-                  className="text-blue-400 hover:text-blue-500"
+                  className="text-white hover:text-blue-500"
                 >
                   <FaEdit className="w-4 h-4" />
                 </button>
@@ -478,6 +478,22 @@ function GuestList() {
               className="input-field mb-3"
               autoFocus
             />
+
+            {/* Public or Private */}
+            <div className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                id="public-private-toggle"
+                className="toggle-checkbox"
+              />
+              <label
+                htmlFor="public-private-toggle"
+                className="toggle-label text-gray-400 ml-2"
+              >
+                Public
+              </label>
+            </div>
+
             <input
               type="email"
               value={newGuestEmail}

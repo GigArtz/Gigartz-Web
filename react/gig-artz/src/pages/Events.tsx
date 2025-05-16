@@ -319,7 +319,7 @@ const EventDetails = () => {
         </div>
       )}
 
-      <div className="my-4 md:mx-0 relative">
+      <div className="my-4 mb-8 md:mx-0 relative shadow-2xl shadow-teal-500 rounded-lg">
         {uid === event?.promoterId && (
           <div
             className="z-50 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10 cursor-pointer"

@@ -186,13 +186,13 @@ function Drawer() {
           {/* More Modal */}
           {isMoreModalOpen && (
             <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-20">
-              <div className="bg-dark border border-teal-500 rounded-2xl shadow-2xl p-6 max-w-xs relative animate-fade-in">
+              <div className="bg-dark border border-teal-500 rounded-2xl shadow-2xl shadow-teal-500 pt-8 px-2 pb-2 ps-4 max-w-xs relative animate-fade-in">
                 <button
                   className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
                   onClick={() => setIsMoreModalOpen(false)}
                   aria-label="Close"
                 >
-                  <FaTimesCircle className="w-5 h-5" />
+                  <FaTimesCircle className="w-4 h-4" />
                 </button>
                 <ul className="space-y-2">
                   {moreNavItems.map((item, index) => (
