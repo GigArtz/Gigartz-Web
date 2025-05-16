@@ -4,15 +4,18 @@ import { fetchUserProfile, updateUserProfile } from "../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import MyProfileTabs from "../components/MyProfileTabs";
-import { AppDispatch } from "../store/store";
+import { AppDispatch, RootState } from "../store/store";
 import FollowersModal from "../components/FollowersModal";
+import { FaMapMarkerAlt, FaPenSquare } from "react-icons/fa";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../config/firebase";
 
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
-  const { uid } = useSelector((state) => state.auth);
-  const [userProfile, setUserProfile] = useState({});
-  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
-  const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
+  const { uid } = useSelector((state: RootState) => state.auth);
+  const { profile, userFollowers, userFollowing } = useSelector(
+    (state: RootState) => state.profile
+  );
 
   const [modalVisible, setModalVisible] = useState(false);
   const [userName, setUserName] = useState("");
@@ -20,8 +23,10 @@ export default function Profile() {
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [name, setName] = useState("");
-  
-
+  const [loading, setLoading] = useState(false);
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
+  const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (uid) {
@@ -29,22 +34,15 @@ export default function Profile() {
     }
   }, [uid, dispatch]);
 
-  const { userList, profile, userFollowers, userFollowing,  } = useSelector((state) => state.profile);
-
-  console.log(profile);
-
   useEffect(() => {
     if (profile) {
-      setUserProfile(profile);
       setUserName(profile?.userName || "");
       setPhoneNumber(profile?.phoneNumber || "");
       setCity(profile?.city || "");
       setBio(profile?.bio || "");
       setName(profile?.name || "");
     }
-  }, [profile, dispatch]);
-
-  //console.log("profile" , profile.userProfile)
+  }, [profile]);
 
   const handleSave = () => {
     dispatch(
@@ -59,6 +57,26 @@ export default function Profile() {
     setModalVisible(false);
   };
 
+  const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    const storageRef = ref(storage, `profilePics/${Date.now()}_${file.name}`);
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      dispatch(updateUserProfile(uid, { profilePicUrl: downloadURL, name: "Profile Pic"}));
+    } catch (error) {
+      console.error("Error uploading profile picture:", (error as Error).message);
+      alert("Failed to upload profile picture. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const uploadCover = () => {
+    console.log("Upload cover picture function not implemented yet.");
+  };
+
   if (!profile) {
     return (
       <div className="main-content">
@@ -70,31 +88,44 @@ export default function Profile() {
     <div className="main-content">
       <div className="relative">
         <img
-          src={profile?.coverProfile || blueBackground}
+          src={profile?.coverPic || blueBackground}
           alt="Cover"
+          onClick={uploadCover}
           className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
         />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-gray-900 opacity-50"></div>
+
         <img
           src={profile?.profilePicUrl || avatar}
           alt="Profile"
-          className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10"
+          className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleProfilePicUpload}
         />
       </div>
 
       <div className="p-5">
-        <div className="flex justify-end">
-          <button
+        <div className="flex gap-4 items-end">
+          <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
+          <FaPenSquare
             onClick={() => setModalVisible(true)}
-            className="border border-teal-400 px-2 py-1 rounded-2xl"
-          >
-            Edit Profile
-          </button>
+            className="w-4 h-4 mb-2 text-teal-500"
+          />
         </div>
-        <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
         <p className="text-sm text-gray-400">
           @{profile?.userName || "username"}
         </p>
-        <p className="mt-2">{profile?.bio || "Add a bio"}</p>
+        <p className="my-2">{profile?.bio || "Add a bio"}</p>
+        <div className="flex gap-1 items-center text-sm text-gray-400">
+          <FaMapMarkerAlt />
+          {profile?.userName || "username"}
+        </div>
         <div className="flex flex-row justify-between">
           <div className="flex-row gap-4 mt-2">
             <div className="flex gap-2 mb-2 text-gray-500">
@@ -112,7 +143,7 @@ export default function Profile() {
                 onClick={() => setIsFollowersModalOpen(true)}
               >
                 <span className="font-bold text-teal-400">
-                  {userFollowers?.length  || 0}
+                  {userFollowers?.length || 0}
                 </span>{" "}
                 Followers
               </p>
@@ -120,15 +151,13 @@ export default function Profile() {
 
             <div className="flex">
               <div className="flex gap-2 my-2">
-                {(profile?.genre || [])
-                  .slice(0, 4) // Only take the first 3 items
-                  .map((genre, index) => (
-                    <div key={index}>
-                      <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
-                        {genre || genre.name}
-                      </p>
-                    </div>
-                  ))}
+                {(Array.isArray(profile?.genre) ? profile.genre : []).slice(0, 4).map((genre, index) => (
+                  <div key={index}>
+                    <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
+                      {genre?.name || genre}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

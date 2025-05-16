@@ -1,6 +1,9 @@
+// @ts-expect-error
+interface Window { google: any; }
+
 import { RootState } from "../store/store";
 import { addEvent } from "../store/eventsSlice";
-import React, { useState, useReducer, useEffect } from "react";
+import React, { useState, useReducer, useEffect, useRef } from "react";
 import {
   FaArrowLeft,
   FaArrowRight,
@@ -182,7 +185,6 @@ const AddEventForm: React.FC = () => {
     setLoading(false); // Hide loader after upload
   };
 
-
   const handleArtistChange = (index, value) => {
     dispatch({ type: "updateArray", index, value });
   };
@@ -278,7 +280,6 @@ const AddEventForm: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <FaSpinner className="text-teal-500 text-4xl animate-spin" />
         </div>
-        
       )}
       <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
         <div className="rounded-lg">
@@ -356,62 +357,123 @@ const AddEventForm: React.FC = () => {
 };
 
 // Step 1: Basic Event Details
-const Step1 = ({ formData, handleChange }) => (
-  <div className="space-y-2">
-    <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
-      Event Details
-    </label>
-    <label className="block text-white">Event Name</label>
-    <input
-      type="text"
-      name="title"
-      value={formData.title}
-      onChange={handleChange}
-      className="input-field"
-      placeholder="Event Name"
-    />
+const Step1 = ({ formData, handleChange }) => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [venueInput, setVenueInput] = useState(formData.venue || "");
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-    <label className="block text-white">Event Venue</label>
-    <input
-      type="text"
-      name="venue"
-      value={formData.venue}
-      onChange={handleChange}
-      className="input-field"
-      placeholder="Event Venue"
-    />
+  // Fetch autocomplete suggestions from Google Places REST API
+  const fetchSuggestions = async (input) => {
+    if (!input) {
+      setSuggestions([]);
+      return;
+    }
+    setLoadingSuggestions(true);
+    try {
+      const apiKey = import.meta.env.VITE_MAPS_API_KEY;
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=establishment&key=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.status === "OK" && data.predictions) {
+        setSuggestions(data.predictions);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (err) {
+      setSuggestions([]);
+    }
+    setLoadingSuggestions(false);
+  };
 
-    <label className="block text-white">Event Description</label>
-    <textarea
-      name="description"
-      value={formData.description}
-      onChange={handleChange}
-      className="input-field"
-      placeholder="Event Description"
-    />
+  const handleVenueInput = (e) => {
+    const value = e.target.value;
+    setVenueInput(value);
+    handleChange({ target: { name: "venue", value, type: "text" } });
+    fetchSuggestions(value);
+  };
 
-    <label className="block text-white">Event Category</label>
-    <input
-      type="text"
-      name="category"
-      value={formData.category}
-      onChange={handleChange}
-      className="input-field"
-      placeholder="Event Category"
-    />
+  const handleSuggestionClick = (suggestion) => {
+    setVenueInput(suggestion.description);
+    handleChange({ target: { name: "venue", value: suggestion.description, type: "text" } });
+    setSuggestions([]);
+  };
 
-    <label className="block text-white">Event Type</label>
-    <select
-      name="eventType"
-      value={formData.eventType}
-      onChange={handleChange}
-      className="input-field"
-    >
-      <option value="Public">Public</option>
-      <option value="Private">Private</option>
-    </select>
-  </div>
-);
+  return (
+    <div className="space-y-2">
+      <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
+        Event Details
+      </label>
+      <label className="block text-white">Event Name</label>
+      <input
+        type="text"
+        name="title"
+        value={formData.title}
+        onChange={handleChange}
+        className="input-field"
+        placeholder="Event Name"
+      />
+
+      <label className="block text-white">Event Venue</label>
+      <div className="relative">
+        <input
+          type="text"
+          name="venue"
+          value={venueInput}
+          onChange={handleVenueInput}
+          className="input-field"
+          placeholder="Search for venue"
+          autoComplete="off"
+        />
+        {loadingSuggestions && (
+          <div className="absolute z-10 bg-white text-black w-full border border-gray-300 rounded shadow p-2">Loading...</div>
+        )}
+        {suggestions.length > 0 && !loadingSuggestions && (
+          <ul className="absolute z-10 bg-white text-black w-full border border-gray-300 rounded shadow">
+            {suggestions.map((suggestion, idx) => (
+              <li
+                key={suggestion.place_id || idx}
+                className="p-2 cursor-pointer hover:bg-teal-100"
+                onClick={() => handleSuggestionClick(suggestion)}
+              >
+                {suggestion.description}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <label className="block text-white">Event Description</label>
+      <textarea
+        name="description"
+        value={formData.description}
+        onChange={handleChange}
+        className="input-field"
+        placeholder="Event Description"
+      />
+
+      <label className="block text-white">Event Category</label>
+      <input
+        type="text"
+        name="category"
+        value={formData.category}
+        onChange={handleChange}
+        className="input-field"
+        placeholder="Event Category"
+      />
+
+      <label className="block text-white">Event Type</label>
+      <select
+        name="eventType"
+        value={formData.eventType}
+        onChange={handleChange}
+        className="input-field"
+      >
+        <option value="Public">Public</option>
+        <option value="Private">Private</option>
+      </select>
+    </div>
+  );
+};
 
 // Step 2: Artist Lineup
 const Step2 = ({ formData, handleArtistChange, dispatch }) => (

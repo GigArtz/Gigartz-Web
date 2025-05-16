@@ -110,7 +110,7 @@ const EventDetails = () => {
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
   useEffect(() => {
     if (!profile) {
-     // alert("Invalid user profile. Please log in to continue.");
+      // alert("Invalid user profile. Please log in to continue.");
       navigate("/"); // Redirect to login page
       return;
     }
@@ -319,7 +319,7 @@ const EventDetails = () => {
         </div>
       )}
 
-      <div className="">
+      <div className="my-4 md:mx-0 relative">
         {uid === event?.promoterId && (
           <div
             className="z-50 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10 cursor-pointer"
@@ -329,7 +329,16 @@ const EventDetails = () => {
           </div>
         )}
 
-        <EventGalleryCarousel event={event} />
+        {event.eventVideo ? (
+          <div className="mt-4">
+            <video autoPlay loop muted className="w-full rounded-lg">
+              <source src={event.eventVideo} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        ) : (
+          <EventGalleryCarousel event={event} />
+        )}
       </div>
 
       <div className="flex flex-row md:flex-row justify-between gap-4">
@@ -357,7 +366,7 @@ const EventDetails = () => {
       <h2 className="text-2xl font-bold">Description</h2>
       <p className="mt-4 text-lg">{event.description}</p>
 
-      <hr className="mt-4" />
+      <br />
 
       <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
         <div>
@@ -385,18 +394,9 @@ const EventDetails = () => {
         </div>
       </div>
 
-      {event.eventVideo && (
-        <div className="mt-4">
-          <video controls className="w-full rounded-lg">
-            <source src={event.eventVideo} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      )}
-
       <hr className="mt-4" />
 
-      <div className="mt-6 mb-20">
+      <div className="mt-6 mb-10">
         <h2 className="text-2xl font-bold">Tickets</h2>
         {Object.entries(event.ticketsAvailable).map(([type, ticket]) => (
           <div
@@ -435,6 +435,39 @@ const EventDetails = () => {
           >
             Get Tickets
           </button>
+        </div>
+      </div>
+
+      <hr className="mt-4" />
+      <div>
+        <h2 className="text-2xl font-bold mt-4">Event Gallery</h2>
+
+        {event.eventVideo && (
+          <div className="mt-4">
+            <video controls className="w-full rounded-lg">
+              <source src={event.eventVideo} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+
+        <div className="overflow-x-auto mt-4">
+          <div
+            className={`flex gap-3 mb-4 ${
+              event.gallery.length === 2 ? "flex-col-2" : ""
+            }`}
+          >
+            {event.gallery.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Event ${index + 1}`}
+                className={`h-80 object-cover object-top flex-shrink-0 rounded-lg ${
+                  event.gallery.length === 2 ? "w-[49%]" : "w-80"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

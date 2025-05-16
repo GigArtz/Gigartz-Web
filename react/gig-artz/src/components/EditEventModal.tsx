@@ -28,7 +28,7 @@ function EditEventModal({
           id="authentication-modal"
           tabIndex={-1}
           aria-hidden={!isModalOpen} // Accessibility improvement for screen readers
-          className="fixed top-0 left-0 right-0 z-10 flex justify-center items-center px-5 md:px-2  w-full h-full bg-black bg-opacity-50 backdrop-blur-sm transition-all duration-300 ease-in-out"
+          className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center px-5 md:px-2  w-full h-full bg-black bg-opacity-50 backdrop-blur-sm transition-all duration-300 ease-in-out"
         >
           <div
             className="relative p-4 w-full md:w-[50%] max-w-lg rounded-lg shadow-lg bg-[#1F1C29] transform transition-all duration-300 ease-in-out"

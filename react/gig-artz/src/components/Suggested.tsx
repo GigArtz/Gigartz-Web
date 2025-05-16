@@ -11,7 +11,7 @@ export default function SuggestedForYou() {
 
   const isLoading = loading === "pending";
   const isError = error !== null;
-  const isEmpty = userList.length === 0;
+  const isEmpty = userList?.length === 0;
   const isSuccess = !isLoading && !isError && !isEmpty;
 
   if (isLoading) {

@@ -15,8 +15,6 @@ function MyProfileTabs({ uid }) {
   useEffect(() => {
     if (profile) {
       console.log("Profile found:", profile);
-      console.log("User tickets:", userTickets);
-      console.log("Events:", events);
 
       const gigGuide =
         Array.from(
@@ -26,14 +24,12 @@ function MyProfileTabs({ uid }) {
                 const matchedEvent = (events || []).find(
                   (event) => event.title === ticket.eventName
                 );
-                console.log("Matching ticket:", ticket, "with event:", matchedEvent);
                 return matchedEvent;
               })
               .filter(Boolean)
           )
         );
       setUserGigGuide(gigGuide);
-      console.log("Gig guide updated:", gigGuide);
     } else {
       console.log("No profile found, clearing gig guide.");
       setUserGigGuide([]);

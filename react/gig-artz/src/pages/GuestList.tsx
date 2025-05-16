@@ -261,7 +261,44 @@ function GuestList() {
 
   return (
     <div className="main-content p-6">
-      <Header title="Guest List" />
+      <div className="relative flex justify-end h-20 mb-12 top-0">
+        <div className="absolute w-full left-0">
+          <Header title="Guest List" />
+        </div>
+
+        {/* Floating action button + menu */}
+        <div className="relative md:flex items-center justify-center h-full me-4 hidden">
+          <button
+            onClick={() => setShowFloatingMenu((prev) => !prev)}
+            className="w-10 h-10 rounded-full btn-primary flex items-center justify-center shadow-lg transform transition-all hover:scale-105"
+          >
+            +
+          </button>
+
+          {showFloatingMenu && (
+            <div className="absolute right-0 top-16 bg-dark text-white whitespace-nowrap rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
+              <button
+                onClick={() => {
+                  setShowListModal(true);
+                  setShowFloatingMenu(false);
+                }}
+                className="btn-primary w-full p-2"
+              >
+                Create List
+              </button>
+              <button
+                onClick={() => {
+                  setIsGuestListModalOpen(true);
+                  setShowFloatingMenu(false);
+                }}
+                className="btn-primary w-full p-2"
+              >
+                Add Guest
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="rounded-lg shadow-md">
         {guestLists.length === 0 ? (
@@ -271,7 +308,7 @@ function GuestList() {
             <div
               key={list.id}
               onClick={() => setSelectedList(list)}
-              className="cursor-pointer border border-teal-500 hover:bg-gray-900 p-4 rounded-lg mb-3 flex justify-between items-center transition"
+              className="cursor-pointer border border-teal-500 hover:bg-gray-900 p-4 rounded-3xl mb-3 flex justify-between items-center transition"
             >
               <span className="text-white font-medium">
                 {list.guestListName}
@@ -507,7 +544,7 @@ function GuestList() {
         </div>
       )}
 
-      <div className="fixed bottom-5 right-5 md:right-[5%] lg:right-[28%] z-10 md:z-40">
+      <div className="fixed sm:hidden  bottom-5 right-5 md:right-[5%] lg:right-[28%] z-10 md:z-40">
         <div className="relative">
           <button
             onClick={() => setShowFloatingMenu((prev) => !prev)}

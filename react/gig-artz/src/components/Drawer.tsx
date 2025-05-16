@@ -8,27 +8,22 @@ import {
   FaSearch,
   FaBell,
   FaEnvelope,
-  FaPlus,
   FaQrcode,
   FaTicketAlt,
   FaCalendar,
   FaSignOutAlt,
-  FaArrowAltCircleLeft,
   FaArrowLeft,
-  FaHamburger,
-  FaEllipsisV,
   FaEllipsisH,
-} from "react-icons/fa"; // Importing icons from react-icons
+  FaTimesCircle,
+} from "react-icons/fa";
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AppDispatch, RootState } from "../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
-import { fetchUserProfile } from "../store/profileSlice"; // Import fetchDrawerUserProfile
+import { fetchUserProfile } from "../store/profileSlice";
 import Loader from "./Loader";
-
-// ...imports remain unchanged...
 
 function Drawer() {
   const navigate = useNavigate();
@@ -39,22 +34,26 @@ function Drawer() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
 
+  // Fetch user profile on mount or user change
   useEffect(() => {
-    dispatch(fetchUserProfile(user?.uid));
+    if (user?.uid) dispatch(fetchUserProfile(user.uid));
   }, [user, dispatch]);
 
+  // Fallback for persisted user
   useEffect(() => {
-    const persistedUser = localStorage.getItem("authUser");
-    if (persistedUser) {
-      dispatch(fetchUserProfile(JSON.parse(persistedUser).uid));
+    if (!user) {
+      const persistedUser = localStorage.getItem("authUser");
+      if (persistedUser) {
+        dispatch(fetchUserProfile(JSON.parse(persistedUser).uid));
+      }
     }
-  }, [dispatch]);
+  }, [user, dispatch]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+  const toggleDrawer = () => setIsDrawerOpen((open) => !open);
 
   const handleLogout = () => {
     localStorage.removeItem("authUser");
@@ -64,7 +63,7 @@ function Drawer() {
   const goBack = () => navigate(-1);
 
   type NavItem = {
-    icon: React.ComponentType<any>;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     label: string;
     link?: string;
     action?: () => void;
@@ -89,18 +88,21 @@ function Drawer() {
     { icon: FaSignOutAlt, label: "Sign Out", action: handleLogout },
   ];
 
-  const isLoading = loading || !profile;
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader />
-      </div>
-    );
-  }
+
 
   const activeLink =
-    navItems.find((item) => location.pathname.startsWith(item.link))?.link ||
+    navItems.find((item) => location.pathname.startsWith(item.link || ""))?.link ||
     "/explore";
+
+  // Handler for navigation item click
+  const handleNavClick = (item: NavItem) => {
+    if (item.action) {
+      item.action();
+    } else if (item.link) {
+      navigate(item.link);
+      setIsDrawerOpen(false);
+    }
+  };
 
   return (
     <div className="relative flex">
@@ -119,7 +121,7 @@ function Drawer() {
           </p>
         </div>
         <img
-          src={profile?.photoURL || avatar}
+          src={profile?.profilePicUrl || avatar}
           className="w-10 h-10 rounded-full border-2 border-gray-800 cursor-pointer"
           onClick={toggleDrawer}
         />
@@ -127,20 +129,21 @@ function Drawer() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 duration-300 ease-in-out
-        ${
-          isDrawerOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        className={`fixed top-0 left-0 h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
+        ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         {/* Profile */}
         <div className="p-4 border-b border-gray-700 text-center">
           <img
-            src={profile?.photoURL || avatar}
+            src={profile?.profilePicUrl || avatar}
             alt="Profile"
             className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full border-2 border-teal-500 cursor-pointer"
             onClick={toggleDrawer}
           />
-          <p className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer" onClick={() => navigate("/profile")}>
+          <p
+            className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer"
+            onClick={() => navigate("/profile")}
+          >
             {profile?.userName || "brooke lines"}
           </p>
           <p className="text-teal-400 text-sm">
@@ -156,20 +159,9 @@ function Drawer() {
               return (
                 <li key={index}>
                   <a
-                    onClick={() => {
-                      if (item.action) {
-                        item.action();
-                      } else {
-                        navigate(item.link);
-                        setIsDrawerOpen(false); // Close drawer on mobile
-                      }
-                    }}
+                    onClick={() => handleNavClick(item)}
                     className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                      ${
-                        isActive
-                          ? "bg-teal-700 text-white"
-                          : "text-white hover:bg-gray-700"
-                      }`}
+                      ${isActive ? "bg-teal-700 text-white" : "text-white hover:bg-gray-700"}`}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.label}</span>
@@ -180,45 +172,53 @@ function Drawer() {
           </ul>
 
           {/* More Options Button */}
-          <div className="my-4 border-y border-gray-700 pt-4">
+          <div className="border-gray-700 pt-4">
             <button
               className="w-full flex items-center px-2 py-2 rounded-2xl text-sm font-semibold text-white bg-dark hover:bg-gray-700 transition mb-2"
-              onClick={() => setShowMoreOptions((prev) => !prev)}
+              onClick={() => setIsMoreModalOpen(true)}
               type="button"
             >
               <FaEllipsisH className="w-5 h-5 me-3" />
               <span className="text-white hover:bg-gray-700">More</span>
-             </button>
-            {showMoreOptions && (
-              <ul className="space-y-2 my-2 animate-fade-in">
-                {moreNavItems.map((item, index) => (
-                  <li key={index}>
-                    <a
-                      onClick={() => {
-                        if (item.action) {
-                          item.action();
-                        } else {
-                          navigate(item.link);
-                          setIsDrawerOpen(false); // Close drawer on mobile
-                        }
-                      }}
-                      className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                        ${item.label === "Sign Out" ? "text-white hover:bg-red-600" : "text-white hover:bg-gray-700"}`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
+            </button>
           </div>
+
+          {/* More Modal */}
+          {isMoreModalOpen && (
+            <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-20">
+              <div className="bg-dark border border-teal-500 rounded-2xl shadow-2xl p-6 max-w-xs relative animate-fade-in">
+                <button
+                  className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
+                  onClick={() => setIsMoreModalOpen(false)}
+                  aria-label="Close"
+                >
+                  <FaTimesCircle className="w-5 h-5" />
+                </button>
+                <ul className="space-y-2">
+                  {moreNavItems.map((item, index) => (
+                    <li key={index}>
+                      <a
+                        onClick={() => {
+                          handleNavClick(item);
+                          setIsMoreModalOpen(false);
+                        }}
+                        className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
+                          ${item.label === "Sign Out" ? "text-white hover:bg-red-600" : "text-white hover:bg-gray-700"}`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span>{item.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Create Button */}
           <div className="flex flex-row font-medium px-2 py-1 mt-4 mb-5 justify-center">
-            {/* Add Button */}
             <button
-              onClick={openModal} // Open modal on click
+              onClick={openModal}
               type="button"
               className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
             >
