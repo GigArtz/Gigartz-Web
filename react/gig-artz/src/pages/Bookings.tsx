@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import Header from "../components/Header";
 import React, { useEffect, useState } from "react";
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 
 function Bookings() {
   const [bookingz, setBookings] = useState([]);

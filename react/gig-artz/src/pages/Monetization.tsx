@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserProfile, switchUserProfile } from "../store/profileSlice";
-import { AppDispatch } from "../store/store";
+import { fetchUserProfile, switchUserProfile } from "../../store/profileSlice";
+import { AppDispatch } from "../../store/store";
 import MultiCheckboxDropdown from "../components/Dropdown";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -76,7 +76,6 @@ const Monetization = () => {
 
       // nagivate to profile page
       navigate("/profile");
-
     } catch (error) {
       toast.error("Error switching profile. Try again.");
     } finally {
@@ -89,17 +88,16 @@ const Monetization = () => {
       <ToastContainer position="top-center" autoClose={3000} />
 
       {/* Services Modal */}
-    
       <div className=" items-center justify-center flex flex-col text-white">
-      {showModal && (
-        <ServicesForm
-          onClose={() => setShowModal(false)}
-          service={service}
-          setService={setService}
-          packages={packages}
-          setPackages={setPackages}
-        />
-      )}
+        {showModal && (
+          <ServicesForm
+            onClose={() => setShowModal(false)}
+            service={service}
+            setService={setService}
+            packages={packages}
+            setPackages={setPackages}
+          />
+        )}
       </div>
 
       {loading && <Loader message="Switching Profile..." />}

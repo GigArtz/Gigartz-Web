@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BottomNav from "../components/BottomNav";
-import { fetchAllEvents } from "../store/eventsSlice";
-import { RootState, AppDispatch } from "../store/store";
+import { fetchAllEvents } from "../../store/eventsSlice";
+import { RootState, AppDispatch } from "../../store/store";
 import EventsTabs from "../components/EventsTabs";
 
 // Define types for Event fields
@@ -93,7 +93,6 @@ const Home: React.FC = () => {
           <EventsTabs events={filteredEvents} loading={loading} error={error} />
         </div>
       )}
-      
 
       {/* Bottom Navigation (Only visible on small screens) */}
       <div className="fixed px-2 bottom-0 w-full block md:hidden">

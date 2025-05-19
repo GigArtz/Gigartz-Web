@@ -11,6 +11,11 @@ const store = configureStore({
     events: eventsReducer,  // Handles events state
     messages: messageReducer,
   },
+
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // Disable the middleware
+    }),
 });
 
 // TypeScript types for Redux state and dispatch

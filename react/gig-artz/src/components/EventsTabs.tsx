@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import EventCard from "./EventCard";
 import UserCard from "./UserCard";
-import { AppDispatch, RootState } from "@/store/store";
+import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllProfiles } from "../store/profileSlice";
+import { fetchAllProfiles } from "../../store/profileSlice";
 import ScrollableEventRow from "./ScrollableEventRow";
 import { FaSpinner } from "react-icons/fa";
 import LgScrollableEventRow from "./LgScrollableEventRow";

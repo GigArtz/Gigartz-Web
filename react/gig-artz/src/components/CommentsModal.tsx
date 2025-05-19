@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CommentCard from "./CommentCard";
 import CommentForm from "./CommentForm";
-import { Event, addReview } from "../store/eventsSlice"; // Assuming Event type is defined here
+import { Event, addReview } from "../../store/eventsSlice"; // Assuming Event type is defined here
 import { FaTimesCircle } from "react-icons/fa";
 
 interface User {

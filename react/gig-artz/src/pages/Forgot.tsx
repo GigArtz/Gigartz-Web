@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { resetPassword, AppDispatch } from "../store/authSlice";
+import { resetPassword } from "../../store/authSlice";
+import { AppDispatch } from "../../store/store";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/White.png";
-import { RootState } from "@/store/store";
+import { RootState } from "../../store/store";
 
 const Forgot: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();

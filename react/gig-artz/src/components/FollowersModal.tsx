@@ -35,9 +35,14 @@ const FollowersModal: React.FC<FollowersModalProps> = ({
         <div className="max-h-80 overflow-y-auto border-t border-gray-700 p-2">
           {users.length > 0 ? (
             users.map((user) => (
-              <div key={user.id} className="mb-2">
+              <button
+                key={user.id}
+                className="mb-2 w-full text-left bg-transparent border-none p-0 focus:outline-none"
+                onClick={onClose}
+                type="button"
+              >
                 <UserCard user={user} />
-              </div>
+              </button>
             ))
           ) : (
             <p className="text-gray-400 text-center mt-4">No users found.</p>

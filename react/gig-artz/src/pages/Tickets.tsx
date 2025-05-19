@@ -1,11 +1,11 @@
-import { fetchAUserProfile } from "../store/profileSlice";
-import { reassignTicket } from "../store/eventsSlice";
+import { fetchAUserProfile } from "../../store/profileSlice";
+import { reassignTicket } from "../../store/eventsSlice";
 import Header from "../components/Header";
 import React, { useEffect, useState } from "react";
 import { FaEllipsisV, FaEye, FaTimesCircle } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../store/store";
+import type { AppDispatch } from "../../store/store";
 
 function Tickets() {
   const [menuOpen, setMenuOpen] = useState(null);
@@ -153,7 +153,7 @@ function Tickets() {
             <p className="text-gray-300 mb-3">
               Enter the email to {modalType} this ticket:
             </p>
-        
+
             <input
               type="email"
               value={email}

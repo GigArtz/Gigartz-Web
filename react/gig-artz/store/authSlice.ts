@@ -2,14 +2,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 
 // Firebase
-import { auth } from "../config/firebase";
+import { auth } from "../src/config/firebase";
 import {
   FacebookAuthProvider,
   GoogleAuthProvider,
   TwitterAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { createUser } from "./profileSlice";
+import { createUser, fetchUserProfile, UserProfile } from "./profileSlice";
 import { AppDispatch } from "./store";
 
 // User Interface
@@ -26,7 +26,7 @@ interface AuthState {
   uid: string | null;
   loading: boolean;
   error: string | null;
-  success: boolean;
+  current_user: UserProfile | null;
 }
 
 // Define formData type for registration
@@ -37,13 +37,16 @@ export interface RegistrationData {
   phoneNumber: string;
 }
 
+// Load user from localStorage during initialization
+const persistedUser = localStorage.getItem("authUser");
+
 // Initial state
 const initialState: AuthState = {
-  user: null,
-  uid: null,
+  user: persistedUser ? JSON.parse(persistedUser) : null,
+  current_user: null,
+  uid: persistedUser ? JSON.parse(persistedUser).uid : null, // Ensure uid is extracted from the persisted user
   loading: false,
   error: null,
-  success: false,
 };
 
 // Auth slice
@@ -61,19 +64,22 @@ const authSlice = createSlice({
     },
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
+      state.uid = action.payload.uid || null; // Ensure uid is set when user is updated
       state.error = null;
     },
     loginSuccess(state, action: PayloadAction<{ user: User; uid: string }>) {
       state.loading = false;
       state.user = action.payload.user;
-      state.uid = action.payload.uid;
+      state.uid = action.payload.uid; // Ensure uid is set
       state.error = null;
+      localStorage.setItem("authUser", JSON.stringify(action.payload.user)); // Persist user
     },
     registerSuccess(state, action: PayloadAction<{ user: User; uid: string }>) {
       state.loading = false;
       state.user = action.payload.user;
-      state.uid = action.payload.uid;
+      state.uid = action.payload.uid; // Ensure uid is set
       state.error = null;
+      localStorage.setItem("authUser", JSON.stringify(action.payload.user)); // Persist user
     },
     loginFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -88,14 +94,11 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    resetPasswordSuccess(state, action: PayloadAction<string>) {
-      state.loading = false;
-      state.success = true;
-    },
     logout(state) {
       state.user = null;
-      state.uid = null;
+      state.uid = null; // Clear uid on logout
       state.error = null;
+      localStorage.removeItem("authUser"); // Clear persisted user
     },
     resetError(state) {
       state.error = null;
@@ -133,8 +136,6 @@ export const resetPassword = (email: string) => async (dispatch: AppDispatch) =>
     console.log("Sending password reset request with email:", email);
     await axios.post("https://gigartz.onrender.com/reset-password", { email });
     console.log("Password reset email sent successfully.");
-    dispatch(authSlice.actions.resetPasswordSuccess("Password reset email sent successfully."));
-
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       console.error("Axios error during password reset:", error.response || error.message);
@@ -160,13 +161,19 @@ export const loginUser = (credentials: { email: string; password: string }) => a
 
     if (response && response.data) {
       const uid = response.data.user.uid;
-      console.log("Res Data:", response.data);
+      console.log("Logged Data:", response.data);
       console.log("Uid:", uid);
-      
-      // Dispatch the login success action
-      dispatch(authSlice.actions.loginSuccess({ user: response.data.user, uid: response.data.user.uid }));
 
-      // Optionally, you can log the success message here for debugging, but do not rely on the store state immediately
+      // Fetch user profile after successful login
+      const profileResponse = await dispatch(fetchUserProfile(uid));  // Assume fetchUserProfile dispatches action to update profile state
+      console.log("User profile data: ", profileResponse);
+
+      // Dispatch the login success action with the user data and profile
+      dispatch(authSlice.actions.loginSuccess({
+        user: response.data.user,
+        uid: uid,
+      }));
+
       console.log("Login Successful!");
     }
   } catch (error: unknown) {
@@ -182,6 +189,9 @@ export const loginUser = (credentials: { email: string; password: string }) => a
     }
   }
 };
+
+
+
 
 // Social login handler
 export const socialLogin = (provider: "facebook" | "google" | "twitter") => async (dispatch: AppDispatch) => {
@@ -231,6 +241,11 @@ export const socialLogin = (provider: "facebook" | "google" | "twitter") => asyn
     }
   }
 };
+
+// Selectors for use in components
+export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
+export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
+export const selectAuthUser = (state: { auth: AuthState }) => state.auth.user;
 
 // Export actions
 export const { logout, resetError } = authSlice.actions;

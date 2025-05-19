@@ -18,11 +18,11 @@ import {
 } from "react-icons/fa";
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AppDispatch, RootState } from "../store/store";
+import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
-import { fetchUserProfile } from "../store/profileSlice";
+import { fetchUserProfile } from "../../store/profileSlice";
 import Loader from "./Loader";
 
 function Drawer() {

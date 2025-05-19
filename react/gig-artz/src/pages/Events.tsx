@@ -1,19 +1,16 @@
 import EventGalleryCarousel from "../components/EventGalleryCarousel";
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 import { useEffect, useState } from "react";
 import {
   FaCalendar,
   FaClock,
-  FaComment,
   FaEllipsisV,
-  FaHeart,
   FaLocationArrow,
   FaRandom,
-  FaShareAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { addLike, buyTicket, fetchAllEvents } from "../store/eventsSlice";
+import { addLike, buyTicket, fetchAllEvents } from "../../store/eventsSlice";
 import React from "react";
 import CommentsModal from "../components/CommentsModal";
 import ShareModal from "../components/ShareModal";
@@ -21,6 +18,7 @@ import CRUDModal from "../components/CRUDModal";
 import EditEventModal from "../components/EditEventModal";
 import EventActions from "../components/EventActions";
 import Payment from "../components/Payment";
+import EventGallery from "../components/EventGallery";
 
 interface Event {
   id: string;
@@ -319,10 +317,10 @@ const EventDetails = () => {
         </div>
       )}
 
-      <div className="my-4 mb-8 md:mx-0 relative shadow-2xl shadow-teal-500 rounded-lg">
+      <div className="my-4 mb-8 md:mx-0 relative shadow-md shadow-teal-500 rounded-lg">
         {uid === event?.promoterId && (
           <div
-            className="z-50 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10 cursor-pointer"
+            className=" border z-50 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10 cursor-pointer"
             onClick={handleCRUD}
           >
             <FaEllipsisV className="w-4 h-4 text-white" />
@@ -343,7 +341,9 @@ const EventDetails = () => {
 
       <div className="flex flex-row md:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">{event.title}</h1>
+          <h1 className="text-lg md:text-3xl font-bold text-white">
+            {event.title}
+          </h1>
           <button onClick={viewHostProfile} className="text-gray-400 mt-2">
             {event.hostName}
           </button>
@@ -363,14 +363,14 @@ const EventDetails = () => {
 
       <hr className="mt-4" />
 
-      <h2 className="text-2xl font-bold">Description</h2>
+      <h2 className="text-lg md:text-2xl font-bold">Description</h2>
       <p className="mt-4 text-lg">{event.description}</p>
 
       <br />
 
       <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
         <div>
-          <p className="flex items-center">
+          <p className="flex items-center ">
             <FaCalendar className="w-5 h-5 text-white mr-2" />{" "}
             {new Date(event.date).toLocaleDateString("en-US", {
               month: "long",
@@ -397,7 +397,7 @@ const EventDetails = () => {
       <hr className="mt-4" />
 
       <div className="mt-6 mb-10">
-        <h2 className="text-2xl font-bold">Tickets</h2>
+        <h2 className="text-lg md:text-2xl font-bold">Tickets</h2>
         {Object.entries(event.ticketsAvailable).map(([type, ticket]) => (
           <div
             key={type}
@@ -440,7 +440,7 @@ const EventDetails = () => {
 
       <hr className="mt-4" />
       <div>
-        <h2 className="text-2xl font-bold mt-4">Event Gallery</h2>
+        <h2 className="text-lg md:text-2xl font-bold mt-4">Gallery</h2>
 
         {event.eventVideo && (
           <div className="mt-4">
@@ -450,25 +450,7 @@ const EventDetails = () => {
             </video>
           </div>
         )}
-
-        <div className="overflow-x-auto mt-4">
-          <div
-            className={`flex gap-3 mb-4 ${
-              event.gallery.length === 2 ? "flex-col-2" : ""
-            }`}
-          >
-            {event.gallery.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`Event ${index + 1}`}
-                className={`h-80 object-cover object-top flex-shrink-0 rounded-lg ${
-                  event.gallery.length === 2 ? "w-[49%]" : "w-80"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+        <EventGallery images={event.gallery} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { buyTicket } from "../store/eventsSlice";
+import { buyTicket } from "../../store/eventsSlice";
 import { FaTimesCircle } from "react-icons/fa";
 
 interface PaymentProps {

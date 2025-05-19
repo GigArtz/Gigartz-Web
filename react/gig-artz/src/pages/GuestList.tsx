@@ -3,10 +3,10 @@ import Header from "../components/Header";
 import { FaTimesCircle, FaTrash, FaEdit } from "react-icons/fa";
 import Toast from "../components/Toast";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/store";
-import { addGuestList } from "../store/eventsSlice";
+import { AppDispatch, RootState } from "../../store/store";
+import { addGuestList } from "../../store/eventsSlice";
 import GuestListModal from "../components/GuestListModal";
-import { fetchAUserProfile } from "../store/profileSlice";
+import { fetchAUserProfile } from "../../store/profileSlice";
 
 function GuestList() {
   const dispatch: AppDispatch = useDispatch();
@@ -308,9 +308,13 @@ function GuestList() {
             <div
               key={list.id}
               onClick={() => setSelectedList(list)}
-              className="cursor-pointer hover:bg-gray-900 p-4 rounded-3xl border-2 border-teal-500 mb-3 flex justify-between items-center transition"
+              className={`h-min cursor-pointer bg-gradient-to-r from-gray-900 via-bg-dark to-gray-900 p-3 rounded-2xl border-2 border-teal-500 mb-3 flex justify-between items-center transition-transform duration-200 shadow-lg hover:scale-[1.025] hover:border-teal-300 hover:shadow-xl ${
+                selectedList && selectedList.id === list.id
+                  ? "ring-2 ring-teal-400"
+                  : ""
+              }`}
             >
-              <span className="text-white font-medium">
+              <span className="text-white font-semibold text-base tracking-wide">
                 {list.guestListName}
               </span>
               <div className="flex gap-2">
@@ -321,7 +325,8 @@ function GuestList() {
                     setNewListName(list.name);
                     setShowListModal(true);
                   }}
-                  className="text-white hover:text-blue-500"
+                  className="text-white hover:text-blue-400 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  title="Edit List"
                 >
                   <FaEdit className="w-4 h-4" />
                 </button>
@@ -330,7 +335,8 @@ function GuestList() {
                     e.stopPropagation();
                     deleteList(list.id);
                   }}
-                  className="text-red-400 hover:text-red-500"
+                  className="text-red-400 hover:text-red-600 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  title="Delete List"
                 >
                   <FaTrash className="w-4 h-4" />
                 </button>
@@ -361,19 +367,23 @@ function GuestList() {
                 selectedList.guests.map((guest, index) => (
                   <li
                     key={`${guest.email}-${index}`}
-                    className="flex justify-between p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
+                    className="flex justify-between items-center p-2 rounded-lg border border-gray-700 bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 hover:bg-gray-700 text-white mb-1 transition-transform transform hover:scale-[1.01] shadow"
                   >
                     <span className="flex items-center gap-2">
                       <img
                         src={guest.profilePicUrl || "/avatar.png"}
                         alt="Avatar"
-                        className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
+                        className="w-8 h-8 rounded-full border-2 border-teal-400 shadow object-cover"
                       />
-                      {guest.name} ({guest.email})
+                      <span className="font-medium text-sm">{guest.name}</span>
+                      <span className="text-gray-400 text-xs">
+                        ({guest.email})
+                      </span>
                     </span>
                     <button
                       onClick={() => deleteGuest(guest.email)}
-                      className="text-red-400 hover:text-red-500 text-sm pr-4 transition-colors"
+                      className="text-red-400 hover:text-red-600 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                      title="Remove Guest"
                     >
                       <FaTrash className="w-4 h-4" />
                     </button>
@@ -606,6 +616,7 @@ function GuestList() {
           onClose={() => setToast(null)}
         />
       )}
+      
     </div>
   );
 }

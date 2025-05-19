@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 import { FaTimesCircle } from "react-icons/fa";
 
 interface GuestListModalFromGuestListProps {
@@ -42,7 +42,7 @@ const GuestListModalFromGuestList: React.FC<
             <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
           </button>
         </div>
-        
+
         <h3 className="text-lg font-semibold mb-4">Add to Guest List</h3>
         <select
           value={selectedListId || ""}

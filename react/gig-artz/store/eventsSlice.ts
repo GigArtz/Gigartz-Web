@@ -223,11 +223,12 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
 
   try {
     console.log("Adding event...");
+    console.log(eventData);
     const response = await axios.post(
       `https://gigartz.onrender.com/addevent`,
       eventData
     );
-    console.log("Event added successfully:", response.data);
+    console.log("Event added successfully:", response?.data?.error);
 
     dispatch(
       eventsSlice.actions.createEventsSuccess("Event added successfully!")
@@ -236,10 +237,10 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        console.error("Response error:", axiosError.response);
         dispatch(
           eventsSlice.actions.createEventsFailure(
-            axiosError.response?.data?.error || "Failed to add event"
+            axiosError.response?.data || "Failed to add event"
           )
         );
       } else if (axiosError.request) {
@@ -391,7 +392,7 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
   dispatch(eventsSlice.actions.createLikeStart());
 
   try {
-    console.log("Adding like...");
+    console.log("Adding like...", eventId, userId);
     const response = await axios.post(
       `https://gigartz.onrender.com/addLike`,
       { eventId, userId }
@@ -435,30 +436,33 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
   }
 };
 
+type EventBooking = {
+  eventId: string;
+  customerUid: string;
+  customerName: string;
+  customerEmail: string;
+  ticketTypes: TicketType[];
+  location: string;
+  eventName: string;
+  eventDate: string;
+  image: string;
+};
+
 // Buy a ticket for an event
 export const buyTicket = (
-  eventId: string,
-  ticketData: {
-    customerUid: string;
-    customerName: string;
-    customerEmail: string;
-    amount: number;
-    ticketType: string;
-    location: string;
-    eventName: string;
-    eventDate: string;
-    description: string;
-    image: string;
-  }
+  ticketData: EventBooking
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.buyTicketStart());
 
   try {
     console.log("Purchasing ticket...");
+    console.log(ticketData)
     const response = await axios.post(
       `https://gigartz.onrender.com/buy-ticket`,
-      { eventId, ...ticketData }
+      ticketData,  // ✅ No extra object wrapping
+      { headers: { "Content-Type": "application/json" } }  // ✅ Ensure JSON format
     );
+
     console.log("Ticket purchased successfully:", response.data);
 
     dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));
@@ -503,8 +507,11 @@ export const scanTicket = (
 
   try {
     console.log("Scanning ticket...");
+    console.log(qrCodeData, customerUid)
+    // Ensure qrCodeData is a string and customerUid is a string
+    
     const response = await axios.post(
-      `https://gigartz.onrender.com/scan-ticket`,
+      `https://gigartz.onrender.com/scanTicket`,
       { qrCodeData, customerUid }
     );
     console.log("Ticket scanned successfully:", response.data);
@@ -542,6 +549,109 @@ export const scanTicket = (
   }
 };
 
+// Reassign a ticket to a new user
+export const reassignTicket = (
+  currentUserId: string,
+  newUserId: string,
+  ticketId: string
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.scanTicketStart()); // Reusing scanTicketStart for loading state
+
+  console.log(currentUserId,newUserId, ticketId)
+  try {
+    console.log("Reassigning ticket...");
+    const response = await axios.post(
+      `https://gigartz.onrender.com/reassign-ticket`,
+      { currentUserId, newUserId, ticketId }
+    );
+    console.log("Ticket reassigned successfully:", response.data);
+
+    dispatch(eventsSlice.actions.scanTicketSuccess("Ticket reassigned successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.response?.data?.error || "Failed to reassign ticket"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(eventsSlice.actions.scanTicketFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Update an event
+export const updateEvent = (
+  eventId: string,
+  userId: string,
+  userEventId: string,
+  eventData: Partial<Event>
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createEventsStart());
+
+  try {
+    console.log("Updating event...");
+    const response = await axios.put(
+      `https://gigartz.onrender.com/editEvent/${eventId}/users/${userId}/userEvents/${userEventId}`,
+      eventData
+    );
+    console.log("Event updated successfully:", response.data);
+
+    dispatch(
+      eventsSlice.actions.createEventsSuccess("Event updated successfully!")
+    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.createEventsFailure(
+            axiosError.response?.data?.error || "Failed to update event"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.createEventsFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.createEventsFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(
+        eventsSlice.actions.createEventsFailure("Unexpected error occurred")
+      );
+    }
+  }
+};
 
 export const {
   fetchEventsStart,

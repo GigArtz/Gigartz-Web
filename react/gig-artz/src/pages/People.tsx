@@ -6,11 +6,11 @@ import {
   followUser,
   bookFreelancer,
   fetchAUserProfile,
-} from "../store/profileSlice";
+} from "../../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import ProfileTabs from "../components/ProfileTabs";
-import { RootState, AppDispatch } from "../store/store";
+import { RootState, AppDispatch } from "../../store/store";
 import {
   FaCalendarPlus,
   FaEnvelope,
@@ -71,7 +71,7 @@ const People: React.FC = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchAUserProfile(uid))
+    dispatch(fetchAUserProfile(uid));
     setIsFreelancer(userProfile?.roles?.freelancer || false);
   }, [dispatch]);
 
@@ -92,14 +92,6 @@ const People: React.FC = () => {
   const handleTipFreelancer = (amount: number) => {
     console.log(`Tipping freelancer ${uid} with amount: $${amount}`);
     // Add logic for tipping (e.g., dispatch an action or navigate to payment page)
-  };
-
-  const handleOpenBookingModal = () => {
-    setIsBookingModalOpen(true);
-  };
-
-  const handleCloseBookingModal = () => {
-    setIsBookingModalOpen(false);
   };
 
   const handleBookFreelancer = (data: BookingFormData) => {
@@ -135,7 +127,7 @@ const People: React.FC = () => {
     <div className="main-content">
       <ProfileSection
         userProfile={userProfile}
-       // uid={userProfile?.userProfile?.id}
+        // uid={userProfile?.userProfile?.id}
         onFollow={handleFollow}
         onMessage={handleMessageClick}
         onAddGuest={handleAddGuestToList}

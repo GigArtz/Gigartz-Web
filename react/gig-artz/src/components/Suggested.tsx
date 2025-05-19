@@ -1,9 +1,10 @@
 import React from "react";
 import UserCard from "./UserCard";
 import { useSelector } from "react-redux";
+import { FaSpinner } from "react-icons/fa";
 
 export default function SuggestedForYou() {
-  const {  userList, loading, error } = useSelector(
+  const { userList, loading, error } = useSelector(
     (state: any) => state.profile
   );
 
@@ -49,16 +50,23 @@ export default function SuggestedForYou() {
               Suggested For You
             </h2>
             {/* Trending cards */}
-            <div className="flex flex-col space-y-1 mt-4">
-              {suggestedUsers?.map((user, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between bg-dark py-2 "
-                >
-                  <UserCard user={user} />
-                </div>
-              ))}
-            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-1 mt-4">
+                {suggestedUsers?.map((user, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-dark py-2 "
+                  >
+                    <UserCard user={user} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

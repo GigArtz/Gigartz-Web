@@ -127,15 +127,55 @@ const messageSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    sendMessageSuccess(state, action: PayloadAction<Messages>) {
+    sendMessageSuccess(state, action: PayloadAction<Message>) {
       state.loading = false;
-      state.contacts = action.payload.contacts;
-      state.conversations = action.payload.conversations; // Add the conversation to the state
+      const newMessage = action.payload;
+
+      // Log the current conversations for debugging
+      console.log("Current conversations:", state.conversations);
+
+      // Find the conversation to update using receiverId or senderId
+      let conversation = state.conversations?.find(
+        (conv) =>
+          conv.contactId === newMessage.receiverId || // Match receiverId
+          conv.contactId === newMessage.senderId      // Match senderId (for two-way conversations)
+      );
+
+      if (conversation) {
+        // Add the new message to the existing conversation
+        conversation.messages.push(newMessage);
+      } else {
+        console.warn("No matching conversation found for the new message:", newMessage);
+
+        // Create a new conversation if none exists
+        const newConversation = {
+          contactId: newMessage.receiverId,
+          messages: [newMessage],
+        };
+        state.conversations.push(newConversation);
+        console.log("Created a new conversation:", newConversation);
+      }
+
       state.error = null;
     },
     sendMessageFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
+    },
+    addConversation: (state, action) => {
+      state.conversations.push(action.payload);
+    },
+    addMessageToConversation: (state, action) => {
+      const { contact, message } = action.payload;
+
+      // Match conversation using receiverId
+      const conversation = state.conversations?.find(
+        (conv) => conv.contactId === contact
+      );
+
+      if (conversation) {
+        conversation.messages.push(message);
+      }
     },
   },
 });
@@ -167,12 +207,22 @@ export const sendMessage =
   (messageData: Message) => async (dispatch: AppDispatch) => {
     dispatch(messageSlice.actions.sendMessageStart());
 
+    console.log("sending message:", messageData);
+
     try {
       const response = await axios.post("https://gigartz.onrender.com/send-message", messageData);
       console.log("Message sent successfully:", response.data);
 
+      // Validate the server response
+      const newMessage = response.data?.message && response.data.receiverId && response.data.senderId && response.data.timestamp
+        ? response.data // Use the message object from the server if valid
+        : {
+          ...messageData, // Use the original message data
+          timestamp: new Date().toISOString(), // Add a timestamp if missing
+        };
+
       // Dispatch success action and add the sent message to the state
-      dispatch(messageSlice.actions.sendMessageSuccess(response.data));
+      dispatch(messageSlice.actions.sendMessageSuccess(newMessage));
     } catch (error: unknown) {
       handleAxiosError(error, dispatch, messageSlice.actions.sendMessageFailure);
     }
@@ -187,6 +237,8 @@ export const {
   sendMessageSuccess,
   sendMessageFailure,
   resetError,
+  addConversation,
+  addMessageToConversation,
 } = messageSlice.actions;
 
 export default messageSlice.reducer;

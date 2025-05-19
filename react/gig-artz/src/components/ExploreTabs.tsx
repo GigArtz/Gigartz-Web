@@ -1,45 +1,74 @@
 import React, { useEffect, useState } from "react";
 import EventCard from "./EventCard";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllProfiles } from "../store/profileSlice";
+import { fetchAllProfiles } from "../../store/profileSlice";
 import UserCard from "./UserCard";
-import { AppDispatch } from "../store/store";
-import { fetchAllEvents } from "../store/eventsSlice";
+import { AppDispatch } from "../../store/store";
+import { fetchAllEvents } from "../../store/eventsSlice";
 import { FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
 import ScrollableEventCol from "./ScrollableEventCol";
+import { useParams } from "react-router-dom";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
+  const { search } = useParams();
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("top");
+  // State for search term
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (search) setSearchTerm(search);
+  }, [search]);
 
   useEffect(() => {
     dispatch(fetchAllProfiles());
     dispatch(fetchAllEvents());
   }, [dispatch]);
 
-  const { profile, userList, loading, error } = useSelector(
+  const { userList, loading, error } = useSelector(
     (state: any) => state.profile
   );
-
-  const { events } = useSelector((state) => state.events);
+  const { events } = useSelector((state: any) => state.events);
 
   const eventList = events || [];
 
-  console.log(eventList);
+  // Filtered lists based on search term
+  const filteredEvents = Array.isArray(eventList)
+    ? eventList.filter((event) => {
+        const title = event?.title?.toLowerCase() || "";
+        const description = event?.description?.toLowerCase() || "";
+        return (
+          title.includes(searchTerm.toLowerCase()) ||
+          description.includes(searchTerm.toLowerCase())
+        );
+      })
+    : [];
+  const filteredUsers = Array.isArray(userList)
+    ? userList.filter((user) => {
+        const name = user?.name?.toLowerCase() || "";
+        const username = user?.username?.toLowerCase() || "";
+        return (
+          name.includes(searchTerm.toLowerCase()) ||
+          username.includes(searchTerm.toLowerCase())
+        );
+      })
+    : [];
 
   return (
     <div className="px-2">
       <div className="my-2">
         <div className="relative rounded-lg border border-gray-700 dark:border-gray-700 bg-[#060512] dark:bg-gray-700">
-          <form>
+          <form onSubmit={(e) => e.preventDefault()}>
             <input
               type="text"
               className="w-full px-4 py-2 rounded-lg bg-[#060512] text-gray-900 dark:text-gray-100 focus:outline-none"
               placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button className="absolute right-0 top-0 mt-2 mr-3">
               <svg
@@ -100,7 +129,7 @@ function ExploreTabs() {
                 <div className="mt-2 w-full p-2 rounded-xl">
                   {/* Scrollable Row */}
                   <LgScrollableEventRow
-                    events={eventList}
+                    events={filteredEvents}
                     loading={loading}
                     error={error}
                   />
@@ -116,7 +145,7 @@ function ExploreTabs() {
                     </span>
                   </div>
                   <ScrollableEventRow
-                    events={eventList}
+                    events={filteredEvents}
                     loading={loading}
                     error={error}
                   />
@@ -132,8 +161,8 @@ function ExploreTabs() {
                     </span>
                   </div>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
-                    {userList?.length > 0 ? (
-                      userList?.map((user) => (
+                    {filteredUsers?.length > 0 ? (
+                      filteredUsers?.map((user) => (
                         <div className="mb-2">
                           <UserCard user={user} />
                         </div>
@@ -150,8 +179,8 @@ function ExploreTabs() {
 
             {activeTab === "people" && (
               <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
-                {userList.length > 0 ? (
-                  userList.map((user) => (
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
                     <div className="mb-2">
                       <UserCard user={user} />
                     </div>
@@ -171,7 +200,7 @@ function ExploreTabs() {
             {activeTab === "events" && (
               <div className="mt-2 w-full p-2 rounded-xl">
                 <ScrollableEventCol
-                  events={eventList}
+                  events={filteredEvents}
                   loading={loading}
                   error={error}
                 />
@@ -181,7 +210,7 @@ function ExploreTabs() {
             {activeTab === "latest" && (
               <div className="mt-2 w-full p-2 rounded-xl">
                 <ScrollableEventCol
-                  events={eventList}
+                  events={filteredEvents}
                   loading={loading}
                   error={error}
                 />

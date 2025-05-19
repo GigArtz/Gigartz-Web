@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUser, socialLogin } from "../store/authSlice";
-import { RootState } from "../store/store";
-import { FaFacebook, FaGoogle } from "react-icons/fa";
+import {
+  selectAuthUser,
+  selectAuthError,
+  selectAuthLoading,
+  resetError,
+  loginUser,
+  socialLogin,
+} from "../../store/authSlice";
+import { FaFacebook, FaGoogle, FaSpinner } from "react-icons/fa";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/White.png";
-import Loader from "../components/Loader";
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const user = useSelector(selectAuthUser);
+  const error = useSelector(selectAuthError);
+  const loading = useSelector(selectAuthLoading);
 
   const [formData, setFormData] = useState({ emailAddress: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -23,38 +30,31 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.emailAddress || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
-
-    await dispatch(loginUser(formData));
-
-    if (!error) {
-      toast.success("Login Successful! Welcome back!");
-      navigate("/home");
-    }
+    dispatch(loginUser(formData));
   };
 
   useEffect(() => {
-    const persistedUser = localStorage.getItem("authUser");
-    if (persistedUser) {
-      navigate("/home"); // Redirect if user is already logged in
+    if (user) {
+      toast.success("Login Successful! Welcome back!");
+      navigate("/home");
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   useEffect(() => {
     if (error) {
       toast.error(`Login Failed: ${error}`);
+      dispatch(resetError());
     }
-  }, [error]);
+  }, [error, dispatch]);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
-      {loading && <Loader message="Loading ..." />}
-
+    <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-dark">
       {/* Logo Section */}
       <div className="flex justify-center md:w-1/3">
         <img src={logo} alt="Logo" className="w-32 md:w-2/3" />
@@ -128,8 +128,16 @@ const Login = () => {
           </div>
 
           {/* Login Button */}
-          <button type="submit" disabled={loading} className="btn-primary">
-            {loading ? "Logging in..." : "Login"}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary flex items-center justify-center h-12 w-full"
+          >
+            {loading ? (
+              <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+            ) : (
+              "Login"
+            )}
           </button>
 
           {/* OR Separator */}

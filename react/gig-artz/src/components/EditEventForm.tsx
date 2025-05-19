@@ -1,5 +1,4 @@
-import { RootState } from "../store/store";
-import { addEvent } from "../store/eventsSlice";
+import { RootState } from "../../store/store";
 import React, { useState, useReducer, useEffect } from "react";
 import {
   FaArrowLeft,
@@ -11,6 +10,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { updateEvent } from "../../store/eventsSlice"; // Adjust the path if needed
 
 // Initialize Firebase Storage
 const storage = getStorage();
@@ -144,24 +144,28 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
         const date = new Date(dateString);
         return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
       };
-  
+
       // Function to format time to HH:MM
       const formatTime = (timeString) => {
         if (!timeString) return ""; // Return an empty string if the time is invalid
-  
+
         // Check if the time is in ISO 8601 format
         if (timeString.includes("T")) {
           const date = new Date(timeString);
           return date.toISOString().split("T")[1].slice(0, 5); // Format as HH:MM
         }
-  
+
         // If the time is already in HH:MM format, return it as is
         return timeString;
       };
-  
+
       // Dispatching updates for event fields
       dispatch({ type: "update", name: "title", value: event.title });
-      dispatch({ type: "update", name: "description", value: event.description });
+      dispatch({
+        type: "update",
+        name: "description",
+        value: event.description,
+      });
       dispatch({ type: "update", name: "category", value: event.category });
       dispatch({ type: "update", name: "date", value: formatDate(event.date) });
       dispatch({ type: "update", name: "venue", value: event.venue });
@@ -187,11 +191,11 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       });
       dispatch({ type: "update", name: "gallery", value: event.gallery });
       dispatch({ type: "update", name: "eventVideo", value: event.eventVideo });
-  
+
       // Format ticketReleaseDate and ticketReleaseTime
       if (event.ticketsAvailable && event.ticketsAvailable.Vip) {
         const vipTicket = event.ticketsAvailable.Vip;
-  
+
         dispatch({
           type: "update",
           name: "ticketReleaseDate",
@@ -205,7 +209,6 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       }
     }
   }, [event]);
-  
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -266,7 +269,15 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       ...formData,
     };
     console.log("Updating event:", updatedEvent);
-    await dispatchRedux(addEvent(updatedEvent)); // Replace with update action
+    // Dispatch updateEvent with correct params
+    dispatchRedux(
+      updateEvent(
+        event?.id, // eventId
+        event?.promoterId, // userId
+        event?.id, // userEventId (ensure this exists on event)
+        updatedEvent // eventData
+      )
+    );
     setLoading(false);
     alert("Event updated successfully!");
     closeModal(); // Close modal after successful update
@@ -455,10 +466,10 @@ const Step1 = ({ formData, handleChange }) => (
 const Step2 = ({ formData, handleArtistChange, dispatch }) => (
   <div className="space-y-2">
     <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-5 text-center">
-      Artist Line Up
+      Artist Lineup
     </label>
     {formData.artistLineUp.map((artist, index) => (
-      <div key={index} className="flex">
+      <div key={index} className="flex items-center mb-2">
         <input
           type="text"
           value={artist}

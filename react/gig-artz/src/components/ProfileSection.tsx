@@ -4,6 +4,7 @@ import {
   FaEnvelope,
   FaMoneyBillAlt,
   FaPlus,
+  FaSpinner,
 } from "react-icons/fa";
 import GuestListModal from "./GuestListModal";
 import TippingModal from "./TippingModal";
@@ -13,7 +14,7 @@ import cover from "../../src/assets/blue.jpg";
 import Tooltip from "./Tooltip";
 import { useDispatch, useSelector } from "react-redux";
 import FollowersModal from "./FollowersModal";
-import { fetchAUserProfile } from "../store/profileSlice";
+import { fetchAUserProfile } from "../../store/profileSlice";
 import { useParams } from "react-router-dom"; // Added for URL params
 
 interface UserProfile {
@@ -54,7 +55,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   const { uid } = useParams(); // Extract uid from URL
   const dispatch = useDispatch();
-  const { userProfile, userFollowing, profile } = useSelector(
+  const { userProfile, userFollowing, loading } = useSelector(
     (state) => state.profile
   );
 
@@ -73,153 +74,170 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   return (
     <div className="">
-      <div className="relative">
-        <img
-          src={userProfile?.userProfile?.coverProfile || cover}
-          alt="Cover"
-          className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
-        />
-        <img
-          src={userProfile?.userProfile?.profilePicUrl || avatar}
-          alt="Profile"
-          className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10"
-        />
-      </div>
-      <div className="p-5">
-        <div className="flex justify-end gap-4 md:text-sm">
-          <div className="flex items-center gap-1">
-            <Tooltip text="Add to Guest List">
-              <button
-                className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
-                onClick={() => setIsGuestListModalOpen(true)}
-              >
-                <FaPlus className="w-3 h-3" />
-              </button>
-            </Tooltip>
-            <Tooltip text="Send Message">
-              <button
-                className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
-                onClick={onMessage}
-              >
-                <FaEnvelope className="w-3 h-3" />
-              </button>
-            </Tooltip>
-            {isFreelancer && (
-              <div className="flex items-center gap-1">
-                {isAcceptingTips && (
-                  <Tooltip text="Tip Freelancer">
-                    <button
-                      onClick={() => setIsTippingModalOpen(true)}
-                      className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
-                    >
-                      <FaMoneyBillAlt className="w-3 h-3" />
-                    </button>
-                  </Tooltip>
-                )}
-                {isAcceptingBookings && (
-                  <Tooltip text="Book Freelancer">
-                    <button
-                      onClick={() => setIsBookingModalOpen(true)}
-                      className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
-                    >
-                      <FaCalendarPlus className="w-3 h-3" />
-                    </button>
-                  </Tooltip>
-                )}
+      <div className="block justify-center items-center bg-dark rounded-lg shadow-md">
+        {loading ? (
+          // Placeholder UI
+          <div className="animate-pulse p-5">
+            <div className="w-full h-40 bg-gray-500 rounded mb-4"></div>
+            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gray-500 border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10"></div>
+            <div className="mt-20 space-y-2">
+              <div className="h-4 bg-gray-500 rounded w-1/3"></div>
+              <div className="h-3 bg-gray-500 rounded w-1/4"></div>
+              <div className="h-3 bg-gray-500 rounded w-2/3 mt-2"></div>
+              <div className="flex gap-2 mt-4">
+                <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
+                <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
+                <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
               </div>
-            )}
-          </div>
-          <Tooltip text={isFollowingUser ? "Unfollow" : "Follow"}>
-            <button
-              onClick={onFollow}
-              className={`border text-xs px-4 py-1 rounded-2xl ${
-                isFollowingUser
-                  ? "border-teal-400 text-teal-400"
-                  : "border-teal-400 text-teal-400"
-              }`}
-            >
-              {isFollowingUser ? "Following" : "Follow"}
-            </button>
-          </Tooltip>
-        </div>
-        <h1 className="text-2xl font-bold">
-          {userProfile?.userProfile?.name || "Name"}
-        </h1>
-        <p className="text-sm text-gray-400">
-          @{userProfile?.userProfile?.userName || "username"}
-        </p>
-        <p className="mt-2">
-          {userProfile?.userProfile?.bio || "No bio available"}
-        </p>
-
-        <div className="flex flex-row justify-between">
-          <div className="flex-row gap-4 mt-2">
-            <div className="flex gap-2 mb-2 text-gray-500">
-              <p
-                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
-                onClick={() => setIsFollowingModalOpen(true)}
-              >
-                <span className="font-bold text-teal-400">
-                  {userProfile?.userFollowing?.length || 0}
-                </span>{" "}
-                Following
-              </p>
-              <p
-                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
-                onClick={() => setIsFollowersModalOpen(true)}
-              >
-                <span className="font-bold text-teal-400">
-                  {userProfile?.userFollowers?.length || 0}
-                </span>{" "}
-                Followers
-              </p>
             </div>
-            <div className="flex">
-              {userProfile?.userProfile?.genre?.length > 0 && (
-                <div className="flex gap-2 my-2">
-                  {userProfile.userProfile.genre
-                    .slice(0, 3)
-                    .map((genre, index) => (
-                      <p
-                        key={index}
-                        className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400"
+          </div>
+        ) : (
+          <div>
+            <div className="relative">
+              <img
+                src={userProfile?.userProfile?.coverProfile || cover}
+                alt="Cover"
+                className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
+              />
+              <img
+                src={userProfile?.userProfile?.profilePicUrl || avatar}
+                alt="Profile"
+                className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10"
+              />
+              <div></div>
+              <div className="p-5">
+                <div className="flex justify-end gap-4 md:text-sm">
+                  <div className="flex items-center gap-1">
+                    <Tooltip text="Add to Guest List">
+                      <button
+                        className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                        onClick={() => setIsGuestListModalOpen(true)}
                       >
-                        {genre.name || genre}
-                      </p>
-                    ))}
+                        <FaPlus className="w-3 h-3" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip text="Send Message">
+                      <button
+                        className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                        onClick={onMessage}
+                      >
+                        <FaEnvelope className="w-3 h-3" />
+                      </button>
+                    </Tooltip>
+                    {isFreelancer && (
+                      <div className="flex items-center gap-1">
+                        {isAcceptingTips && (
+                          <Tooltip text="Tip Freelancer">
+                            <button
+                              onClick={() => setIsTippingModalOpen(true)}
+                              className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                            >
+                              <FaMoneyBillAlt className="w-3 h-3" />
+                            </button>
+                          </Tooltip>
+                        )}
+                        {isAcceptingBookings && (
+                          <Tooltip text="Book Freelancer">
+                            <button
+                              onClick={() => setIsBookingModalOpen(true)}
+                              className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                            >
+                              <FaCalendarPlus className="w-3 h-3" />
+                            </button>
+                          </Tooltip>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Tooltip text={isFollowingUser ? "Unfollow" : "Follow"}>
+                    <button
+                      onClick={onFollow}
+                      className={`border text-xs px-4 py-1 rounded-2xl ${
+                        isFollowingUser
+                          ? "border-teal-400 text-teal-400"
+                          : "border-teal-400 text-teal-400"
+                      }`}
+                    >
+                      {isFollowingUser ? "Following" : "Follow"}
+                    </button>
+                  </Tooltip>
                 </div>
-              )}
+                <h1 className="text-2xl font-bold">
+                  {userProfile?.userProfile?.name || "Name"}
+                </h1>
+                <p className="text-sm text-gray-400">
+                  @{userProfile?.userProfile?.userName || "username"}
+                </p>
+                <p className="mt-2">
+                  {userProfile?.userProfile?.bio || "No bio available"}
+                </p>
+                <div className="flex flex-row justify-between">
+                  <div className="flex-row gap-4 mt-2">
+                    <div className="flex gap-2 mb-2 text-gray-500">
+                      <p
+                        className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                        onClick={() => setIsFollowingModalOpen(true)}
+                      >
+                        <span className="font-bold text-teal-400">
+                          {userProfile?.userFollowing?.length || 0}
+                        </span>{" "}
+                        Following
+                      </p>
+                      <p
+                        className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                        onClick={() => setIsFollowersModalOpen(true)}
+                      >
+                        <span className="font-bold text-teal-400">
+                          {userProfile?.userFollowers?.length || 0}
+                        </span>{" "}
+                        Followers
+                      </p>
+                    </div>
+                    <div className="flex">
+                      {userProfile?.userProfile?.genre?.length > 0 && (
+                        <div className="flex gap-2 my-2">
+                          {userProfile.userProfile.genre
+                            .slice(0, 3)
+                            .map((genre, index) => (
+                              <p
+                                key={index}
+                                className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400"
+                              >
+                                {genre.name || genre}
+                              </p>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
-
       <GuestListModal
         isOpen={isGuestListModalOpen}
         onClose={() => setIsGuestListModalOpen(false)}
         onAddGuest={onAddGuest}
         preFilledEmail={userProfile?.userProfile?.emailAddress}
       />
-
       <TippingModal
         isOpen={isTippingModalOpen}
         onClose={() => setIsTippingModalOpen(false)}
         onSubmit={onTip}
       />
-
       <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         onSubmit={onBook}
       />
-
       <FollowersModal
         title="Followers"
         isOpen={isFollowersModalOpen}
         onClose={() => setIsFollowersModalOpen(false)}
         users={userProfile?.userFollowers}
       />
-
       <FollowersModal
         title="Following"
         isOpen={isFollowingModalOpen}

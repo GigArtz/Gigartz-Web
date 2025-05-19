@@ -1,6 +1,6 @@
 import { FaComment, FaHeart, FaShareAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { UserProfile } from "../store/profileSlice";
+import { UserProfile } from "../../store/profileSlice";
 import { useSelector } from "react-redux";
 
 interface EventActionsProps {

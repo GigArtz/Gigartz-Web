@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "../store/authSlice";
+import {
+  registerUser,
+  selectAuthUser,
+  selectAuthError,
+  selectAuthLoading,
+  resetError,
+} from "../../store/authSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { RootState } from "../store/store";
-import { MdVisibility, MdVisibilityOff } from "react-icons/md";
-import logo from "../assets/White.png";
 import { useNavigate } from "react-router-dom";
-import Loader from "../components/Loader";
+import logo from "../assets/White.png";
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { FaSpinner } from "react-icons/fa";
 
 const InputField = ({
   label,
@@ -28,6 +33,7 @@ const InputField = ({
         className="input-field"
         value={value}
         onChange={onChange}
+        required
       />
       {showToggle && onToggle && (
         <button
@@ -55,7 +61,9 @@ const Button = ({ label, onClick, disabled }) => (
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const user = useSelector(selectAuthUser);
+  const error = useSelector(selectAuthError);
+  const loading = useSelector(selectAuthLoading);
 
   const [userName, setUserName] = useState("");
   const [name, setName] = useState("");
@@ -86,37 +94,37 @@ const Register = () => {
       toast.error("Passwords do not match");
       return;
     }
-
     if (!/^[\w.-]+@[\w.-]+\.\w{2,3}$/.test(emailAddress)) {
       toast.error("Invalid email address");
       return;
     }
-
     dispatch(
+      // @ts-expect-error: Redux thunk type mismatch workaround
       registerUser({
-        userName,
-        name,
-        emailAddress,
-        city,
+        email: emailAddress,
         password,
-        confirmPassword,
-        fcmToken: "12345678",
+        userName,
+        phoneNumber: "", // Provide a value or connect to a field if needed
       })
     );
   };
 
-  // Handle successful registration
   useEffect(() => {
-    if (!loading && !error) {
+    if (user) {
       toast.success("Registration Successful!");
       navigate("/");
     }
-  }, [loading, error, navigate]);
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(`Registration Failed: ${error}`);
+      dispatch(resetError());
+    }
+  }, [error, dispatch]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
-      {loading && <Loader message="Loading ..." />}
-
       {/* Logo Section */}
       <div className="flex justify-center md:w-1/3">
         <img src={logo} alt="Logo" className="w-32 md:w-2/3" />
@@ -131,6 +139,9 @@ const Register = () => {
             placeholder="Enter username"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
+            showToggle={false}
+            onToggle={undefined}
+            showValue={false}
           />
           <InputField
             label="Name"
@@ -138,6 +149,9 @@ const Register = () => {
             placeholder="Enter name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            showToggle={false}
+            onToggle={undefined}
+            showValue={false}
           />
 
           <InputField
@@ -146,6 +160,9 @@ const Register = () => {
             placeholder="Enter email"
             value={emailAddress}
             onChange={(e) => setEmailAddress(e.target.value)}
+            showToggle={false}
+            onToggle={undefined}
+            showValue={false}
           />
           <InputField
             label="City"
@@ -153,6 +170,9 @@ const Register = () => {
             placeholder="Enter city"
             value={city}
             onChange={(e) => setCity(e.target.value)}
+            showToggle={false}
+            onToggle={undefined}
+            showValue={false}
           />
           <InputField
             label="Password"
@@ -174,11 +194,19 @@ const Register = () => {
             onToggle={toggleShowPassword2}
             showValue={showPassword2}
           />
-          <Button
-            label={loading ? "Signing up..." : "Sign Up"}
+        
+          <button
+            type="submit"
             onClick={handleRegister}
             disabled={loading}
-          />
+            className="btn-primary flex items-center justify-center h-12 w-full"
+          >
+            {loading ? (
+              <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+            ) : (
+              "Sign Up"
+            )}
+          </button>
 
           <p className="text-center text-white mt-4">
             Already have an account?{" "}

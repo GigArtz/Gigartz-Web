@@ -1,6 +1,6 @@
 import "./App.css";
 import { Provider } from "react-redux"; // Redux Provider to make store available to components
-import store from "./store/store"; // Your Redux store
+import store from "../store/store"; // Your Redux store
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // Import Router and Routes
 import Follow from "./pages/follow";
 import EventManager from "./pages/Events";

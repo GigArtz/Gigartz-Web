@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/store";
+import { AppDispatch, RootState } from "../../store/store";
 import {
   getMessages,
   sendMessage,
   Message,
   addConversation, // Import action to add a new conversation
-} from "../store/messageSlice";
+} from "../../store/messageSlice";
 import Loader from "../components/Loader";
 import Chat from "../components/Chat";
 import { FaTimesCircle } from "react-icons/fa";
@@ -148,7 +148,9 @@ const Messages: React.FC = () => {
                       }
                     >
                       <h3 className="font-semibold">
-                        {getUsernameById(conversation?.contact) || contact?.userName || "Unknown"}
+                        {getUsernameById(conversation?.contact) ||
+                          contact?.userName ||
+                          "Unknown"}
                       </h3>
                       {lastMessage && (
                         <p className="text-sm text-gray-300 truncate">
@@ -179,7 +181,7 @@ const Messages: React.FC = () => {
           activeConversation && window.innerWidth < 768
             ? "flex"
             : "hidden md:flex"
-        } flex-1 items-center justify-center`}
+        } flex-1 items-center justify-center sm:ps-4`}
       >
         {activeConversation ? (
           <Chat

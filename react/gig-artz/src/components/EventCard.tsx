@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import image from "../assets/blue.jpg"; // Default fallback image
 import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 import EventActions from "./EventActions";
 
 interface Event {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { followUser } from "../store/profileSlice"; // Import the followUser action
+import { followUser } from "../../store/profileSlice"; // Import the followUser action
 
 const Follow = () => {
   const dispatch = useDispatch();

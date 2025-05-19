@@ -4,8 +4,8 @@ interface Window {
   mapsReady?: boolean;
 }
 
-import { RootState } from "../store/store";
-import { addEvent } from "../store/eventsSlice";
+import { RootState } from "../../store/store";
+import { addEvent } from "../../store/eventsSlice";
 import React, { useState, useReducer, useEffect, useRef } from "react";
 import {
   FaArrowLeft,
@@ -381,12 +381,8 @@ const Step1 = ({ formData, handleChange }) => {
       <div className="relative">
         <Autocomplete
           apiKey={import.meta.env.VITE_MAPS_API_KEY}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            borderRadius: "0.5rem",
-            fontSize: "1rem",
-          }}
+          style={{}}
+          className="input-field"
           defaultValue={formData.venue}
           onPlaceSelected={(place) => {
             const value = place.formatted_address || place.name || "";

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
-import { Message } from "../store/messageSlice";
+import { RootState } from "../../store/store";
+import { Message } from "../../store/messageSlice";
 import { FaPaperclip, FaPaperPlane, FaTimesCircle } from "react-icons/fa";
 
 interface ChatProps {
@@ -85,7 +85,7 @@ const Chat: React.FC<ChatProps> = ({
   return (
     <div className="flex-1 flex flex-col h-full bg-dark text-white">
       {/* Chat Header */}
-      <div className="p-4 bg-gray-800 flex items-center shadow-md sticky top-0 z-10 justify-between">
+      <div className="p-4 bg-gray-800 flex items-center shadow-md sticky top-0 z-10 justify-between rounded-2xl">
         <h2 className="text-lg text-teal-400 font-semibold">
           {getUsernameById(conversation?.contact)}
         </h2>
@@ -98,7 +98,7 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4 mb-16">
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {Object.entries(messagesGrouped).map(([date, messages]) => (
           <div key={date}>
             <div className="text-center text-xs text-gray-500 my-2">{date}</div>
@@ -117,7 +117,7 @@ const Chat: React.FC<ChatProps> = ({
       {/* Chat Input */}
       <form
         onSubmit={onSendMessage}
-        className="p-4 flex items-center sticky bottom-0 bg-gray-900 z-10"
+        className="p-4 flex items-center sticky rounded-2xl bottom-0 bg-gray-900 z-10 mb-1"
       >
         <label className="cursor-pointer mr-2">
           <FaPaperclip size={20} />

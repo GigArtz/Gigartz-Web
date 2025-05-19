@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 import { FaTimesCircle } from "react-icons/fa";
 
 interface GuestListModalProps {

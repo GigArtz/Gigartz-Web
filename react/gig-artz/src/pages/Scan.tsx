@@ -1,10 +1,10 @@
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 import Header from "../components/Header";
 import React, { useState, useRef, useEffect } from "react";
 import { FaCamera, FaQrcode } from "react-icons/fa";
 import QrScanner from "react-qr-scanner";
 import { useSelector, useDispatch } from "react-redux";
-import { scanTicket } from "../store/eventsSlice"; // Import the action
+import { scanTicket } from "../../store/eventsSlice"; // Import the action
 
 function Scanner() {
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -71,7 +71,7 @@ function Scanner() {
         </h1>
         <p className="text-center mb-4 text-gray-600">
           Scan a QR code to get the data.
-        </p> 
+        </p>
 
         {isScanning && (
           <div className="flex flex-col items-center justify-center border rounded-lg p-2 shadow-md">

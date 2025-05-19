@@ -11,7 +11,7 @@ import {
   fetchUserProfile,
   updateUserProfile,
 } from "../store/profileSlice";
-import { RootState } from "../store/store";
+import { RootState } from "../../store/store";
 
 const AuthComponent = () => {
   const dispatch = useDispatch();
@@ -93,7 +93,9 @@ const AuthComponent = () => {
   return (
     <div className="p-5 max-w-sm mx-auto">
       <h1 className="text-3xl font-bold text-gray-950 mb-4">hello</h1>
-      <h1 className="text-center text-3xl font-bold underline mb-4">Hello World</h1>
+      <h1 className="text-center text-3xl font-bold underline mb-4">
+        Hello World
+      </h1>
       <h2 className="mb-4">Redux Async API Testing</h2>
 
       <p>Access Token:</p>

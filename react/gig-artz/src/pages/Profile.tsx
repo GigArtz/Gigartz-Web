@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserProfile, updateUserProfile } from "../store/profileSlice";
+import { fetchUserProfile, updateUserProfile } from "../../store/profileSlice";
 import avatar from "../assets/avater.png";
 import blueBackground from "../assets/blue.jpg";
 import MyProfileTabs from "../components/MyProfileTabs";
-import { AppDispatch, RootState } from "../store/store";
+import { AppDispatch, RootState } from "../../store/store";
 import FollowersModal from "../components/FollowersModal";
 import { FaMapMarkerAlt, FaPenSquare } from "react-icons/fa";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
