@@ -71,9 +71,15 @@ const People: React.FC = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchAUserProfile(uid));
+    if (uid) {
+      dispatch(fetchAUserProfile(uid));
+    }
+    // Only set freelancer status when userProfile changes
+  }, [dispatch, uid]);
+
+  useEffect(() => {
     setIsFreelancer(userProfile?.roles?.freelancer || false);
-  }, [dispatch]);
+  }, [userProfile]);
 
   const handleFollow = () => {
     setIsFollowing((prev) => !prev);
@@ -115,13 +121,7 @@ const People: React.FC = () => {
     );
   }
 
-  if (!userProfile) {
-    return (
-      <div className="main-content">
-        <p className="text-center">User Not Found</p>
-      </div>
-    );
-  }
+
 
   return (
     <div className="main-content">

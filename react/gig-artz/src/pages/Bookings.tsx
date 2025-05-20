@@ -1,29 +1,57 @@
 import { useSelector } from "react-redux";
 import Header from "../components/Header";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { RootState } from "../../store/store";
 
 function Bookings() {
-  const [bookingz, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const { profile } = useSelector((state: RootState) => state.profile);
+  const { profile, userBookings } = useSelector(
+    (state: RootState) => state.profile
+  );
 
-  useEffect(() => {
-    if (profile?.myBookings) {
-      const mappedBookings = profile.myBookings.map((booking) => ({
-        id: booking.id,
-        title: booking.eventDetails || "No Title",
-        location: booking.venue || "No Venue",
-        date: new Date(booking.date.seconds * 1000).toLocaleDateString(),
-        guests: booking.additionalInfo || "N/A",
-        price: "N/A", // Adjust if price is available
-        status: booking.status,
-        image: "https://via.placeholder.com/150", // Replace with actual image if available
-      }));
-      setBookings(mappedBookings);
-    }
-  }, [profile]);
+  // Confirmed bookings: from userBookings (Redux state)
+  const confirmedBookings = (userBookings || []).map((booking) => ({
+    id: booking.id,
+    title: booking.eventDetails || "No Title",
+    location: booking.venue || "No Venue",
+    date:
+      booking.date && booking.date.seconds
+        ? new Date(booking.date.seconds * 1000).toLocaleDateString()
+        : typeof booking.date === "string"
+        ? booking.date
+        : "N/A",
+    guests: booking.additionalInfo || "N/A",
+    price: "N/A", // Adjust if price is available
+    status: booking.status,
+    image:
+      typeof booking.image === "string"
+        ? booking.image
+        : "https://placehold.co/150x150?text=No+Image", // Use valid placeholder
+  }));
+
+  // Pending bookings: from userBookingsRequests (Redux state)
+  const { userBookingsRequests } = useSelector(
+    (state: RootState) => state.profile
+  );
+  const pendingBookings = (userBookingsRequests || []).map((booking) => ({
+    id: booking.id,
+    title: booking.eventDetails || "No Title",
+    location: booking.venue || "No Venue",
+    date:
+      booking.date && booking.date.seconds
+        ? new Date(booking.date.seconds * 1000).toLocaleDateString()
+        : typeof booking.date === "string"
+        ? booking.date
+        : "N/A",
+    guests: booking.additionalInfo || "N/A",
+    price: "N/A", // Adjust if price is available
+    status: booking.status,
+    image:
+      typeof booking.image === "string"
+        ? booking.image
+        : "https://placehold.co/150x150?text=No+Image", // Use valid placeholder
+  }));
 
   const openModal = (booking) => {
     setSelectedBooking(booking);
@@ -46,30 +74,70 @@ function Bookings() {
   return (
     <div className="main-content p-2">
       <Header title="Bookings" />
+      {/* Confirmed Bookings Section */}
+      <h2 className="text-lg text-white font-semibold mb-2 mt-2">
+        Confirmed Bookings
+      </h2>
       <div className="flex flex-wrap w-full justify-center md:grid md:grid-cols-2 gap-4">
-        {bookingz.map((booking) => (
-          <div
-            key={booking.id}
-            className="bg-gray-900 p-4 rounded-lg shadow-md w-full flex items-center gap-4 cursor-pointer"
-            onClick={() => openModal(booking)}
-          >
-            {/* Booking Image */}
-            <img
-              src={booking.image}
-              alt={booking.title}
-              className="w-16 h-16 rounded-md border-2 border-teal-400"
-            />
-
-            {/* Booking Details */}
-            <div className="flex-grow">
-              <h2 className="text-lg font-semibold text-white line-clamp-1">
-                {booking.title}
-              </h2>
-              <p className="text-sm text-gray-400">{booking.location}</p>
-              <p className="text-xs text-gray-300">{booking.date}</p>
+        {confirmedBookings.length > 0 ? (
+          confirmedBookings.map((booking) => (
+            <div
+              key={booking.id}
+              className="bg-gray-900 p-4 rounded-lg shadow-md w-full flex items-center gap-4 cursor-pointer"
+              onClick={() => openModal(booking)}
+            >
+              <img
+                src={booking.image}
+                alt={booking.title}
+                className="w-16 h-16 rounded-md border-2 border-teal-400"
+              />
+              <div className="flex-grow">
+                <h2 className="text-lg font-semibold text-white line-clamp-1">
+                  {booking.title}
+                </h2>
+                <p className="text-sm text-gray-400">{booking.location}</p>
+                <p className="text-xs text-gray-300">{booking.date}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p className="text-gray-400 text-center mt-4 w-full">
+            No confirmed bookings.
+          </p>
+        )}
+      </div>
+
+      {/* Pending Bookings Section */}
+      <h2 className="text-lg text-white font-semibold mb-2 mt-6">
+        Pending Bookings
+      </h2>
+      <div className="flex flex-wrap w-full justify-center md:grid md:grid-cols-2 gap-4">
+        {pendingBookings.length > 0 ? (
+          pendingBookings.map((booking) => (
+            <div
+              key={booking.id}
+              className="bg-gray-800 p-4 rounded-lg shadow-md w-full flex items-center gap-4 cursor-pointer"
+              onClick={() => openModal(booking)}
+            >
+              <img
+                src={booking.image}
+                alt={booking.title}
+                className="w-16 h-16 rounded-md border-2 border-teal-400"
+              />
+              <div className="flex-grow">
+                <h2 className="text-lg font-semibold text-white line-clamp-1">
+                  {booking.title}
+                </h2>
+                <p className="text-sm text-gray-400">{booking.location}</p>
+                <p className="text-xs text-gray-300">{booking.date}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-400 text-center mt-4 w-full">
+            No pending bookings.
+          </p>
+        )}
       </div>
 
       {/* Modal for Booking Details */}
@@ -99,7 +167,6 @@ function Bookings() {
             <p className="text-gray-300">
               <strong>Status:</strong> {selectedBooking.status}
             </p>
-
             <div className="flex justify-end gap-2 mt-4">
               <button
                 onClick={closeModal}

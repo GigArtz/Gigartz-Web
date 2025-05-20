@@ -56,6 +56,8 @@ function Drawer() {
   const toggleDrawer = () => setIsDrawerOpen((open) => !open);
 
   const handleLogout = () => {
+    dispatch({ type: "auth/logout" }); // Clear auth state
+    dispatch({ type: "profile/logout" }); // Clear profile state
     localStorage.removeItem("authUser");
     navigate("/", { replace: true });
   };
@@ -88,11 +90,10 @@ function Drawer() {
     { icon: FaSignOutAlt, label: "Sign Out", action: handleLogout },
   ];
 
-
-
   const activeLink =
-    navItems.find((item) => location.pathname.startsWith(item.link || ""))?.link ||
-    "/explore";
+    [...(navItems || []), ...(moreNavItems || [])].find((item) =>
+      location.pathname.startsWith(item.link || "")
+    )?.link || "/explore";
 
   // Handler for navigation item click
   const handleNavClick = (item: NavItem) => {
@@ -130,101 +131,137 @@ function Drawer() {
       {/* Drawer */}
       <div
         className={`fixed top-0 left-0 h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
-        ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        ${
+          isDrawerOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
       >
         {/* Profile */}
-        <div className="p-4 border-b border-gray-700 text-center">
-          <img
-            src={profile?.profilePicUrl || avatar}
-            alt="Profile"
-            className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full border-2 border-teal-500 cursor-pointer"
-            onClick={toggleDrawer}
-          />
-          <p
-            className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer"
-            onClick={() => navigate("/profile")}
-          >
-            {profile?.userName || "brooke lines"}
-          </p>
-          <p className="text-teal-400 text-sm">
-            {profile?.bio || "brooke lines"}
-          </p>
-        </div>
+        {loading ? (
+          <div className="p-4 border-b border-gray-700 text-center animate-pulse">
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full bg-gray-700 mb-2" />
+            <div className="h-5 w-24 mx-auto bg-gray-700 rounded mb-1" />
+            <div className="h-4 w-32 mx-auto bg-gray-800 rounded" />
+          </div>
+        ) : (
+          <div className="p-4 border-b border-gray-700 text-center">
+            <img
+              src={profile?.profilePicUrl || avatar}
+              alt="Profile"
+              className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full border-2 border-teal-500 cursor-pointer"
+              onClick={toggleDrawer}
+            />
+            <p
+              className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer"
+              onClick={() => navigate("/profile")}
+            >
+              {profile?.userName || "brooke lines"}
+            </p>
+            <p className="text-teal-400 text-sm">
+              {profile?.bio || "brooke lines"}
+            </p>
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="py-4 px-4 overflow-y-auto max-h-[80vh] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-          <ul className="space-y-2">
-            {navItems.map((item, index) => {
-              const isActive = activeLink === item.link;
-              return (
-                <li key={index}>
-                  <a
-                    onClick={() => handleNavClick(item)}
-                    className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                      ${isActive ? "bg-teal-700 text-white" : "text-white hover:bg-gray-700"}`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </a>
+          {loading ? (
+            <ul className="space-y-2 animate-pulse">
+              {[...Array(5)].map((_, i) => (
+                <li key={i}>
+                  <div className="flex items-center gap-3 p-2 rounded-2xl">
+                    <div className="w-5 h-5 bg-gray-700 rounded" />
+                    <div className="h-4 w-20 bg-gray-700 rounded" />
+                  </div>
                 </li>
-              );
-            })}
-          </ul>
-
-          {/* More Options Button */}
-          <div className="border-gray-700 pt-4">
-            <button
-              className="w-full flex items-center px-2 py-2 rounded-2xl text-sm font-semibold text-white bg-dark hover:bg-gray-700 transition mb-2"
-              onClick={() => setIsMoreModalOpen(true)}
-              type="button"
-            >
-              <FaEllipsisH className="w-5 h-5 me-3" />
-              <span className="text-white hover:bg-gray-700">More</span>
-            </button>
-          </div>
-
-          {/* More Modal */}
-          {isMoreModalOpen && (
-            <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-20">
-              <div className="bg-dark border border-teal-500 rounded-2xl shadow-2xl shadow-teal-500 pt-8 px-2 pb-2 ps-4 max-w-xs relative animate-fade-in">
-                <button
-                  className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
-                  onClick={() => setIsMoreModalOpen(false)}
-                  aria-label="Close"
-                >
-                  <FaTimesCircle className="w-4 h-4" />
-                </button>
-                <ul className="space-y-2">
-                  {moreNavItems.map((item, index) => (
+              ))}
+              <div className="pt-4">
+                <div className="w-full h-10 bg-gray-700 rounded-2xl" />
+              </div>
+            </ul>
+          ) : (
+            <>
+              <ul className="space-y-2">
+                {navItems.map((item, index) => {
+                  const isActive = activeLink === item.link;
+                  return (
                     <li key={index}>
                       <a
-                        onClick={() => {
-                          handleNavClick(item);
-                          setIsMoreModalOpen(false);
-                        }}
+                        onClick={() => handleNavClick(item)}
                         className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                          ${item.label === "Sign Out" ? "text-white hover:bg-red-600" : "text-white hover:bg-gray-700"}`}
+                          ${
+                            isActive
+                              ? "bg-teal-700 text-white"
+                              : "text-white hover:bg-gray-700"
+                          }`}
                       >
                         <item.icon className="w-5 h-5" />
                         <span>{item.label}</span>
                       </a>
                     </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
+                  );
+                })}
+              </ul>
 
-          {/* Create Button */}
-          <div className="flex flex-row font-medium px-2 py-1 mt-4 mb-5 justify-center">
-            <button
-              onClick={openModal}
-              type="button"
-              className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
-            >
-              Create
-            </button>
-          </div>
+              {/* More Options Button */}
+              <div className="border-gray-700 pt-4">
+                <button
+                  className="w-full flex items-center px-2 py-2 rounded-2xl text-sm font-semibold text-white bg-dark hover:bg-gray-700 transition mb-2"
+                  onClick={() => setIsMoreModalOpen(true)}
+                  type="button"
+                >
+                  <FaEllipsisH className="w-5 h-5 me-3" />
+                  <span className="text-white hover:bg-gray-700">More</span>
+                </button>
+              </div>
+
+              {/* More Modal */}
+              {isMoreModalOpen && (
+                <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-20">
+                  <div className="bg-dark border border-teal-500 rounded-2xl shadow-2xl shadow-teal-500 pt-8 px-2 pb-2 ps-4 max-w-xs relative animate-fade-in">
+                    <button
+                      className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
+                      onClick={() => setIsMoreModalOpen(false)}
+                      aria-label="Close"
+                    >
+                      <FaTimesCircle className="w-4 h-4" />
+                    </button>
+                    <ul className="space-y-2">
+                      {moreNavItems.map((item, index) => (
+                        <li key={index}>
+                          <a
+                            onClick={() => {
+                              handleNavClick(item);
+                              setIsMoreModalOpen(false);
+                            }}
+                            className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
+                              ${
+                                item.label === "Sign Out"
+                                  ? "text-white hover:bg-red-600"
+                                  : "text-white hover:bg-gray-700"
+                              }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Create Button */}
+              <div className="flex flex-row font-medium px-2 py-1 mt-4 mb-5 justify-center">
+                <button
+                  onClick={openModal}
+                  type="button"
+                  className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
+                >
+                  Create
+                </button>
+              </div>
+            </>
+          )}
         </nav>
       </div>
 

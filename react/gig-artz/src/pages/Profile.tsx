@@ -13,7 +13,7 @@ import { storage } from "../config/firebase";
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
   const { uid } = useSelector((state: RootState) => state.auth);
-  const { profile, userFollowers, userFollowing } = useSelector(
+  const { profile, userFollowers, userFollowing, loadingProfile } = useSelector(
     (state: RootState) => state.profile
   );
 
@@ -57,7 +57,9 @@ export default function Profile() {
     setModalVisible(false);
   };
 
-  const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePicUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
@@ -65,9 +67,17 @@ export default function Profile() {
     try {
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
-      dispatch(updateUserProfile(uid, { profilePicUrl: downloadURL, name: "Profile Pic"}));
+      dispatch(
+        updateUserProfile(uid, {
+          profilePicUrl: downloadURL,
+          name: "Profile Pic",
+        })
+      );
     } catch (error) {
-      console.error("Error uploading profile picture:", (error as Error).message);
+      console.error(
+        "Error uploading profile picture:",
+        (error as Error).message
+      );
       alert("Failed to upload profile picture. Please try again.");
     }
     setLoading(false);
@@ -86,78 +96,90 @@ export default function Profile() {
   }
   return (
     <div className="main-content">
-      <div className="relative">
-        <img
-          src={profile?.coverPic || blueBackground}
-          alt="Cover"
-          onClick={uploadCover}
-          className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
-        />
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-gray-900 opacity-50"></div>
+      {loadingProfile && (
+        <div className="flex justify-center items-center h-screen">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      )}
+      {!loadingProfile && !profile && (
+        <div className="flex justify-center items-center h-screen">
+          <p className="text-gray-500">User Not Found</p>
+        </div>
+      )}
 
-        <img
-          src={profile?.profilePicUrl || avatar}
-          alt="Profile"
-          className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer"
-          onClick={() => fileInputRef.current?.click()}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={handleProfilePicUpload}
-        />
-      </div>
-
-      <div className="p-5">
-        <div className="flex gap-4 items-end">
-          <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
-          <FaPenSquare
-            onClick={() => setModalVisible(true)}
-            className="w-4 h-4 mb-2 text-teal-500"
+      <div>
+        <div className="relative">
+          <img
+            src={profile?.coverPic || blueBackground}
+            alt="Cover"
+            onClick={uploadCover}
+            className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
+          />
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-gray-900 opacity-50"></div>
+          <img
+            src={profile?.profilePicUrl || avatar}
+            alt="Profile"
+            className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleProfilePicUpload}
           />
         </div>
-        <p className="text-sm text-gray-400">
-          @{profile?.userName || "username"}
-        </p>
-        <p className="my-2">{profile?.bio || "Add a bio"}</p>
-        <div className="flex gap-1 items-center text-sm text-gray-400">
-          <FaMapMarkerAlt />
-          {profile?.userName || "username"}
-        </div>
-        <div className="flex flex-row justify-between">
-          <div className="flex-row gap-4 mt-2">
-            <div className="flex gap-2 mb-2 text-gray-500">
-              <p
-                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
-                onClick={() => setIsFollowingModalOpen(true)}
-              >
-                <span className="font-bold text-teal-400">
-                  {userFollowing?.length || 0}
-                </span>{" "}
-                Following
-              </p>
-              <p
-                className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
-                onClick={() => setIsFollowersModalOpen(true)}
-              >
-                <span className="font-bold text-teal-400">
-                  {userFollowers?.length || 0}
-                </span>{" "}
-                Followers
-              </p>
-            </div>
-
-            <div className="flex">
-              <div className="flex gap-2 my-2">
-                {(Array.isArray(profile?.genre) ? profile.genre : []).slice(0, 4).map((genre, index) => (
-                  <div key={index}>
-                    <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
-                      {genre?.name || genre}
-                    </p>
-                  </div>
-                ))}
+        <div className="p-5">
+          <div className="flex gap-4 items-end">
+            <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
+            <FaPenSquare
+              onClick={() => setModalVisible(true)}
+              className="w-4 h-4 mb-2 text-teal-500"
+            />
+          </div>
+          <p className="text-sm text-gray-400">
+            @{profile?.userName || "username"}
+          </p>
+          <p className="my-2">{profile?.bio || "Add a bio"}</p>
+          <div className="flex gap-1 items-center text-sm text-gray-400">
+            <FaMapMarkerAlt />
+            {profile?.userName || "username"}
+          </div>
+          <div className="flex flex-row justify-between">
+            <div className="flex-row gap-4 mt-2">
+              <div className="flex gap-2 mb-2 text-gray-500">
+                <p
+                  className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                  onClick={() => setIsFollowingModalOpen(true)}
+                >
+                  <span className="font-bold text-teal-400">
+                    {userFollowing?.length || 0}
+                  </span>{" "}
+                  Following
+                </p>
+                <p
+                  className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                  onClick={() => setIsFollowersModalOpen(true)}
+                >
+                  <span className="font-bold text-teal-400">
+                    {userFollowers?.length || 0}
+                  </span>{" "}
+                  Followers
+                </p>
+              </div>
+              <div className="flex">
+                <div className="flex gap-2 my-2">
+                  {(Array.isArray(profile?.genre) ? profile.genre : [])
+                    .slice(0, 4)
+                    .map((genre, index) => (
+                      <div key={index}>
+                        <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
+                          {genre?.name || genre}
+                        </p>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           </div>

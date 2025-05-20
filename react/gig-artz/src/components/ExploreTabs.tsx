@@ -9,20 +9,36 @@ import { FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
 import ScrollableEventCol from "./ScrollableEventCol";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
   const { search } = useParams();
+  const location = useLocation();
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("top");
   // State for search term
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Update searchTerm if search param changes (from EventsTabs)
   useEffect(() => {
     if (search) setSearchTerm(search);
   }, [search]);
+
+  // Optionally, update the input field and filter when the URL changes
+  useEffect(() => {
+    if (search) setSearchTerm(search);
+  }, [search]);
+
+  // Get tab from query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab === "events" || tab === "people") {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     dispatch(fetchAllProfiles());
@@ -62,7 +78,18 @@ function ExploreTabs() {
     <div className="px-2">
       <div className="my-2">
         <div className="relative rounded-lg border border-gray-700 dark:border-gray-700 bg-[#060512] dark:bg-gray-700">
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchTerm.trim() !== "") {
+                window.history.replaceState(
+                  null,
+                  "",
+                  `/explore/${encodeURIComponent(searchTerm)}`
+                );
+              }
+            }}
+          >
             <input
               type="text"
               className="w-full px-4 py-2 rounded-lg bg-[#060512] text-gray-900 dark:text-gray-100 focus:outline-none"

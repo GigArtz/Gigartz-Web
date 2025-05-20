@@ -1,15 +1,74 @@
 import React, { useState } from "react";
 import EventCard from "./EventCard";
 import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
 
 function WalletTabs({ uid }) {
-  const { loading, error } = useSelector((state) => state.profile);
-  const events = useSelector((state) => state.events);
-
-  const userEvents = events?.events.filter((event) => event.promoterId === uid);
+  // Use RootState for type safety
+  const { loading, error, userBookings, userBookingsRequests } = useSelector(
+    (state: RootState) => state.profile
+  );
 
   // State to track active tab
   const [activeTab, setActiveTab] = useState("walletOverview");
+
+  // Bookings data from Redux (same as Bookings page)
+  const confirmedBookings = (userBookings || []).map((booking) => ({
+    id: booking.id,
+    title: booking.eventDetails || "No Title",
+    location: booking.venue || "No Venue",
+    date:
+      booking.date && booking.date.seconds
+        ? new Date(booking.date.seconds * 1000).toLocaleDateString()
+        : typeof booking.date === "string"
+        ? booking.date
+        : "N/A",
+    guests: booking.additionalInfo || "N/A",
+    price: "N/A",
+    status: booking.status,
+    image:
+      typeof booking.image === "string"
+        ? booking.image
+        : "https://placehold.co/150x150?text=No+Image",
+  }));
+  const pendingBookings = (userBookingsRequests || []).map((booking) => ({
+    id: booking.id,
+    title: booking.eventDetails || "No Title",
+    location: booking.venue || "No Venue",
+    date:
+      booking.date && booking.date.seconds
+        ? new Date(booking.date.seconds * 1000).toLocaleDateString()
+        : typeof booking.date === "string"
+        ? booking.date
+        : "N/A",
+    guests: booking.additionalInfo || "N/A",
+    price: "N/A",
+    status: booking.status,
+    image:
+      typeof booking.image === "string"
+        ? booking.image
+        : "https://placehold.co/150x150?text=No+Image",
+  }));
+
+  // Modal state for booking actions
+  const [selectedBooking, setSelectedBooking] = useState(null);
+
+  const openModal = (booking) => setSelectedBooking(booking);
+  const closeModal = () => setSelectedBooking(null);
+  const handleAccept = () => {
+    if (selectedBooking) {
+      // TODO: Add accept logic here
+      console.log(`Accepted booking: ${selectedBooking.title}`);
+      closeModal();
+    }
+  };
+  const handleDecline = () => {
+    if (selectedBooking) {
+      // TODO: Add decline logic here
+      console.log(`Declined booking: ${selectedBooking.title}`);
+      closeModal();
+    }
+  };
 
   return (
     <div className=" rounded-lg shadow-md">
@@ -119,18 +178,126 @@ function WalletTabs({ uid }) {
 
             {/* Bookings */}
             {activeTab === "bookings" && (
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold text-white">
-                  Event Bookings
-                </h3>
-                {userEvents.length > 0 ? (
-                  userEvents.map((event) => (
-                    <EventCard key={event.id} event={event} cardSize="md" />
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-center mt-4">
-                    No bookings found.
-                  </p>
+              <div className="flex flex-col gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Confirmed Bookings
+                  </h3>
+                  {confirmedBookings.length > 0 ? (
+                    confirmedBookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="bg-gray-900 p-4 rounded-lg shadow-md w-full flex items-center gap-4 mb-2 cursor-pointer"
+                        onClick={() => openModal(booking)}
+                      >
+                        <img
+                          src={booking.image}
+                          alt={booking.title}
+                          className="w-16 h-16 rounded-md border-2 border-teal-400"
+                        />
+                        <div className="flex-grow">
+                          <h2 className="text-lg font-semibold text-white line-clamp-1">
+                            {booking.title}
+                          </h2>
+                          <p className="text-sm text-gray-400">
+                            {booking.location}
+                          </p>
+                          <p className="text-xs text-gray-300">
+                            {booking.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400 text-center mt-4">
+                      No confirmed bookings.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2 mt-4">
+                    Pending Bookings
+                  </h3>
+                  {pendingBookings.length > 0 ? (
+                    pendingBookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="bg-gray-800 p-4 rounded-lg shadow-md w-full flex items-center gap-4 mb-2 cursor-pointer"
+                        onClick={() => openModal(booking)}
+                      >
+                        <img
+                          src={booking.image}
+                          alt={booking.title}
+                          className="w-16 h-16 rounded-md border-2 border-teal-400"
+                        />
+                        <div className="flex-grow">
+                          <h2 className="text-lg font-semibold text-white line-clamp-1">
+                            {booking.title}
+                          </h2>
+                          <p className="text-sm text-gray-400">
+                            {booking.location}
+                          </p>
+                          <p className="text-xs text-gray-300">
+                            {booking.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400 text-center mt-4">
+                      No pending bookings.
+                    </p>
+                  )}
+                </div>
+                {/* Modal for Booking Details */}
+                {selectedBooking && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-gray-900 p-6 rounded-lg w-96 shadow-lg">
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Booking Details
+                      </h2>
+                      <img
+                        src={selectedBooking.image}
+                        alt={selectedBooking.title}
+                        className="w-full rounded-lg mb-3"
+                      />
+                      <p className="text-gray-300">
+                        <strong>Title:</strong> {selectedBooking.title}
+                      </p>
+                      <p className="text-gray-300">
+                        <strong>Location:</strong> {selectedBooking.location}
+                      </p>
+                      <p className="text-gray-300">
+                        <strong>Date:</strong> {selectedBooking.date}
+                      </p>
+                      <p className="text-gray-300">
+                        <strong>Guests:</strong> {selectedBooking.guests}
+                      </p>
+                      <p className="text-gray-300">
+                        <strong>Status:</strong> {selectedBooking.status}
+                      </p>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <button
+                          onClick={closeModal}
+                          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                        >
+                          Close
+                        </button>
+                        <button
+                          onClick={handleDecline}
+                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={handleAccept}
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
