@@ -105,6 +105,11 @@ function Drawer() {
     }
   };
 
+  const handleUsernameClick = () => {
+    navigate(`/profile`);
+    setIsDrawerOpen(false);
+  };
+
   return (
     <div className="relative flex">
       {/* Modal */}
@@ -152,7 +157,7 @@ function Drawer() {
             />
             <p
               className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer"
-              onClick={() => navigate("/profile")}
+              onClick={() => handleUsernameClick()}
             >
               {profile?.userName || "brooke lines"}
             </p>

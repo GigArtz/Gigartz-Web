@@ -603,7 +603,6 @@ export const reassignTicket = (
 export const updateEvent = (
   eventId: string,
   userId: string,
-  userEventId: string,
   eventData: Partial<Event>
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.createEventsStart());
@@ -611,8 +610,10 @@ export const updateEvent = (
   try {
     console.log("Updating event...");
     const response = await axios.put(
-      `https://gigartz.onrender.com/editEvent/${eventId}/users/${userId}/userEvents/${userEventId}`,
-      eventData
+      `https://gigartz.onrender.com/users/${userId}/userEvents`,
+      { eventId, ...eventData }, // Spread the eventData to include all fields
+      { headers: { "Content-Type": "application/json" } } // Ensure JSON format
+    
     );
     console.log("Event updated successfully:", response.data);
 

@@ -9,11 +9,12 @@ import FollowersModal from "../components/FollowersModal";
 import { FaMapMarkerAlt, FaPenSquare } from "react-icons/fa";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../config/firebase";
+import ProfileSectionUI from "../components/ProfileSectionUI";
 
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
   const { uid } = useSelector((state: RootState) => state.auth);
-  const { profile, userFollowers, userFollowing, loadingProfile } = useSelector(
+  const { profile, userFollowers, userFollowing, loading } = useSelector(
     (state: RootState) => state.profile
   );
 
@@ -23,10 +24,11 @@ export default function Profile() {
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoading] = useState(false);
   const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
   const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const coverInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (uid) {
@@ -69,8 +71,7 @@ export default function Profile() {
       const downloadURL = await getDownloadURL(snapshot.ref);
       dispatch(
         updateUserProfile(uid, {
-          profilePicUrl: downloadURL,
-          name: "Profile Pic",
+          profilePicture: downloadURL,
         })
       );
     } catch (error) {
@@ -83,8 +84,26 @@ export default function Profile() {
     setLoading(false);
   };
 
-  const uploadCover = () => {
-    console.log("Upload cover picture function not implemented yet.");
+  const handleCoverPicUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    const storageRef = ref(storage, `coverPics/${Date.now()}_${file.name}`);
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      dispatch(
+        updateUserProfile(uid, {
+          coverPic: downloadURL,
+        })
+      );
+    } catch (error) {
+      console.error("Error uploading cover picture:", (error as Error).message);
+      alert("Failed to upload cover picture. Please try again.");
+    }
+    setLoading(false);
   };
 
   if (!profile) {
@@ -96,94 +115,103 @@ export default function Profile() {
   }
   return (
     <div className="main-content">
-      {loadingProfile && (
-        <div className="flex justify-center items-center h-screen">
-          <p className="text-gray-500">Loading...</p>
-        </div>
-      )}
-      {!loadingProfile && !profile && (
-        <div className="flex justify-center items-center h-screen">
-          <p className="text-gray-500">User Not Found</p>
-        </div>
-      )}
-
-      <div>
-        <div className="relative">
-          <img
-            src={profile?.coverPic || blueBackground}
-            alt="Cover"
-            onClick={uploadCover}
-            className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
-          />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-gray-900 opacity-50"></div>
-          <img
-            src={profile?.profilePicUrl || avatar}
-            alt="Profile"
-            className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          />
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={handleProfilePicUpload}
-          />
-        </div>
-        <div className="p-5">
-          <div className="flex gap-4 items-end">
-            <h1 className="text-2xl font-bold">{profile?.name || "Name"}</h1>
-            <FaPenSquare
-              onClick={() => setModalVisible(true)}
-              className="w-4 h-4 mb-2 text-teal-500"
-            />
-          </div>
-          <p className="text-sm text-gray-400">
-            @{profile?.userName || "username"}
-          </p>
-          <p className="my-2">{profile?.bio || "Add a bio"}</p>
-          <div className="flex gap-1 items-center text-sm text-gray-400">
-            <FaMapMarkerAlt />
-            {profile?.userName || "username"}
-          </div>
-          <div className="flex flex-row justify-between">
-            <div className="flex-row gap-4 mt-2">
-              <div className="flex gap-2 mb-2 text-gray-500">
-                <p
-                  className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
-                  onClick={() => setIsFollowingModalOpen(true)}
-                >
-                  <span className="font-bold text-teal-400">
-                    {userFollowing?.length || 0}
-                  </span>{" "}
-                  Following
-                </p>
-                <p
-                  className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
-                  onClick={() => setIsFollowersModalOpen(true)}
-                >
-                  <span className="font-bold text-teal-400">
-                    {userFollowers?.length || 0}
-                  </span>{" "}
-                  Followers
-                </p>
+      <div className="">
+        {loading ? (
+          <ProfileSectionUI />
+        ) : (
+          <div>
+            <div className="relative">
+              <img
+                src={profile?.coverPic || blueBackground}
+                alt="Cover"
+                onClick={() => coverInputRef.current?.click()}
+                className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4 cursor-pointer"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                ref={coverInputRef}
+                style={{ display: "none" }}
+                onChange={handleCoverPicUpload}
+              />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-gray-900 opacity-50"></div>
+              <img
+                src={profile?.profilePicUrl || avatar}
+                alt="Profile"
+                className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleProfilePicUpload}
+              />
+              <FaPenSquare
+                onClick={() => coverInputRef.current?.click()}
+                className="absolute top-2 right-2 w-6 h-6 text-white bg-teal-500 rounded-full p-1 cursor-pointer shadow-lg hover:bg-teal-600 z-10"
+                title="Edit cover photo"
+              />
+            </div>
+            <div className="p-5">
+              <div className="flex gap-4 items-end">
+                <h1 className="text-2xl font-bold">
+                  {profile?.name || "Name"}
+                </h1>
+                <FaPenSquare
+                  onClick={() => setModalVisible(true)}
+                  className="w-4 h-4 mb-2 text-teal-500"
+                />
               </div>
-              <div className="flex">
-                <div className="flex gap-2 my-2">
-                  {(Array.isArray(profile?.genre) ? profile.genre : [])
-                    .slice(0, 4)
-                    .map((genre, index) => (
-                      <div key={index}>
-                        <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
-                          {genre?.name || genre}
-                        </p>
-                      </div>
-                    ))}
+              <p className="text-sm text-gray-400">
+                @{profile?.userName || "username"}
+              </p>
+              <p className="my-2">{profile?.bio || "Add a bio"}</p>
+              <div className="flex gap-1 items-center text-sm text-gray-400">
+                <FaMapMarkerAlt />
+                {profile?.userName || "username"}
+              </div>
+              <div className="flex flex-row justify-between">
+                <div className="flex-row gap-4 mt-2">
+                  <div className="flex gap-2 mb-2 text-gray-500">
+                    <p
+                      className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                      onClick={() => setIsFollowingModalOpen(true)}
+                    >
+                      <span className="font-bold text-teal-400">
+                        {userFollowing?.length || 0}
+                      </span>{" "}
+                      Following
+                    </p>
+                    <p
+                      className="border-b border-transparent hover:border-gray-600 hover:border-b cursor-pointer"
+                      onClick={() => setIsFollowersModalOpen(true)}
+                    >
+                      <span className="font-bold text-teal-400">
+                        {userFollowers?.length || 0}
+                      </span>{" "}
+                      Followers
+                    </p>
+                  </div>
+                  <div className="flex">
+                    <div className="flex gap-2 my-2">
+                      {(Array.isArray(profile?.genre) ? profile.genre : [])
+                        .slice(0, 4)
+                        .map((genre, index) => (
+                          <div key={index}>
+                            <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
+                              {genre?.name || genre}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <FollowersModal

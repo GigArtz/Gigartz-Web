@@ -274,7 +274,6 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       updateEvent(
         event?.id, // eventId
         event?.promoterId, // userId
-        event?.id, // userEventId (ensure this exists on event)
         updatedEvent // eventData
       )
     );

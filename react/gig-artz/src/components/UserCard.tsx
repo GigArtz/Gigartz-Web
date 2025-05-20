@@ -32,16 +32,16 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
 
   return (
     <div
-      className="flex items-center scroll-smooth snap-x md:space-x-2  justify-between w-full max-w-lg p-3 rounded-lg cursor-pointer hover:bg-gray-900 transition duration-300 shadow-md hover:shadow-lg"
+      className="flex items-center scroll-smooth snap-x md:space-x-1  justify-between w-full max-w-lg p-3 rounded-lg cursor-pointer hover:bg-gray-900 transition duration-300 shadow-md hover:shadow-lg"
       onClick={handleClick}
     >
-      <div className="flex items-center md:gap-4 flex-nowrap">
+      <div className="flex items-center md:gap-2 flex-nowrap">
         {/* Profile Info */}
-        <div className="flex items-center gap-4 flex-nowrap">
+        <div className="flex items-center gap-2 flex-nowrap">
           <img
             src={user.profilePicUrl || "/avatar.png"}
             alt="Avatar"
-            className="w-12 h-12 rounded-full border-2 border-teal-400 object-cover"
+            className="w-11 h-11 min-w-11 min-h-11 max-w-11 max-h-11 rounded-full border-2 border-teal-400 object-cover"
           />
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold text-white">
@@ -51,7 +51,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
             <p className="text-sm text-gray-400">
               @{user.userName || "username"}
             </p>
-            <p className="text-xs text-gray-300 truncate w-52 sm:w-40">
+            <p className="text-xs text-gray-300 truncate w-48 sm:w-40">
               {user.bio || "No bio available"}
             </p>
           </div>
