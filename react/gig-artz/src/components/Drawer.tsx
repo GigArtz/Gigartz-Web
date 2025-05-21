@@ -152,7 +152,7 @@ function Drawer() {
             <img
               src={profile?.profilePicUrl || avatar}
               alt="Profile"
-              className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full border-2 border-teal-500 cursor-pointer"
+              className="w-16 h-16 md:w-20 md:h-20 min-w-16 min-h-16 max-w-20 max-h-20 mx-auto rounded-full border-2 border-teal-500 object-cover cursor-pointer"
               onClick={toggleDrawer}
             />
             <p

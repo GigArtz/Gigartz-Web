@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserProfile, updateUserProfile } from "../../store/profileSlice";
 import avatar from "../assets/avater.png";
@@ -10,6 +10,7 @@ import { FaMapMarkerAlt, FaPenSquare } from "react-icons/fa";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../config/firebase";
 import ProfileSectionUI from "../components/ProfileSectionUI";
+import ProfileMultiStepForm from "../components/ProfileMultiStepForm";
 
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,15 +19,9 @@ export default function Profile() {
     (state: RootState) => state.profile
   );
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [city, setCity] = useState("");
-  const [bio, setBio] = useState("");
-  const [name, setName] = useState("");
-  const [loadingProfile, setLoading] = useState(false);
-  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
-  const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = React.useState(false);
+  const [isFollowingModalOpen, setIsFollowingModalOpen] = React.useState(false);
+  const [multiStepOpen, setMultiStepOpen] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const coverInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -36,35 +31,12 @@ export default function Profile() {
     }
   }, [uid, dispatch]);
 
-  useEffect(() => {
-    if (profile) {
-      setUserName(profile?.userName || "");
-      setPhoneNumber(profile?.phoneNumber || "");
-      setCity(profile?.city || "");
-      setBio(profile?.bio || "");
-      setName(profile?.name || "");
-    }
-  }, [profile]);
-
-  const handleSave = () => {
-    dispatch(
-      updateUserProfile(uid, {
-        userName,
-        phoneNumber,
-        city,
-        bio,
-        name,
-      })
-    );
-    setModalVisible(false);
-  };
-
   const handleProfilePicUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setLoading(true);
+    // setLoading(true);
     const storageRef = ref(storage, `profilePics/${Date.now()}_${file.name}`);
     try {
       const snapshot = await uploadBytes(storageRef, file);
@@ -81,7 +53,7 @@ export default function Profile() {
       );
       alert("Failed to upload profile picture. Please try again.");
     }
-    setLoading(false);
+    // setLoading(false);
   };
 
   const handleCoverPicUpload = async (
@@ -89,21 +61,21 @@ export default function Profile() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setLoading(true);
+    // setLoading(true);
     const storageRef = ref(storage, `coverPics/${Date.now()}_${file.name}`);
     try {
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       dispatch(
         updateUserProfile(uid, {
-          coverPic: downloadURL,
+          coverProfile: downloadURL,
         })
       );
     } catch (error) {
       console.error("Error uploading cover picture:", (error as Error).message);
       alert("Failed to upload cover picture. Please try again.");
     }
-    setLoading(false);
+    // setLoading(false);
   };
 
   if (!profile) {
@@ -122,7 +94,7 @@ export default function Profile() {
           <div>
             <div className="relative">
               <img
-                src={profile?.coverPic || blueBackground}
+                src={profile?.coverProfile || blueBackground}
                 alt="Cover"
                 onClick={() => coverInputRef.current?.click()}
                 className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4 cursor-pointer"
@@ -138,7 +110,7 @@ export default function Profile() {
               <img
                 src={profile?.profilePicUrl || avatar}
                 alt="Profile"
-                className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer"
+                className="w-20 h-20 sm:w-28 sm:h-28 min-w-28 min-h-28 max-w-28 max-h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer object-cover"
                 onClick={() => fileInputRef.current?.click()}
               />
               <input
@@ -160,17 +132,17 @@ export default function Profile() {
                   {profile?.name || "Name"}
                 </h1>
                 <FaPenSquare
-                  onClick={() => setModalVisible(true)}
+                  onClick={() => setMultiStepOpen(true)}
                   className="w-4 h-4 mb-2 text-teal-500"
                 />
               </div>
               <p className="text-sm text-gray-400">
                 @{profile?.userName || "username"}
               </p>
-              <p className="my-2">{profile?.bio || "Add a bio"}</p>
+              <p className="mt-2">{profile?.bio || "Add a bio"}</p>
               <div className="flex gap-1 items-center text-sm text-gray-400">
                 <FaMapMarkerAlt />
-                {profile?.userName || "username"}
+                {profile?.city || "location"}
               </div>
               <div className="flex flex-row justify-between">
                 <div className="flex-row gap-4 mt-2">
@@ -228,77 +200,12 @@ export default function Profile() {
         users={userFollowing}
       />
 
-      {modalVisible && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-3/4 max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1 text-sm">Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={profile?.name || "Enter Name"}
-                  className="w-full px-4 py-2 bg-gray-700 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm">Username</label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder={profile?.userName || "Enter Username"}
-                  className="w-full px-4 py-2 bg-gray-700 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm">Phone Number</label>
-                <input
-                  type="text"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder={profile?.phoneNumber || "Enter Phone Number"}
-                  className="w-full px-4 py-2 bg-gray-700 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm">City</label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder={profile?.city || "Enter City"}
-                  className="w-full px-4 py-2 bg-gray-700 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm">Bio</label>
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder={profile?.bio || "Enter Bio"}
-                  className="w-full px-4 py-2 bg-gray-700 rounded-md"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-4 mt-6">
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-teal-500 rounded-md"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => setModalVisible(false)}
-                className="px-4 py-2 bg-gray-600 rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+      {multiStepOpen && (
+        <ProfileMultiStepForm
+          isOpen={multiStepOpen}
+          onClose={() => setMultiStepOpen(false)}
+          initialValues={profile}
+        />
       )}
 
       {/* Profile Tabs */}

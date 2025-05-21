@@ -14,6 +14,7 @@ export interface UserProfile {
   profilePicUrl: string | null;
   profilePicture: string | null;
   coverPic: string | null;
+  coverProfile: string | null;
   bio: string;
   bookingRequests: any[]; // Adjust type as needed
   city: string;

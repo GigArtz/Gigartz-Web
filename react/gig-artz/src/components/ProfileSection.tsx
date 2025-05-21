@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   FaCalendarPlus,
   FaEnvelope,
+  FaMapMarkerAlt,
   FaMoneyBillAlt,
   FaPlus,
   FaSpinner,
@@ -90,7 +91,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               <img
                 src={userProfile?.userProfile?.profilePicUrl || avatar}
                 alt="Profile"
-                className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10"
+                className="w-20 h-20 sm:w-28 sm:h-28 min-w-20 min-h-20 max-w-28 max-h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer object-cover"
               />
               <div></div>
               <div className="p-5">
@@ -159,6 +160,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 <p className="mt-2">
                   {userProfile?.userProfile?.bio || "No bio available"}
                 </p>
+                <div className="flex gap-1 items-center text-sm text-gray-400">
+                  <FaMapMarkerAlt />
+                  {userProfile?.userProfile?.city || "location"}
+                </div>
                 <div className="flex flex-row justify-between">
                   <div className="flex-row gap-4 mt-2">
                     <div className="flex gap-2 mb-2 text-gray-500">
