@@ -221,6 +221,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         onSubmit={onTip}
       />
       <BookingModal
+        services={userProfile?.userProfile?.services}
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         onSubmit={onBook}

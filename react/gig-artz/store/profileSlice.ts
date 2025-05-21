@@ -391,58 +391,60 @@ export const updateUserProfile =
 
 // Switch user profile via API
 export const switchUserProfile =
-  (userId: string, genre: [], acceptTips: boolean, acceptBookings: boolean) =>
-    async (dispatch: AppDispatch) => {
-      dispatch(profileSlice.actions.updateProfileStart());
+  (userId: string, genre: [], acceptTips: boolean, acceptBookings: boolean, services: any) =>
+  async (dispatch: AppDispatch) => {
+    dispatch(profileSlice.actions.updateProfileStart());
 
-      try {
-        // Send the updated profile data to the API endpoint
-        const response = await axios.post(
-          "https://gigartz.onrender.com/switchUser",
-          { userId, acceptTips, genre, acceptBookings }
-        );
+    console.log(userId, acceptTips, genre, acceptBookings, services);
 
-        console.log("User profile update response:", response.data);
+    try {
+      // Send the updated profile data to the API endpoint
+      const response = await axios.post(
+        "https://gigartz.onrender.com/switchUser",
+        { userId, acceptTips, genre, acceptBookings, services }
+      );
 
-        // Dispatch success action with the updated profile response if needed
-        dispatch(
-          profileSlice.actions.updateProfileSuccess(response.data.updatedProfile)
-        );
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError;
-          if (axiosError.response) {
-            // The request was made and the server responded with an error
-            console.error("Response error:", axiosError.response?.data);
-            dispatch(
-              profileSlice.actions.updateProfileFailure(
-                axiosError.response?.data?.error || "Failed to fetch user profile"
-              )
-            );
-          } else if (axiosError.request) {
-            // The request was made, but no response was received
-            console.error("Request error:", axiosError.request);
-            dispatch(
-              profileSlice.actions.updateProfileFailure(
-                "No response received from server"
-              )
-            );
-          } else {
-            // Something else happened during the setup of the request
-            console.error("Error setting up request:", axiosError.message);
-            dispatch(
-              profileSlice.actions.updateProfileFailure(axiosError.message)
-            );
-          }
-        } else {
-          // Handle non-Axios errors
-          console.error("Unexpected error fetching user profile:", error);
+      console.log("User profile update response:", response.data);
+
+      // Dispatch success action with the updated profile response if needed
+      dispatch(
+        profileSlice.actions.updateProfileSuccess(response.data.updatedProfile)
+      );
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          // The request was made and the server responded with an error
+          console.error("Response error:", axiosError.response?.data);
           dispatch(
-            profileSlice.actions.updateProfileFailure("Unexpected error occurred")
+            profileSlice.actions.updateProfileFailure(
+              axiosError.response?.data?.error || "Failed to fetch user profile"
+            )
+          );
+        } else if (axiosError.request) {
+          // The request was made, but no response was received
+          console.error("Request error:", axiosError.request);
+          dispatch(
+            profileSlice.actions.updateProfileFailure(
+              "No response received from server"
+            )
+          );
+        } else {
+          // Something else happened during the setup of the request
+          console.error("Error setting up request:", axiosError.message);
+          dispatch(
+            profileSlice.actions.updateProfileFailure(axiosError.message)
           );
         }
+      } else {
+        // Handle non-Axios errors
+        console.error("Unexpected error fetching user profile:", error);
+        dispatch(
+          profileSlice.actions.updateProfileFailure("Unexpected error occurred")
+        );
       }
-    };
+    }
+  };
 
 // Create user profile in Firestore after social login
 export const createUser =

@@ -20,8 +20,14 @@ const Monetization = () => {
   const navigate = useNavigate();
 
   const [service, setService] = useState({ name: "", description: "" });
-  const [packages, setPackages] = useState([
-    { name: "", baseFee: "", additionalCosts: "" },
+  const [services, setServices] = useState([
+    {
+      name: "",
+      description: "",
+      offeringOptions: "",
+      baseFee: "",
+      additionalCosts: "",
+    },
   ]);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -37,6 +43,22 @@ const Monetization = () => {
   useEffect(() => {
     setIsFreelancer(profile?.roles?.freelancer || false);
   }, [profile]);
+
+  // Auto-check Accept Bookings if there are services added
+  useEffect(() => {
+    // Check if at least one service has all required fields
+    const hasService = services.some(
+      (srv) =>
+        srv.name.trim() !== "" &&
+        srv.description.trim() !== "" &&
+        srv.offeringOptions.trim() !== "" &&
+        srv.baseFee.trim() !== "" &&
+        srv.additionalCosts.trim() !== ""
+    );
+    if (hasService) {
+      setAcceptBookings(true);
+    }
+  }, [services]);
 
   const categories = [
     "General",
@@ -56,7 +78,13 @@ const Monetization = () => {
 
     try {
       await dispatch(
-        switchUserProfile(uid, selectedCategories, acceptTips, acceptBookings)
+        switchUserProfile(
+          uid,
+          selectedCategories,
+          acceptTips,
+          acceptBookings,
+          services
+        )
       );
 
       if (error) {
@@ -85,17 +113,15 @@ const Monetization = () => {
 
   return (
     <div className="main-content flex flex-col items-center justify-center">
-      <ToastContainer position="top-center" autoClose={3000} />
+      <ToastContainer position="top-left" autoClose={3000} />
 
       {/* Services Modal */}
       <div className=" items-center justify-center flex flex-col text-white">
         {showModal && (
           <ServicesForm
             onClose={() => setShowModal(false)}
-            service={service}
-            setService={setService}
-            packages={packages}
-            setPackages={setPackages}
+            services={services}
+            setServices={setServices}
           />
         )}
       </div>

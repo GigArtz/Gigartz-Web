@@ -9,17 +9,28 @@ interface BookingFormData {
   additionalInfo: string;
 }
 
+interface Service {
+  name: string;
+  offeringOptions: string;
+  baseFee: string;
+  additionalCosts: string;
+  description: string;
+}
+
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: BookingFormData) => void;
+  onSubmit: (data: BookingFormData & { serviceName: string }) => void;
+  services: Service[];
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({
+  services,
   isOpen,
   onClose,
   onSubmit,
 }) => {
+  const [selectedService, setSelectedService] = useState<string>("");
   const [formData, setFormData] = useState<BookingFormData>({
     eventDetails: "",
     date: "",
@@ -37,7 +48,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (!selectedService) return;
+    onSubmit({ ...formData, serviceName: selectedService });
     setFormData({
       eventDetails: "",
       date: "",
@@ -45,6 +57,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
       venue: "",
       additionalInfo: "",
     });
+    setSelectedService("");
   };
 
   if (!isOpen) return null;
@@ -59,7 +72,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
               Book Freelancer
             </h3>
             <button
-            type="button"
+              type="button"
               onClick={onClose}
               className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
             >
@@ -67,67 +80,113 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </button>
           </div>
 
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Event Details</label>
-            <input
-              type="text"
-              name="eventDetails"
-              value={formData.eventDetails}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Event details"
-              required
-            />
+          {/* Service Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Select a Service
+            </label>
+            <div className="flex flex-col gap-2">
+              {services && services.length > 0 ? (
+                services.map((service) => (
+                  <button
+                    type="button"
+                    key={service.name}
+                    className={`border rounded p-2 text-left ${
+                      selectedService === service.name
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300"
+                    }`}
+                    onClick={() => setSelectedService(service.name)}
+                  >
+                    <div className="font-semibold">{service.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {service.offeringOptions}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Base Fee: {service.baseFee} | Additional:{" "}
+                      {service.additionalCosts}
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {service.description}
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-400">No services available.</div>
+              )}
+            </div>
           </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Time</label>
-            <input
-              type="time"
-              name="time"
-              value={formData.time}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Venue</label>
-            <input
-              type="text"
-              name="venue"
-              value={formData.venue}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Venue"
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Additional Info</label>
-            <textarea
-              name="additionalInfo"
-              value={formData.additionalInfo}
-              onChange={handleChange}
-              placeholder="Additional information"
-              className="input-field"
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button type="submit" className="btn-primary">
-              Book
-            </button>
-          </div>
+
+          {/* Booking Form - only show if a service is selected */}
+          {selectedService && (
+            <React.Fragment>
+              <div className="mb-2">
+                <label className="block text-sm font-medium">
+                  Event Details
+                </label>
+                <input
+                  type="text"
+                  name="eventDetails"
+                  value={formData.eventDetails}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="Event details"
+                  required
+                />
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium">Date</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium">Time</label>
+                <input
+                  type="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={handleChange}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium">Venue</label>
+                <input
+                  type="text"
+                  name="venue"
+                  value={formData.venue}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="Venue"
+                  required
+                />
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium">
+                  Additional Info
+                </label>
+                <textarea
+                  name="additionalInfo"
+                  value={formData.additionalInfo}
+                  onChange={handleChange}
+                  placeholder="Additional information"
+                  className="input-field"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button type="submit" className="btn-primary">
+                  Book
+                </button>
+              </div>
+            </React.Fragment>
+          )}
         </form>
       </div>
     </div>

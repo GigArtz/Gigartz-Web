@@ -1,71 +1,64 @@
 import React, { useState } from "react";
 import { FaBackspace, FaRemoveFormat } from "react-icons/fa";
 
+interface Service {
+  name: string;
+  description: string;
+  offeringOptions: string;
+  baseFee: string;
+  additionalCosts: string;
+}
+
 interface ServicesFormProps {
   onClose: () => void;
-  service: { name: string; description: string };
-  setService: React.Dispatch<
-    React.SetStateAction<{ name: string; description: string }>
-  >;
-  packages: { name: string; baseFee: string; additionalCosts: string }[];
-  setPackages: React.Dispatch<
-    React.SetStateAction<
-      { name: string; baseFee: string; additionalCosts: string }[]
-    >
-  >;
+  services: Service[];
+  setServices: React.Dispatch<React.SetStateAction<Service[]>>;
 }
 
 const ServicesForm: React.FC<ServicesFormProps> = ({
   onClose,
-  service,
-  setService,
-  packages,
-  setPackages,
+  services,
+  setServices,
 }) => {
   const [step, setStep] = useState(1);
 
-  // Handle Input Changes
-  const handleServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setService({ ...service, [e.target.name]: e.target.value });
-  };
-
-  const handlePackageChange = (
+  // Handle Input Changes for a service
+  const handleServiceChange = (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const updatedPackages = [...packages];
-    updatedPackages[index] = {
-      ...updatedPackages[index],
+    const updatedServices = [...services];
+    updatedServices[index] = {
+      ...updatedServices[index],
       [e.target.name]: e.target.value,
     };
-    setPackages(updatedPackages);
+    setServices(updatedServices);
   };
 
-  const addPackage = () => {
-    setPackages([...packages, { name: "", baseFee: "", additionalCosts: "" }]);
+  const addService = () => {
+    setServices([
+      ...services,
+      {
+        name: "",
+        description: "",
+        offeringOptions: "",
+        baseFee: "",
+        additionalCosts: "",
+      },
+    ]);
   };
 
-  const removePackage = (index: number) => {
-    if (packages.length > 1) {
-      setPackages(packages.filter((_, i) => i !== index));
+  const removeService = (index: number) => {
+    if (services.length > 1) {
+      setServices(services.filter((_, i) => i !== index));
     } else {
-      alert("You must have at least one package.");
-    }
-  };
-
-  const removeService = () => {
-    if (window.confirm("Are you sure you want to cancel this service?")) {
-      setService({ name: "", description: "" });
-      setPackages([{ name: "", baseFee: "", additionalCosts: "" }]);
-      setStep(1);
-      onClose();
+      alert("You must have at least one service.");
     }
   };
 
   const handleSubmit = () => {
-    console.log("Service:", service);
-    console.log("Packages:", packages);
-    alert("Service & Packages Saved!");
+    // You can add validation or API call here
+    alert("Services Saved!");
     onClose();
   };
 
@@ -75,14 +68,8 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
         <div className="flex justify-between items-center mb-4">
           {/* Modal Header */}
           <h1 className="text-2xl font-bold text-white">
-            {step === 1
-              ? "Add Service"
-              : step === 2
-              ? "Add Packages"
-              : "Review & Confirm"}
+            {step === 1 ? "Add Services" : "Review & Confirm"}
           </h1>
-
-          {/* Back Button */}
           {step > 1 && (
             <button
               className="text-gray-400 hover:text-white flex items-center gap-2"
@@ -93,102 +80,93 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
           )}
         </div>
 
-        {/* Step 1: Add Service */}
+        {/* Step 1: Add Services */}
         {step === 1 && (
           <div className="mt-4">
-            <label className="text-gray-300">Service Name</label>
-            <input
-              type="text"
-              name="name"
-              className="input-field mb-2 mt-1"
-              value={service.name}
-              placeholder="Service Name"
-              onChange={handleServiceChange}
-            />
-            <label className="text-gray-300 mt-4">Description</label>
-            <input
-              type="text"
-              name="description"
-              className="input-field mb-2 mt-1"
-              value={service.description}
-              placeholder="Description"
-              onChange={handleServiceChange}
-            />
-          </div>
-        )}
-
-        {/* Step 2: Add Packages */}
-        {step === 2 && (
-          <div className="mt-4">
-            {packages.map((pkg, index) => (
+            {services.map((srv, index) => (
               <div
                 key={index}
                 className="mb-4 p-3 bg-gray-800 rounded relative"
               >
                 <button
                   className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                  onClick={() => removePackage(index)}
+                  onClick={() => removeService(index)}
                 >
                   <FaRemoveFormat />
                 </button>
-
-                <label className="text-gray-300">Package Name</label>
+                <label className="text-gray-300">Service Name</label>
                 <input
                   type="text"
                   name="name"
                   className="input-field mb-2 mt-1"
-                  value={pkg.name}
-                  placeholder="Package Name"
-                  onChange={(e) => handlePackageChange(index, e)}
+                  value={srv.name}
+                  placeholder="Service Name"
+                  onChange={(e) => handleServiceChange(index, e)}
+                />
+                <label className="text-gray-300 mt-4">Description</label>
+                <input
+                  type="text"
+                  name="description"
+                  className="input-field mb-2 mt-1"
+                  value={srv.description}
+                  placeholder="Description"
+                  onChange={(e) => handleServiceChange(index, e)}
+                />
+                <label className="text-gray-300 mt-4">Offering Options</label>
+                <input
+                  type="text"
+                  name="offeringOptions"
+                  className="input-field mb-2 mt-1"
+                  value={srv.offeringOptions}
+                  placeholder="Offering Options"
+                  onChange={(e) => handleServiceChange(index, e)}
                 />
                 <label className="text-gray-300 mt-4">Base Fee</label>
                 <input
                   type="text"
                   name="baseFee"
                   className="input-field mb-2 mt-1"
+                  value={srv.baseFee}
                   placeholder="Base Fee"
-                  value={pkg.baseFee}
-                  onChange={(e) => handlePackageChange(index, e)}
+                  onChange={(e) => handleServiceChange(index, e)}
                 />
                 <label className="text-gray-300 mt-4">Additional Costs</label>
                 <input
                   type="text"
                   name="additionalCosts"
                   className="input-field mb-2 mt-1"
+                  value={srv.additionalCosts}
                   placeholder="Additional Costs"
-                  value={pkg.additionalCosts}
-                  onChange={(e) => handlePackageChange(index, e)}
+                  onChange={(e) => handleServiceChange(index, e)}
                 />
               </div>
             ))}
-            <button className="mt-2 w-full btn-secondary" onClick={addPackage}>
-              + Add Another Package
+            <button className="mt-2 w-full btn-secondary" onClick={addService}>
+              + Add Another Service
             </button>
           </div>
         )}
 
-        {/* Step 3: Review & Confirm */}
-        {step === 3 && (
+        {/* Step 2: Review & Confirm */}
+        {step === 2 && (
           <div className="mt-4 text-gray-300">
-            <h2 className="text-xl font-semibold">Review Service</h2>
-            <p>
-              <strong>Name:</strong> {service.name}
-            </p>
-            <p>
-              <strong>Description:</strong> {service.description}
-            </p>
-
-            <h2 className="text-xl font-semibold mt-4">Review Packages</h2>
-            {packages.map((pkg, index) => (
+            <h2 className="text-xl font-semibold mb-2">Review Services</h2>
+            {services.map((srv, index) => (
               <div key={index} className="bg-gray-800 p-3 rounded mt-2">
                 <p>
-                  <strong>Package:</strong> {pkg.name}
+                  <strong>Name:</strong> {srv.name}
                 </p>
                 <p>
-                  <strong>Base Fee:</strong> {pkg.baseFee}
+                  <strong>Description:</strong> {srv.description}
                 </p>
                 <p>
-                  <strong>Additional Costs:</strong> {pkg.additionalCosts}
+                  <strong>Offering Options:</strong> {srv.offeringOptions}
+                </p>
+                <p>
+                  <strong>Base Fee:</strong> {srv.baseFee}
+                </p>
+                <p>
+                  <strong>Additional Costs:</strong> {srv.additionalCosts}
                 </p>
               </div>
             ))}
@@ -206,7 +184,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
           </button>
 
           {/* Next / Submit */}
-          {step < 3 ? (
+          {step < 2 ? (
             <button className="btn-primary" onClick={() => setStep(step + 1)}>
               Next
             </button>
