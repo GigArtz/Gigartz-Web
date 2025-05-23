@@ -48,11 +48,11 @@ const Home: React.FC = () => {
   );
 
   // Add state for selected tab
-  const [selectedTab, setSelectedTab] = useState("forYou");
+  const [selectedTab, setSelectedTab] = useState("events");
 
   const followingUserIds: string[] = []; // TODO: Replace with actual following user IDs
   const filteredEvents =
-    selectedTab === "forYou"
+    selectedTab === "events"
       ? events
       : events.filter((event: Event) =>
           followingUserIds.includes(event.promoterId)
@@ -68,8 +68,8 @@ const Home: React.FC = () => {
       <div className="tabs">
         <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
-            { key: "forYou", label: "For You" },
-            { key: "recent", label: "Recent" },
+            { key: "events", label: "Events" },
+            { key: "reviews", label: "Reviews" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -87,7 +87,7 @@ const Home: React.FC = () => {
         </ul>
       </div>
 
-      {selectedTab === "forYou" && (
+      {selectedTab === "events" && (
         // Main Content
         <div className="flex flex-col justify-evenly">
           <EventsTabs events={filteredEvents} loading={loading} error={error} />

@@ -1,25 +1,30 @@
 import React, { useState } from "react";
 import { FaTimesCircle } from "react-icons/fa";
+import Payment from "./Payment";
 
 interface TippingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (amount: number) => void;
 }
 
-const TippingModal: React.FC<TippingModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-}) => {
-  const [selectedAmount, setSelectedAmount] = useState<number | "">(10);
+const TippingModal: React.FC<TippingModalProps> = ({ isOpen, onClose }) => {
+  const [selectedAmount, setSelectedAmount] = useState<number | "">(100);
+  const [showPayment, setShowPayment] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    // Optionally show a success message
+  };
+
+  const handlePaymentFailure = () => {
+    setShowPayment(false);
+    // Optionally show an error message
+  };
+
+  const handleTipClick = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedAmount && selectedAmount > 0) {
-      onSubmit(Number(selectedAmount));
-      setSelectedAmount(10); // Reset to default
-      onClose();
+      setShowPayment(true);
     }
   };
 
@@ -28,7 +33,7 @@ const TippingModal: React.FC<TippingModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-dark rounded-lg shadow-lg w-11/12 max-w-md p-4">
-        <form onSubmit={handleSubmit} className="p-4">
+        <form onSubmit={handleTipClick} className="p-4">
           {/* Modal Header */}
           <div className="flex items-center justify-between mb-4 pb-1">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -81,6 +86,18 @@ const TippingModal: React.FC<TippingModalProps> = ({
               Tip
             </button>
           </div>
+          {showPayment && (
+            <Payment
+              amount={selectedAmount === "" ? 0 : Number(selectedAmount)}
+              ticketDetails={{
+                type: "tip",
+                amount: selectedAmount === "" ? 0 : Number(selectedAmount),
+              }}
+              onSuccess={handlePaymentSuccess}
+              onFailure={handlePaymentFailure}
+              onClose={() => setShowPayment(false)}
+            />
+          )}
         </form>
       </div>
     </div>

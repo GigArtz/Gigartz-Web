@@ -13,14 +13,16 @@ function Scanner() {
           QR code scanning is only available in our mobile app. Please download
           the app to use this feature.
         </p>
-        <a
-          href="https://your-app-download-link.com" // TODO: Replace with actual app store link
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors font-semibold"
-        >
-          Download App
-        </a>
+        <button>
+          <a
+            href="https://your-app-download-link.com" // TODO: Replace with actual app store link
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 px-6 py-3 text-white rounded-3xl shadow-lg btn-primary transition-colors font-semibold"
+          >
+            Download App
+          </a>
+        </button>
       </div>
     </div>
   );

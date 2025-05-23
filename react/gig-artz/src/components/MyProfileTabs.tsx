@@ -9,14 +9,14 @@ function MyProfileTabs({ uid }) {
   const { events } = useSelector((state) => state.events);
 
   const [userGigGuide, setUserGigGuide] = useState([]);
-  const [activeTab, setActiveTab] = useState("gigGuide");
+  const [activeTab, setActiveTab] = useState("events");
 
 
   useEffect(() => {
     if (profile) {
       console.log("Profile found:", profile);
 
-      const gigGuide =
+      const events =
         Array.from(
           new Set(
             (userTickets || userEvents || [])
@@ -29,7 +29,7 @@ function MyProfileTabs({ uid }) {
               .filter(Boolean)
           )
         );
-      setUserGigGuide(gigGuide);
+      setUserGigGuide(events);
     } else {
       console.log("No profile found, clearing gig guide.");
       setUserGigGuide([]);
@@ -42,7 +42,7 @@ function MyProfileTabs({ uid }) {
       <div className="tabs">
         <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
-            { key: "gigGuide", label: "Gig Guide" },
+            { key: "events", label: "Events" },
             { key: "reviews", label: "Reviews" },
           ].map(({ key, label }) => (
             <li key={key}>
@@ -74,7 +74,7 @@ function MyProfileTabs({ uid }) {
         {!loading && !error && (
           <>
 
-            {activeTab === "gigGuide" && (
+            {activeTab === "events" && (
               <div className="snap-start flex-shrink-0 w-[100%] p-1">
                 {/* Scrollable Col */}
                 <ScrollableEventCol

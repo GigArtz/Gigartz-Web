@@ -37,7 +37,7 @@ function ProfileTabs({ uid }) {
   }, [profile]);
 
   // State to track active tab
-  const [activeTab, setActiveTab] = useState("gigGuide");
+  const [activeTab, setActiveTab] = useState("events");
 
   return (
     <div>
@@ -45,8 +45,9 @@ function ProfileTabs({ uid }) {
       <div className="tabs">
         <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
-            { key: "gigGuide", label: "Gig Guide" },
+            { key: "events", label: "Events" },
             { key: "reviews", label: "Reviews" },
+             { key: "guestList", label: "Guest Lists" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -76,7 +77,7 @@ function ProfileTabs({ uid }) {
 
         {!loading && !error && (
           <>
-            {activeTab === "gigGuide" && (
+            {activeTab === "events" && (
               <div className="snap-start flex-shrink-0 w-[100%] p-1">
                 {/* Scrollable Col */}
                 <ScrollableEventCol
@@ -89,6 +90,10 @@ function ProfileTabs({ uid }) {
 
             {activeTab === "reviews" && (
               <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
+            )}
+
+            {activeTab === "guestList" && (
+              <p className="text-gray-500 text-center mt-4">No guest list(s) yet.</p>
             )}
           </>
         )}

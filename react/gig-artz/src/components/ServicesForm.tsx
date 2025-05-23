@@ -1,12 +1,18 @@
 import React, { useState } from "react";
 import { FaBackspace, FaRemoveFormat } from "react-icons/fa";
 
+interface ServicePackage {
+  name: string;
+  baseFee: string;
+  additionalCosts: string;
+  price: string;
+  description: string;
+}
+
 interface Service {
   name: string;
   description: string;
-  offeringOptions: string;
-  baseFee: string;
-  additionalCosts: string;
+  packages?: ServicePackage[];
 }
 
 interface ServicesFormProps {
@@ -41,9 +47,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
       {
         name: "",
         description: "",
-        offeringOptions: "",
-        baseFee: "",
-        additionalCosts: "",
+        packages: [],
       },
     ]);
   };
@@ -60,6 +64,41 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
     // You can add validation or API call here
     alert("Services Saved!");
     onClose();
+  };
+
+  const handlePackageChange = (
+    serviceIdx: number,
+    pkgIdx: number,
+    field: keyof ServicePackage,
+    value: string
+  ) => {
+    const updatedServices = [...services];
+    const pkgs = updatedServices[serviceIdx].packages || [];
+    pkgs[pkgIdx] = { ...pkgs[pkgIdx], [field]: value };
+    updatedServices[serviceIdx].packages = pkgs;
+    setServices(updatedServices);
+  };
+
+  const addPackage = (serviceIdx: number) => {
+    const updatedServices = [...services];
+    if (!updatedServices[serviceIdx].packages)
+      updatedServices[serviceIdx].packages = [];
+    updatedServices[serviceIdx].packages!.push({
+      name: "",
+      price: "",
+      description: "",
+    });
+    setServices(updatedServices);
+  };
+
+  const removePackage = (serviceIdx: number, pkgIdx: number) => {
+    const updatedServices = [...services];
+    if (updatedServices[serviceIdx].packages) {
+      updatedServices[serviceIdx].packages = updatedServices[
+        serviceIdx
+      ].packages!.filter((_, i) => i !== pkgIdx);
+      setServices(updatedServices);
+    }
   };
 
   return (
@@ -112,33 +151,104 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
                   placeholder="Description"
                   onChange={(e) => handleServiceChange(index, e)}
                 />
-                <label className="text-gray-300 mt-4">Offering Options</label>
-                <input
-                  type="text"
-                  name="offeringOptions"
-                  className="input-field mb-2 mt-1"
-                  value={srv.offeringOptions}
-                  placeholder="Offering Options"
-                  onChange={(e) => handleServiceChange(index, e)}
-                />
-                <label className="text-gray-300 mt-4">Base Fee</label>
-                <input
-                  type="text"
-                  name="baseFee"
-                  className="input-field mb-2 mt-1"
-                  value={srv.baseFee}
-                  placeholder="Base Fee"
-                  onChange={(e) => handleServiceChange(index, e)}
-                />
-                <label className="text-gray-300 mt-4">Additional Costs</label>
-                <input
-                  type="text"
-                  name="additionalCosts"
-                  className="input-field mb-2 mt-1"
-                  value={srv.additionalCosts}
-                  placeholder="Additional Costs"
-                  onChange={(e) => handleServiceChange(index, e)}
-                />
+
+                {/* Packages Section */}
+                <div className="mt-4">
+                  <label className="text-gray-300 font-semibold">
+                    Packages
+                  </label>
+                  {(srv.packages || []).map((pkg, pkgIdx) => (
+                    <div
+                      key={pkgIdx}
+                      className="bg-gray-700 p-2 rounded mb-2 flex flex-col gap-1"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Package Name"
+                        className="input-field"
+                        value={pkg.name}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            index,
+                            pkgIdx,
+                            "name",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Base Fee"
+                        className="input-field"
+                        value={pkg.baseFee || ""}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            index,
+                            pkgIdx,
+                            "baseFee",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Additional Costs"
+                        className="input-field"
+                        value={pkg.additionalCosts || ""}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            index,
+                            pkgIdx,
+                            "additionalCosts",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Price"
+                        className="input-field"
+                        value={pkg.price}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            index,
+                            pkgIdx,
+                            "price",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        className="input-field"
+                        value={pkg.description}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            index,
+                            pkgIdx,
+                            "description",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="text-xs text-red-400 self-end mt-1"
+                        onClick={() => removePackage(index, pkgIdx)}
+                      >
+                        Remove Package
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn-secondary mt-1"
+                    onClick={() => addPackage(index)}
+                  >
+                    + Add Package
+                  </button>
+                </div>
               </div>
             ))}
             <button className="mt-2 w-full btn-secondary" onClick={addService}>
@@ -159,15 +269,34 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
                 <p>
                   <strong>Description:</strong> {srv.description}
                 </p>
-                <p>
-                  <strong>Offering Options:</strong> {srv.offeringOptions}
-                </p>
-                <p>
-                  <strong>Base Fee:</strong> {srv.baseFee}
-                </p>
-                <p>
-                  <strong>Additional Costs:</strong> {srv.additionalCosts}
-                </p>
+                {srv.packages && srv.packages.length > 0 && (
+                  <div className="mt-2">
+                    <strong>Packages:</strong>
+                    {srv.packages.map((pkg, pkgIdx) => (
+                      <div
+                        key={pkgIdx}
+                        className="bg-gray-700 p-2 rounded mt-1"
+                      >
+                        <p>
+                          <strong>Name:</strong> {pkg.name}
+                        </p>
+                        <p>
+                          <strong>Base Fee:</strong> {pkg.baseFee}
+                        </p>
+                        <p>
+                          <strong>Additional Costs:</strong>{" "}
+                          {pkg.additionalCosts}
+                        </p>
+                        <p>
+                          <strong>Price:</strong> {pkg.price}
+                        </p>
+                        <p>
+                          <strong>Description:</strong> {pkg.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
