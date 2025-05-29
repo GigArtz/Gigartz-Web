@@ -28,6 +28,28 @@ import Scanner from "./pages/Scan";
 import Bookings from "./pages/Bookings";
 import Settings from "./pages/Settings";
 import TitleUpdater from "./components/TitleUpdater";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import { selectAuthUser } from "../store/authSlice";
+
+function AuthRedirect() {
+  const user = useSelector(selectAuthUser);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // If user is logged in and on the login or register page, redirect to /home
+    if (
+      user &&
+      (location.pathname === "/" || location.pathname === "/register")
+    ) {
+      navigate("/home", { replace: true });
+    }
+  }, [user, location, navigate]);
+
+  return null;
+}
 
 function App() {
   return (
@@ -40,6 +62,7 @@ function App() {
         {" "}
         {/* Wrap your app with BrowserRouter to enable routing */}
         <TitleUpdater /> {/* Move TitleUpdater inside Router */}
+        <AuthRedirect />
         <Routes>
           <Route path="/" element={<Login />} />
           <Route

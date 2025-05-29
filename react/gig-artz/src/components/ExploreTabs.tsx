@@ -9,7 +9,7 @@ import { FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
 import ScrollableEventCol from "./ScrollableEventCol";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
@@ -20,6 +20,8 @@ function ExploreTabs() {
   const [activeTab, setActiveTab] = useState("top");
   // State for search term
   const [searchTerm, setSearchTerm] = useState("");
+
+  const nagivate = useNavigate();
 
   // Update searchTerm if search param changes (from EventsTabs)
   useEffect(() => {
@@ -39,6 +41,15 @@ function ExploreTabs() {
       setActiveTab(tab);
     }
   }, [location.search]);
+
+  // Helper to handle See All navigation with tab selection
+  const handleSeeAll = (section: string) => {
+    let tab = "events";
+    if (section === "Popular Freelancers" || section === "People") {
+      tab = "people";
+    }
+    nagivate(`/explore?tab=${tab}`);
+  };
 
   useEffect(() => {
     dispatch(fetchAllProfiles());
@@ -167,7 +178,7 @@ function ExploreTabs() {
                     <h2 className="text-xl text-white font-semibold mb-4">
                       Trending
                     </h2>
-                    <span className="text-teal-500 text-sm hover:underline cursor-pointer">
+                    <span onClick={() => handleSeeAll('trending')} className="text-teal-500 text-sm hover:underline cursor-pointer">
                       See All
                     </span>
                   </div>
@@ -183,7 +194,7 @@ function ExploreTabs() {
                     <h2 className="text-xl text-white font-semibold mb-4">
                       People
                     </h2>
-                    <span className="text-teal-500 text-sm hover:underline cursor-pointer">
+                    <span onClick={() => handleSeeAll('People')}  className="text-teal-500 text-sm hover:underline cursor-pointer">
                       See All
                     </span>
                   </div>

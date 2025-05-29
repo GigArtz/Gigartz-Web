@@ -115,7 +115,7 @@ function WalletTabs({ uid }) {
               <div className="text-white space-y-4">
                 <div className="bg-gray-800 p-4 rounded-md">
                   <h3 className="text-lg font-semibold">Wallet Balance</h3>
-                  <p className="text-2xl font-bold mt-2">R 2,340.50</p>
+                  <p className="text-2xl font-bold mt-2">R {'0' || '00'}</p>
                   <button className="mt-3 w-36 btn-primary rounded-3xl">
                     Withdraw Funds
                   </button>

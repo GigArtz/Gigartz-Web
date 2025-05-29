@@ -44,13 +44,13 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
             className="w-11 h-11 min-w-11 min-h-11 max-w-11 max-h-11 rounded-full border-2 border-teal-400 object-cover"
           />
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold truncate text-white">
+            <h3 className="text-lg font-semibold truncate w-full sm:min-w-12 text-white">
               {user.name || "Unknown"}
             </h3>
             <p className="text-sm text-gray-400">
               @{user.userName || "username"}
             </p>
-            <p className="text-xs text-gray-300 truncate w-full sm:min-w-12 border">
+            <p className="text-xs text-gray-300 truncate w-full sm:min-w-12">
               {user.bio || "No bio available"}
             </p>
           </div>

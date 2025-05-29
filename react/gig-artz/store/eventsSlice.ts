@@ -506,7 +506,8 @@ export const addReview =
       }
     };
 
-// Like an event
+
+    // Like an event
 export const addLike = (eventId: string, userId: string) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.createLikeStart());
 
@@ -650,35 +651,109 @@ export const scanTicket = (
   }
 };
 
+// Reassign a ticket to a new user
 export const reassignTicket = (
   currentUserId: string,
   newUserId: string,
   ticketId: string
-) => async () => {
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.scanTicketStart()); // Reusing scanTicketStart for loading state
+
+  console.log(currentUserId,newUserId, ticketId)
   try {
-    await axios.post(
-      `https://gigartz.onrender.com/reassignTicket`,
+    console.log("Reassigning ticket...");
+    const response = await axios.post(
+      `https://gigartz.onrender.com/reassign-ticket`,
       { currentUserId, newUserId, ticketId }
     );
-    // Optionally dispatch a success action if you want to track this
-  } catch {
-    // Optionally dispatch a failure action if you want to track this
+    console.log("Ticket reassigned successfully:", response.data);
+
+    dispatch(eventsSlice.actions.scanTicketSuccess("Ticket reassigned successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.response?.data?.error || "Failed to reassign ticket"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.scanTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(eventsSlice.actions.scanTicketFailure("Unexpected error occurred"));
+    }
   }
 };
 
+
+// Update an event
 export const updateEvent = (
   eventId: string,
   userId: string,
   eventData: Partial<Event>
-) => async () => {
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createEventsStart());
+
   try {
-    await axios.put(
-      `https://gigartz.onrender.com/events/${eventId}`,
-      { userId, ...eventData }
+    console.log("Updating event...");
+    const response = await axios.put(
+      `https://gigartz.onrender.com/users/${userId}/userEvents`,
+      { eventId, ...eventData }, // Spread the eventData to include all fields
+      { headers: { "Content-Type": "application/json" } } // Ensure JSON format
+    
     );
-    // Optionally dispatch a success action if you want to track this
-  } catch {
-    // Optionally dispatch a failure action if you want to track this
+    console.log("Event updated successfully:", response.data);
+
+    dispatch(
+      eventsSlice.actions.createEventsSuccess("Event updated successfully!")
+    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        console.error("Response error:", axiosError.response?.data);
+        dispatch(
+          eventsSlice.actions.createEventsFailure(
+            axiosError.response?.data?.error || "Failed to update event"
+          )
+        );
+      } else if (axiosError.request) {
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.createEventsFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(
+          eventsSlice.actions.createEventsFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      console.error("Unexpected error:", error);
+      dispatch(
+        eventsSlice.actions.createEventsFailure("Unexpected error occurred")
+      );
+    }
   }
 };
 

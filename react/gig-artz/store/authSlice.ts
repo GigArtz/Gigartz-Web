@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { createUser, fetchUserProfile, UserProfile } from "./profileSlice";
 import { AppDispatch } from "./store";
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 // User Interface
 export interface User {
@@ -172,13 +173,22 @@ export const resetPassword = (email: string) => async (dispatch: AppDispatch) =>
   }
 };
 
-export const loginUser = (credentials: { email: string; password: string }) => async (dispatch: AppDispatch) => {
+// Accept rememberMe in credentials
+export const loginUser = (email: string, password: string, rememberMe?: boolean) => async (dispatch: AppDispatch) => {
   dispatch(authSlice.actions.loginStart());
   try {
-    console.log("Sending login request with credentials:", credentials);
+    // Defensive: ensure email and password are not objects/undefined and coerce to string
+    const emailStr = typeof email === "string" ? email : String(email ?? "");
+    const passwordStr = typeof password === "string" ? password : String(password ?? "");
+    if (!emailStr || !passwordStr) {
+      dispatch(authSlice.actions.loginFailure("Email and password are required and must be strings."));
+      return;
+    }
+    const payload = { emailAddress: emailStr, password: passwordStr };
+    console.log("Sending login request with payload:", payload);
     const response = await axios.post(
       "https://gigartz.onrender.com/login",
-      credentials
+      payload
     );
 
     if (response && response.data) {
@@ -187,10 +197,16 @@ export const loginUser = (credentials: { email: string; password: string }) => a
       console.log("Uid:", uid);
 
       // Fetch user profile after successful login
-      const profileResponse = await dispatch(fetchUserProfile(uid));  // Assume fetchUserProfile dispatches action to update profile state
+      const profileResponse = await dispatch(fetchUserProfile(uid));
       console.log("User profile data: ", profileResponse);
 
-      // Dispatch the login success action with the user data and profile
+      // Only persist user if rememberMe is true
+      if (rememberMe) {
+        localStorage.setItem("authUser", JSON.stringify(response.data.user));
+      } else {
+        localStorage.removeItem("authUser");
+      }
+
       dispatch(authSlice.actions.loginSuccess({
         user: response.data.user,
         uid: uid,
@@ -211,7 +227,6 @@ export const loginUser = (credentials: { email: string; password: string }) => a
     }
   }
 };
-
 
 
 

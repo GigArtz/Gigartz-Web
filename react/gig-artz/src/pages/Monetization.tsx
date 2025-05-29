@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Loader from "../components/Loader";
 import ServicesForm from "../components/ServicesForm";
 import { useNavigate } from "react-router-dom";
+import { h } from "@ionic/pwa-elements/dist/types/stencil-public-runtime";
 
 const Monetization = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -20,15 +21,7 @@ const Monetization = () => {
   const navigate = useNavigate();
 
   const [service, setService] = useState({ name: "", description: "" });
-  const [services, setServices] = useState([
-    {
-      name: "",
-      description: "",
-      offeringOptions: "",
-      baseFee: "",
-      additionalCosts: "",
-    },
-  ]);
+  const [services, setServices] = useState([]);
 
   const dispatch = useDispatch<AppDispatch>();
   const { profile, error } = useSelector((state: any) => state.profile);
@@ -49,15 +42,21 @@ const Monetization = () => {
     // Check if at least one service has all required fields
     const hasService = services.some(
       (srv) =>
+        srv &&
+        typeof srv.name === "string" &&
         srv.name.trim() !== "" &&
+        typeof srv.description === "string" &&
         srv.description.trim() !== "" &&
+        typeof srv.offeringOptions === "string" &&
         srv.offeringOptions.trim() !== "" &&
+        typeof srv.baseFee === "string" &&
         srv.baseFee.trim() !== "" &&
+        typeof srv.additionalCosts === "string" &&
         srv.additionalCosts.trim() !== ""
     );
-    if (hasService) {
-      setAcceptBookings(true);
-    }
+    setAcceptBookings(hasService);
+
+     console.log(services);
   }, [services]);
 
   const categories = [
@@ -73,6 +72,8 @@ const Monetization = () => {
       toast.error("Please accept the terms and conditions.");
       return;
     }
+
+   
 
     setLoading(true); // Start loader
 
@@ -113,7 +114,7 @@ const Monetization = () => {
 
   return (
     <div className="main-content flex flex-col items-center justify-center">
-      <ToastContainer position="top-left" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Services Modal */}
       <div className=" items-center justify-center flex flex-col text-white">
@@ -168,6 +169,7 @@ const Monetization = () => {
                 onChange={() => setShowModal(true)}
               />
             </div>
+
           </div>
 
           {/* Terms and Conditions */}

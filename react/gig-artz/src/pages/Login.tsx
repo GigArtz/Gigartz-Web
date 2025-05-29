@@ -14,9 +14,10 @@ import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/White.png";
+import { AppDispatch } from "../../store/store";
 
 const Login = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const user = useSelector(selectAuthUser);
   const error = useSelector(selectAuthError);
@@ -36,7 +37,14 @@ const Login = () => {
       toast.error("Please fill in all fields");
       return;
     }
-    dispatch(loginUser(formData));
+    // Ensure both are strings and call loginUser with string args
+    dispatch(
+      loginUser(
+        String(formData.emailAddress),
+        String(formData.password),
+        rememberMe
+      )
+    );
   };
 
   useEffect(() => {

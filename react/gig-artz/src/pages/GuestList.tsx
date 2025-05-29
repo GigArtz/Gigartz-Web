@@ -66,11 +66,19 @@ function GuestList() {
     }
 
     if (!editingList) {
+      // Optimistically add new guest list
+      const tempId = `temp-${Date.now()}`;
+      const optimisticList = {
+        id: tempId,
+        guestListName: newListName,
+        guests: [],
+      };
+      setGuestLists((prev) => [...prev, optimisticList]);
+
       try {
         const actionResult = await dispatch(
           createGuestList({ userId: user.uid, guestListName: newListName })
         );
-        // Safely extract guestListId
         let guestListId = undefined;
         if (actionResult && typeof actionResult === "object") {
           if (
@@ -85,10 +93,15 @@ function GuestList() {
         } else if (typeof actionResult === "string") {
           guestListId = actionResult;
         }
-        console.log("Created guestListId:", guestListId);
-
+        // Replace temp list with real one if possible
+        if (guestListId) {
+          setGuestLists((prev) =>
+            prev.map((list) =>
+              list.id === tempId ? { ...list, id: guestListId } : list
+            )
+          );
+        }
         const guest = userList?.find((user) => user.name === newGuestName);
-
         if (guestListId && guest?.name) {
           await dispatch(
             addGuestsToGuestList(user.uid, guestListId, guest.name)
@@ -100,6 +113,8 @@ function GuestList() {
           showToast("Failed to create guest list or invalid guest.", "error");
         }
       } catch (error) {
+        // Remove optimistically added list on error
+        setGuestLists((prev) => prev.filter((list) => list.id !== tempId));
         console.error("Error creating guest list or adding guest:", error);
         showToast("Failed to create guest list.", "error");
       }
@@ -143,7 +158,7 @@ function GuestList() {
 
     try {
       await dispatch(
-        addGuestsToGuestList(user.uid, selectedList.id, guest.name)
+        addGuestsToGuestList(user.uid, selectedList.id, guest.userName)
       );
       setSelectedList(null);
       showToast("Guest added successfully!", "success");
@@ -196,8 +211,6 @@ function GuestList() {
           >
             +
           </button>
-
-          <p className="text-white">id: {user?.uid} </p>
 
           {showFloatingMenu && (
             <div className="absolute right-0 top-16 bg-dark text-white whitespace-nowrap rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
@@ -302,7 +315,7 @@ function GuestList() {
                       />
                       <span className="font-medium text-sm">{guest.name}</span>
                       <span className="text-gray-400 text-xs">
-                        ({guest.email})
+                        @{guest.userName || guest.emailAdrress}
                       </span>
                     </span>
                     <button
@@ -359,7 +372,7 @@ function GuestList() {
                         onClick={() => setNewGuestName(user.emailAddress)}
                         className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
                       >
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between gap-3">
                           <p className="flex items-center gap-2">
                             <img
                               src={user.profilePicUrl || "/avatar.png"}
@@ -368,8 +381,8 @@ function GuestList() {
                             />
                             {user.name}
                           </p>
-                          <span className="text-gray-400 text-sm">
-                            {user.emailAddress}
+                          <span className="text-gray-400 text-sm min-w-32">
+                            @{user.userName || user.emailAddrress}
                           </span>
                         </div>
                       </li>
