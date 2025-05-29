@@ -4,7 +4,7 @@ import { FaTimesCircle, FaTrash, FaEdit } from "react-icons/fa";
 import Toast from "../components/Toast";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store/store";
-import { addGuestList } from "../../store/eventsSlice";
+import { addGuestsToGuestList, createGuestList } from "../../store/eventsSlice";
 import GuestListModal from "../components/GuestListModal";
 import { fetchAUserProfile } from "../../store/profileSlice";
 
@@ -18,7 +18,7 @@ function GuestList() {
   const [guestLists, setGuestLists] = useState(userGuestList || []);
 
   const [selectedList, setSelectedList] = useState(null);
-  const [newGuestEmail, setNewGuestEmail] = useState("");
+  const [newGuestName, setNewGuestName] = useState("");
   const [newListName, setNewListName] = useState("");
   const [editingList, setEditingList] = useState(null);
   const [showListModal, setShowListModal] = useState(false);
@@ -59,116 +59,81 @@ function GuestList() {
     setToast({ message, type });
   };
 
-  const handleSaveList = () => {
+  const handleSaveList = async () => {
     if (!newListName.trim()) {
       showToast("List name cannot be empty!", "error");
       return;
     }
 
-    if (!newGuestEmail.trim()) {
-      showToast("Guest email cannot be empty!", "error");
-      return;
-    }
+    if (!editingList) {
+      try {
+        const actionResult = await dispatch(
+          createGuestList({ userId: user.uid, guestListName: newListName })
+        );
+        // Safely extract guestListId
+        let guestListId = undefined;
+        if (actionResult && typeof actionResult === "object") {
+          if (
+            actionResult.payload &&
+            (actionResult.payload.id ||
+              typeof actionResult.payload === "string")
+          ) {
+            guestListId = actionResult.payload.id || actionResult.payload;
+          } else if (actionResult.id) {
+            guestListId = actionResult.id;
+          }
+        } else if (typeof actionResult === "string") {
+          guestListId = actionResult;
+        }
+        console.log("Created guestListId:", guestListId);
 
-    const guest = userList?.find((user) => user.emailAddress === newGuestEmail);
+        const guest = userList?.find((user) => user.name === newGuestName);
 
-    if (!guest) {
-      showToast("No matching guest found with this email!", "error");
-      return;
-    }
-
-    if (!guest.name || !guest.emailAddress || !guest.phoneNumber) {
-      showToast(
-        "Each guest must have a valid name, email, and phone number.",
-        "error"
-      );
-      return;
-    }
-
-    const guestInfo = {
-      name: guest.name,
-      email: guest.emailAddress,
-      phoneNumber: guest.phoneNumber,
-    };
-
-    if (editingList) {
-      // Update existing list
-      dispatch(
-        addGuestList({
-          userId: user.uid,
-          guestListName: newList.name,
-          guests: newList.guests,
-        })
-      ).then(() => {
-        dispatch(fetchAUserProfile(user.uid)); // 👈 Refresh profile here
-        setSelectedList(null);
-        showToast("New list created successfully!", "success");
-      });
+        if (guestListId && guest?.name) {
+          await dispatch(
+            addGuestsToGuestList(user.uid, guestListId, guest.name)
+          );
+          dispatch(fetchAUserProfile(user.uid));
+          setSelectedList(null);
+          showToast("New list created successfully!", "success");
+        } else {
+          showToast("Failed to create guest list or invalid guest.", "error");
+        }
+      } catch (error) {
+        console.error("Error creating guest list or adding guest:", error);
+        showToast("Failed to create guest list.", "error");
+      }
     } else {
-      // Create new list with the first guest
-      const newList = {
-        id: Date.now(),
-        name: newListName,
-        guests: [guestInfo],
-      };
-
-      dispatch(
-        addGuestList({
-          userId: user.uid,
-          guestListName: newList.name,
-          guests: newList.guests,
-        })
-      ).then(() => {
-        // Refresh guest lists
-        setSelectedList(null);
-        dispatch(fetchAUserProfile(user.uid));
-        showToast("New list created successfully!", "success");
-      });
+      showToast("Editing guest lists is not yet implemented.", "info");
     }
 
     setNewListName("");
-    setNewGuestEmail("");
+    setNewGuestName("");
     setEditingList(null);
     setShowListModal(false);
   };
 
-  const deleteList = (id) => {
-    const updatedLists = guestLists.filter((list) => list.id !== id);
-    dispatch(
-      addGuestList({
-        userId: user.uid,
-        guestListName: null,
-        guests: updatedLists,
-      })
-    );
+  const deleteList = async (id) => {
+    // You would call a delete slice action here once implemented
+    showToast("List deleted! (API logic not implemented)", "info");
     setSelectedList(null);
-    showToast("List deleted!", "info");
   };
 
-  const addGuest = () => {
-    if (!newGuestEmail.trim() || !selectedList) {
+  const addGuest = async () => {
+    if (!newGuestName.trim() || !selectedList) {
       showToast("Guest email cannot be empty!", "error");
       return;
     }
 
-    const guest = userList?.find((user) => user.emailAddress === newGuestEmail);
+    const guest = userList?.find((user) => user.emailAddress === newGuestName);
 
-    if (!guest.name || !guest.emailAddress || !guest.phoneNumber) {
-      showToast(
-        "Each guest must have a valid name, email, and phone number.",
-        "error"
-      );
+    if (!guest || !guest.name) {
+      showToast("Each guest must have a valid username.", "error");
       return;
     }
 
-    const guestInfo = {
-      name: guest.name,
-      email: guest.emailAddress,
-      phoneNumber: guest.phoneNumber,
-    };
-
     const isGuestAlreadyAdded = selectedList.guests.some(
-      (existingGuest) => existingGuest.email === guestInfo.email
+      (existingGuest) => existingGuest.name === guest.name
     );
 
     if (isGuestAlreadyAdded) {
@@ -176,46 +141,28 @@ function GuestList() {
       return;
     }
 
-    const updatedGuests = [...selectedList.guests, guestInfo];
-
-    dispatch(
-      addGuestList({
-        userId: user.uid,
-        guestListName: selectedList.name,
-        guests: updatedGuests,
-      })
-    ).then(() => {
-      // Refresh guest lists
+    try {
+      await dispatch(
+        addGuestsToGuestList(user.uid, selectedList.id, guest.name)
+      );
       setSelectedList(null);
       showToast("Guest added successfully!", "success");
-    });
+    } catch (error) {
+      console.error("Error adding guest:", error);
+      showToast("Failed to add guest.", "error");
+    }
 
-    setNewGuestEmail("");
+    setNewGuestName("");
   };
 
-  const deleteGuest = (guestEmail) => {
+  const deleteGuest = async (guestName) => {
     if (!selectedList) return;
-
-    const updatedGuests = selectedList.guests.filter(
-      (guest) => guest.email !== guestEmail
-    );
-
-    dispatch(
-      addGuestList({
-        userId: user.uid,
-        guestListName: selectedList.name,
-        guests: updatedGuests,
-      })
-    ).then(() => {
-      dispatch(fetchAUserProfile(user.uid)); // 👈 Add this
-      showToast("Guest removed!", "info");
-    });
-
-    showToast("Guest removed!", "info");
+    // You would call a delete guest slice action here once implemented
+    showToast("Guest removed! (API logic not implemented)", "info");
   };
 
-  const handleAddGuestToList = (listId: number, guestEmail: string) => {
-    const guest = userList?.find((user) => user.emailAddress === guestEmail);
+  const handleAddGuestToList = (listId, guestName) => {
+    const guest = userList?.find((user) => user.emailAddress === guestName);
     if (!guest) {
       showToast("No matching guest found with this email!", "error");
       return;
@@ -226,36 +173,11 @@ function GuestList() {
         list.id === listId
           ? {
               ...list,
-              guests: [
-                ...list.guests,
-                {
-                  name: guest.name,
-                  email: guest.emailAddress,
-                  phoneNumber: guest.phoneNumber,
-                },
-              ],
+              guests: [...list.guests, { name: guest.name }],
             }
           : list
       )
     );
-
-    const updatedLists = guestLists.map((list) =>
-      list.id === listId
-        ? {
-            ...list,
-            guests: [
-              ...list.guests,
-              {
-                name: guest.name,
-                email: guest.emailAddress,
-                phoneNumber: guest.phoneNumber,
-              },
-            ],
-          }
-        : list
-    );
-    localStorage.setItem("guestLists", JSON.stringify(updatedLists));
-
     showToast("Guest added successfully!", "success");
   };
 
@@ -274,6 +196,8 @@ function GuestList() {
           >
             +
           </button>
+
+          <p className="text-white">id: {user?.uid} </p>
 
           {showFloatingMenu && (
             <div className="absolute right-0 top-16 bg-dark text-white whitespace-nowrap rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
@@ -346,6 +270,7 @@ function GuestList() {
         )}
       </div>
 
+      {/* Modal for editing/adding guests to a list */}
       {selectedList && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="p-4 md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
@@ -363,7 +288,7 @@ function GuestList() {
             </div>
 
             <ul className="space-y-2 mb-3">
-              {selectedList.guests.length > 0 ? (
+              {selectedList.guests && selectedList.guests.length > 0 ? (
                 selectedList.guests.map((guest, index) => (
                   <li
                     key={`${guest.email}-${index}`}
@@ -397,10 +322,10 @@ function GuestList() {
             <div className="flex flex-col gap-2">
               <input
                 type="email"
-                value={newGuestEmail}
+                value={newGuestName}
                 onChange={(e) => {
                   const email = e.target.value.trim();
-                  setNewGuestEmail(email);
+                  setNewGuestName(email);
                 }}
                 placeholder="Enter guest name or email"
                 className="input-field"
@@ -413,25 +338,25 @@ function GuestList() {
                   (user) =>
                     user.name
                       .toLowerCase()
-                      .includes(newGuestEmail.toLowerCase()) ||
+                      .includes(newGuestName.toLowerCase()) ||
                     user.emailAddress
                       .toLowerCase()
-                      .includes(newGuestEmail.toLowerCase())
+                      .includes(newGuestName.toLowerCase())
                 ).length > 0 ? (
                   userList
                     .filter(
                       (user) =>
                         user.name
                           .toLowerCase()
-                          .includes(newGuestEmail.toLowerCase()) ||
+                          .includes(newGuestName.toLowerCase()) ||
                         user.emailAddress
                           .toLowerCase()
-                          .includes(newGuestEmail.toLowerCase())
+                          .includes(newGuestName.toLowerCase())
                     )
                     .map((user) => (
                       <li
                         key={user.emailAddress}
-                        onClick={() => setNewGuestEmail(user.emailAddress)}
+                        onClick={() => setNewGuestName(user.emailAddress)}
                         className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
                       >
                         <div className="flex justify-between items-center">
@@ -464,6 +389,7 @@ function GuestList() {
         </div>
       )}
 
+      {/* Modal for creating a new list */}
       {showListModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="p-4 md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
@@ -504,62 +430,69 @@ function GuestList() {
               </label>
             </div>
 
-            <input
-              type="email"
-              value={newGuestEmail}
-              onChange={(e) => setNewGuestEmail(e.target.value)}
-              placeholder="Enter guest email or username"
-              className="input-field mb-3"
-            />
-
-            <ul className="text-gray-300 grid overflow-y-auto max-h-60">
-              {userList &&
-              userList.filter(
-                (user) =>
-                  user.name
-                    .toLowerCase()
-                    .includes(newGuestEmail.toLowerCase()) ||
-                  user.emailAddress
-                    .toLowerCase()
-                    .includes(newGuestEmail.toLowerCase())
-              ).length > 0 ? (
-                userList
-                  .filter(
+            {editingList ? (
+              <div>
+                <input
+                  type="email"
+                  value={newGuestName}
+                  onChange={(e) => setNewGuestName(e.target.value)}
+                  placeholder="Enter guest email or username"
+                  className="input-field mb-3"
+                />
+                <ul className="text-gray-300 grid overflow-y-auto max-h-60">
+                  {userList &&
+                  userList.filter(
                     (user) =>
                       user.name
                         .toLowerCase()
-                        .includes(newGuestEmail.toLowerCase()) ||
+                        .includes(newGuestName.toLowerCase()) ||
                       user.emailAddress
                         .toLowerCase()
-                        .includes(newGuestEmail.toLowerCase())
-                  )
-                  .map((user) => (
-                    <li
-                      key={user.emailAddress}
-                      onClick={() => setNewGuestEmail(user.emailAddress)}
-                      className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
-                    >
-                      <div className="flex justify-between items-center">
-                        <p className="flex items-center gap-2">
-                          <img
-                            src={user.profilePicUrl || "/avatar.png"}
-                            alt="Avatar"
-                            className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
-                          />
-                          {user.name}
-                        </p>
-                        <span className="text-gray-400 text-sm">
-                          {user.emailAddress}
-                        </span>
-                      </div>
-                    </li>
-                  ))
-              ) : (
-                <p className="text-gray-400 text-center">
-                  No matching users found.
-                </p>
-              )}
-            </ul>
+                        .includes(newGuestName.toLowerCase())
+                  ).length > 0 ? (
+                    userList
+                      .filter(
+                        (user) =>
+                          user.name
+                            .toLowerCase()
+                            .includes(newGuestName.toLowerCase()) ||
+                          user.emailAddress
+                            .toLowerCase()
+                            .includes(newGuestName.toLowerCase())
+                      )
+                      .map((user) => (
+                        <li
+                          key={user.emailAddress}
+                          onClick={() => setNewGuestName(user.emailAddress)}
+                          className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
+                        >
+                          <div className="flex justify-between items-center">
+                            <p className="flex items-center gap-2">
+                              <img
+                                src={user.profilePicUrl || "/avatar.png"}
+                                alt="Avatar"
+                                className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
+                              />
+                              {user.name}
+                            </p>
+                            <span className="text-gray-400 text-sm">
+                              {user.emailAddress}
+                            </span>
+                          </div>
+                        </li>
+                      ))
+                  ) : (
+                    <p className="text-gray-400 text-center">
+                      No matching users found.
+                    </p>
+                  )}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-gray-400 mb-3">
+                Create a list first, then add guests.
+              </p>
+            )}
 
             <div className="flex justify-end">
               <button onClick={handleSaveList} className="btn-primary">
@@ -616,7 +549,6 @@ function GuestList() {
           onClose={() => setToast(null)}
         />
       )}
-      
     </div>
   );
 }

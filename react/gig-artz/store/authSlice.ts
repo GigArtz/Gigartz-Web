@@ -38,13 +38,35 @@ export interface RegistrationData {
 }
 
 // Load user from localStorage during initialization
-const persistedUser = localStorage.getItem("authUser");
+const persistedUserRaw = localStorage.getItem("authUser");
+let persistedUser: User | null = null;
+
+if (persistedUserRaw) {
+  try {
+    const parsed = JSON.parse(persistedUserRaw);
+    // Check if it's a Firebase user object (has providerData and stsTokenManager)
+    if (parsed && parsed.providerData && parsed.stsTokenManager) {
+      persistedUser = {
+        userName: parsed.email || parsed.userName || "Unnamed User",
+        emailAddress: parsed.email || parsed.emailAddress || "",
+        phoneNumber: parsed.phoneNumber || "",
+        profilePic: parsed.photoURL || "",
+        uid: parsed.uid || null,
+      };
+    } else {
+      // Assume it's already in User format
+      persistedUser = parsed;
+    }
+  } catch {
+    persistedUser = null;
+  }
+}
 
 // Initial state
 const initialState: AuthState = {
-  user: persistedUser ? JSON.parse(persistedUser) : null,
+  user: persistedUser,
   current_user: null,
-  uid: persistedUser ? JSON.parse(persistedUser).uid : null, // Ensure uid is extracted from the persisted user
+  uid: persistedUser ? persistedUser.uid : null, // Ensure uid is extracted from the persisted user
   loading: false,
   error: null,
 };

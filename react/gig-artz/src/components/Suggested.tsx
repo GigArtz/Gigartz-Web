@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import UserCard from "./UserCard";
 import { useSelector } from "react-redux";
 import { FaSpinner } from "react-icons/fa";
 
+
 export default function SuggestedForYou() {
+  
   const { userList, loading, error } = useSelector(
     (state: any) => state.profile
   );
+
 
   const suggestedUsers = userList?.slice(0, 5);
 
@@ -15,27 +18,7 @@ export default function SuggestedForYou() {
   const isEmpty = userList?.length === 0;
   const isSuccess = !isLoading && !isError && !isEmpty;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-400">Loading...</p>
-      </div>
-    );
-  }
-  if (isError) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-red-500">Error loading data</p>
-      </div>
-    );
-  }
-  if (isEmpty) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-400">No users found</p>
-      </div>
-    );
-  }
+  
   if (!isSuccess) {
     return null; // or some fallback UI
   }
@@ -56,7 +39,7 @@ export default function SuggestedForYou() {
                 <FaSpinner className="text-teal-500 text-2xl animate-spin" />
               </div>
             ) : (
-              <div className="flex flex-col space-y-1 mt-4">
+              <div className="flex flex-col space-y-1 mt-4 fade">
                 {suggestedUsers?.map((user, index) => (
                   <div
                     key={index}

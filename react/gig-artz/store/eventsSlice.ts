@@ -170,6 +170,64 @@ const eventsSlice = createSlice({
     resetError(state) {
       state.error = null;
     },
+    // Ticket resale actions
+    resaleTicketStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    resaleTicketSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    resaleTicketFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    // Refund actions
+    refundTicketStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    refundTicketSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    refundTicketFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchGuestListsStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchGuestListsSuccess(state) {
+      state.loading = false;
+      state.success = null;
+      state.error = null;
+      // Optionally add guestLists to state if you want to store them
+      // state.guestLists = action.payload;
+    },
+    fetchGuestListsFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchGuestsStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchGuestsSuccess(state) {
+      state.loading = false;
+      state.success = null;
+      state.error = null;
+      // Optionally add guests to state if you want to store them
+      // state.guests = action.payload;
+    },
+    fetchGuestsFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
   },
 });
 
@@ -267,29 +325,29 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
   }
 };
 
-// Adding guest list
-export const addGuestList =
-  (guestListData: {
-    userId: string;
-    guestListName: string;
-    guests: { name: string; email: string; phoneNumber: string }[];
-  }) =>
+// Adding guest list name
+export const createGuestList =
+  (guestListData: { userId: string; guestListName: string }) =>
     async (dispatch: AppDispatch) => {
       dispatch(eventsSlice.actions.createGuestListStart());
 
       try {
-        console.log("Adding guest list...");
+        console.log("Creating guest list...");
         const response = await axios.post(
-          `https://gigartz.onrender.com/addGuestList`,
+          `https://gigartz.onrender.com/guest-list/create`,
           guestListData
         );
-        console.log("Guest list added successfully:", response.data);
+        console.log("Guest list:", response);
+        console.log("Guest list created successfully:", response.data);
 
         dispatch(
           eventsSlice.actions.createGuestListSuccess(
-            "Guest list added successfully!"
+            "Guest list created successfully!"
           )
         );
+
+        // Optionally return the new guestListId for the next step
+        return response.data.guestListId;
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -297,7 +355,7 @@ export const addGuestList =
             console.error("Response error:", axiosError.response?.data);
             dispatch(
               eventsSlice.actions.createGuestListFailure(
-                axiosError.response?.data?.error || "Failed to add guest list"
+                axiosError.response?.data?.error || "Failed to create guest list"
               )
             );
           } else if (axiosError.request) {
@@ -325,6 +383,67 @@ export const addGuestList =
         }
       }
     };
+
+
+
+// Adding guests to the guest list
+export const addGuestsToGuestList =
+  (userId: string, guestListId: string, username: string) =>
+    async (dispatch: AppDispatch) => {
+      dispatch(eventsSlice.actions.createGuestListStart());
+
+      console.log({ userId, username, guestListId })
+
+      try {
+        console.log("Adding guests to guest list...");
+        const response = await axios.post(
+          `https://gigartz.onrender.com/guest-list/add-profile`,
+          { userId, username, guestListId }
+        );
+        console.log("Guests added successfully:", response.data);
+
+        dispatch(
+          eventsSlice.actions.createGuestListSuccess(
+            "Guests added successfully!"
+          )
+        );
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError;
+          if (axiosError.response) {
+            console.error("Response error:", axiosError.response?.data);
+            dispatch(
+              eventsSlice.actions.createGuestListFailure(
+                axiosError.response?.data?.error || "Failed to add guests"
+              )
+            );
+          } else if (axiosError.request) {
+            console.error("Request error:", axiosError.request);
+            dispatch(
+              eventsSlice.actions.createGuestListFailure(
+                "No response received from server"
+              )
+            );
+          } else {
+            console.error("Error setting up request:", axiosError.message);
+            dispatch(
+              eventsSlice.actions.createGuestListFailure(
+                axiosError.message || "Unexpected error occurred"
+              )
+            );
+          }
+        } else {
+          console.error("Unexpected error:", error);
+          dispatch(
+            eventsSlice.actions.createGuestListFailure(
+              "Unexpected error occurred"
+            )
+          );
+        }
+      }
+    };
+
+
 
 // Adding a review
 export const addReview =
@@ -453,38 +572,29 @@ export const buyTicket = (
   ticketData: EventBooking
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.buyTicketStart());
-
   try {
-    console.log("Purchasing ticket...");
-    console.log(ticketData)
-    const response = await axios.post(
-      `https://gigartz.onrender.com/buy-ticket`,
-      ticketData,  // ✅ No extra object wrapping
-      { headers: { "Content-Type": "application/json" } }  // ✅ Ensure JSON format
+    await axios.post(
+      `https://gigartz.onrender.com/buyTicket`,
+      ticketData
     );
-
-    console.log("Ticket purchased successfully:", response.data);
-
     dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        // Try to extract error message from response data
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to buy ticket";
         dispatch(
-          eventsSlice.actions.buyTicketFailure(
-            axiosError.response?.data?.error || "Failed to purchase ticket"
-          )
+          eventsSlice.actions.buyTicketFailure(errorMsg)
         );
       } else if (axiosError.request) {
-        console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.buyTicketFailure(
             "No response received from server"
           )
         );
       } else {
-        console.error("Error setting up request:", axiosError.message);
         dispatch(
           eventsSlice.actions.buyTicketFailure(
             axiosError.message || "Unexpected error occurred"
@@ -492,50 +602,40 @@ export const buyTicket = (
         );
       }
     } else {
-      console.error("Unexpected error:", error);
-      dispatch(eventsSlice.actions.buyTicketFailure("Unexpected error occurred"));
+      dispatch(
+        eventsSlice.actions.buyTicketFailure("Unexpected error occurred")
+      );
     }
   }
 };
 
-// Scan a ticket using QR code data
 export const scanTicket = (
   qrCodeData: string,
   customerUid: string
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.scanTicketStart());
-
   try {
-    console.log("Scanning ticket...");
-    console.log(qrCodeData, customerUid)
-    // Ensure qrCodeData is a string and customerUid is a string
-    
-    const response = await axios.post(
+    await axios.post(
       `https://gigartz.onrender.com/scanTicket`,
       { qrCodeData, customerUid }
     );
-    console.log("Ticket scanned successfully:", response.data);
-
     dispatch(eventsSlice.actions.scanTicketSuccess("Ticket scanned successfully!"));
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to scan ticket";
         dispatch(
-          eventsSlice.actions.scanTicketFailure(
-            axiosError.response?.data?.error || "Failed to scan ticket"
-          )
+          eventsSlice.actions.scanTicketFailure(errorMsg)
         );
       } else if (axiosError.request) {
-        console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.scanTicketFailure(
             "No response received from server"
           )
         );
       } else {
-        console.error("Error setting up request:", axiosError.message);
         dispatch(
           eventsSlice.actions.scanTicketFailure(
             axiosError.message || "Unexpected error occurred"
@@ -543,112 +643,208 @@ export const scanTicket = (
         );
       }
     } else {
-      console.error("Unexpected error:", error);
-      dispatch(eventsSlice.actions.scanTicketFailure("Unexpected error occurred"));
+      dispatch(
+        eventsSlice.actions.scanTicketFailure("Unexpected error occurred")
+      );
     }
   }
 };
 
-// Reassign a ticket to a new user
 export const reassignTicket = (
   currentUserId: string,
   newUserId: string,
   ticketId: string
-) => async (dispatch: AppDispatch) => {
-  dispatch(eventsSlice.actions.scanTicketStart()); // Reusing scanTicketStart for loading state
-
-  console.log(currentUserId,newUserId, ticketId)
+) => async () => {
   try {
-    console.log("Reassigning ticket...");
-    const response = await axios.post(
-      `https://gigartz.onrender.com/reassign-ticket`,
+    await axios.post(
+      `https://gigartz.onrender.com/reassignTicket`,
       { currentUserId, newUserId, ticketId }
     );
-    console.log("Ticket reassigned successfully:", response.data);
-
-    dispatch(eventsSlice.actions.scanTicketSuccess("Ticket reassigned successfully!"));
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
-        dispatch(
-          eventsSlice.actions.scanTicketFailure(
-            axiosError.response?.data?.error || "Failed to reassign ticket"
-          )
-        );
-      } else if (axiosError.request) {
-        console.error("Request error:", axiosError.request);
-        dispatch(
-          eventsSlice.actions.scanTicketFailure(
-            "No response received from server"
-          )
-        );
-      } else {
-        console.error("Error setting up request:", axiosError.message);
-        dispatch(
-          eventsSlice.actions.scanTicketFailure(
-            axiosError.message || "Unexpected error occurred"
-          )
-        );
-      }
-    } else {
-      console.error("Unexpected error:", error);
-      dispatch(eventsSlice.actions.scanTicketFailure("Unexpected error occurred"));
-    }
+    // Optionally dispatch a success action if you want to track this
+  } catch {
+    // Optionally dispatch a failure action if you want to track this
   }
 };
 
-// Update an event
 export const updateEvent = (
   eventId: string,
   userId: string,
   eventData: Partial<Event>
-) => async (dispatch: AppDispatch) => {
-  dispatch(eventsSlice.actions.createEventsStart());
-
+) => async () => {
   try {
-    console.log("Updating event...");
-    const response = await axios.put(
-      `https://gigartz.onrender.com/users/${userId}/userEvents`,
-      { eventId, ...eventData }, // Spread the eventData to include all fields
-      { headers: { "Content-Type": "application/json" } } // Ensure JSON format
-    
+    await axios.put(
+      `https://gigartz.onrender.com/events/${eventId}`,
+      { userId, ...eventData }
     );
-    console.log("Event updated successfully:", response.data);
+    // Optionally dispatch a success action if you want to track this
+  } catch {
+    // Optionally dispatch a failure action if you want to track this
+  }
+};
 
-    dispatch(
-      eventsSlice.actions.createEventsSuccess("Event updated successfully!")
+export const fetchGuestLists = (userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.fetchGuestListsStart());
+  try {
+    await axios.get(
+      `https://gigartz.onrender.com/guest-list/${userId}`
     );
+    dispatch(eventsSlice.actions.fetchGuestListsSuccess());
+    // Optionally handle response.data if you want to store guest lists
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to fetch guest lists";
         dispatch(
-          eventsSlice.actions.createEventsFailure(
-            axiosError.response?.data?.error || "Failed to update event"
-          )
+          eventsSlice.actions.fetchGuestListsFailure(errorMsg)
         );
       } else if (axiosError.request) {
-        console.error("Request error:", axiosError.request);
         dispatch(
-          eventsSlice.actions.createEventsFailure(
+          eventsSlice.actions.fetchGuestListsFailure(
             "No response received from server"
           )
         );
       } else {
-        console.error("Error setting up request:", axiosError.message);
         dispatch(
-          eventsSlice.actions.createEventsFailure(
+          eventsSlice.actions.fetchGuestListsFailure(
             axiosError.message || "Unexpected error occurred"
           )
         );
       }
     } else {
-      console.error("Unexpected error:", error);
       dispatch(
-        eventsSlice.actions.createEventsFailure("Unexpected error occurred")
+        eventsSlice.actions.fetchGuestListsFailure("Unexpected error occurred")
+      );
+    }
+  }
+};
+
+export const fetchGuests = (guestListId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.fetchGuestsStart());
+  try {
+    await axios.get(
+      `https://gigartz.onrender.com/guest-list/guests/${guestListId}`
+    );
+    dispatch(eventsSlice.actions.fetchGuestsSuccess());
+    // Optionally handle response.data if you want to store guests
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to fetch guests";
+        dispatch(
+          eventsSlice.actions.fetchGuestsFailure(errorMsg)
+        );
+      } else if (axiosError.request) {
+        dispatch(
+          eventsSlice.actions.fetchGuestsFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        dispatch(
+          eventsSlice.actions.fetchGuestsFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      dispatch(
+        eventsSlice.actions.fetchGuestsFailure("Unexpected error occurred")
+      );
+    }
+  }
+};
+
+// Ticket resale
+export const resaleTicket = (
+  userId: string,
+  ticketId: string,
+  resalePrice: number,
+  sellToPublic: boolean
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.resaleTicketStart());
+  try {
+    await axios.post(
+      `https://gigartz.onrender.com/resale-ticket`,
+      { userId, ticketId, resalePrice, sellToPublic }
+    );
+    dispatch(eventsSlice.actions.resaleTicketSuccess("Ticket listed for resale successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to list ticket for resale";
+        dispatch(
+          eventsSlice.actions.resaleTicketFailure(errorMsg)
+        );
+      } else if (axiosError.request) {
+        dispatch(
+          eventsSlice.actions.resaleTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        dispatch(
+          eventsSlice.actions.resaleTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      dispatch(
+        eventsSlice.actions.resaleTicketFailure("Unexpected error occurred")
+      );
+    }
+  }
+};
+
+// Ticket refund
+export const refundTicket = (
+  userId: string,
+  ticketId: string,
+  bankDetails: {
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    routingNumber: string;
+  }
+) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.refundTicketStart());
+  try {
+    await axios.post(
+      `https://gigartz.onrender.com/refundTicket`,
+      { userId, ticketId, bankDetails }
+    );
+    dispatch(eventsSlice.actions.refundTicketSuccess("Refund processed successfully!"));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to process refund";
+        dispatch(
+          eventsSlice.actions.refundTicketFailure(errorMsg)
+        );
+      } else if (axiosError.request) {
+        dispatch(
+          eventsSlice.actions.refundTicketFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        dispatch(
+          eventsSlice.actions.refundTicketFailure(
+            axiosError.message || "Unexpected error occurred"
+          )
+        );
+      }
+    } else {
+      dispatch(
+        eventsSlice.actions.refundTicketFailure("Unexpected error occurred")
       );
     }
   }
@@ -676,6 +872,18 @@ export const {
   fetchEventsSuccess,
   fetchEventsFailure,
   resetError,
+  resaleTicketStart,
+  resaleTicketSuccess,
+  resaleTicketFailure,
+  refundTicketStart,
+  refundTicketSuccess,
+  refundTicketFailure,
+  fetchGuestListsStart,
+  fetchGuestListsSuccess,
+  fetchGuestListsFailure,
+  fetchGuestsStart,
+  fetchGuestsSuccess,
+  fetchGuestsFailure,
 } = eventsSlice.actions;
 
 export default eventsSlice.reducer;

@@ -16,25 +16,24 @@ function MyProfileTabs({ uid }) {
     if (profile) {
       console.log("Profile found:", profile);
 
-      const events =
-        Array.from(
-          new Set(
-            (userTickets || userEvents || [])
-              .map((ticket) => {
-                const matchedEvent = (events || []).find(
-                  (event) => event.title === ticket.eventName
-                );
-                return matchedEvent;
-              })
-              .filter(Boolean)
-          )
-        );
-      setUserGigGuide(events);
+      // Merge userTickets and userEvents, then find matching events
+      const ticketAndEventNames = [
+        ...(userTickets || []),
+        ...(userEvents || [])
+      ].map((item) => item?.eventName || item?.title).filter(Boolean);
+
+      const uniqueEventNames = Array.from(new Set(ticketAndEventNames));
+
+      const matchedEvents = (events || []).filter(event =>
+        uniqueEventNames.includes(event?.title)
+      );
+
+      setUserGigGuide(matchedEvents);
     } else {
       console.log("No profile found, clearing gig guide.");
       setUserGigGuide([]);
     }
-  }, [profile, userTickets, events]);
+  }, [profile, userTickets, userEvents, events]);
 
   return (
     <div>
