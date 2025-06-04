@@ -1,6 +1,6 @@
-import { FaTimesCircle, FaEdit, FaTrash } from "react-icons/fa";
+import { FaTimesCircle, FaEdit, FaTrash, FaEye } from "react-icons/fa";
 
-const CRUDModal = ({ setIsCRUDVisible, onEdit, onDelete, event }) => {
+const CRUDModal = ({ setIsCRUDVisible, onEdit, onDelete, onInsights, event }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex justify-center items-center">
       <div className="bg-dark p-6 rounded-lg shadow-lg relative w-80 animate-fadeIn">
@@ -24,11 +24,23 @@ const CRUDModal = ({ setIsCRUDVisible, onEdit, onDelete, event }) => {
               onEdit(event);
               setIsCRUDVisible(false); // Close modal after editing
             }}
-            className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition"
+            className="w-full flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded-lg transition"
           >
             <FaEdit className="w-5 h-5" />
-            Edit Event
+            Edit
           </button>
+
+          {/* Insights Button */}
+          <button
+            onClick={() => {
+              onInsights(event);
+              setIsCRUDVisible(false); // Close modal after deleting
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-lime-500 hover:bg-lime-600 text-white py-2 px-4 rounded-lg transition"
+          >
+            <FaEye className="w-5 h-5" />
+            Insights
+          </button> 
 
           {/* Delete Button */}
           <button
@@ -39,8 +51,10 @@ const CRUDModal = ({ setIsCRUDVisible, onEdit, onDelete, event }) => {
             className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
           >
             <FaTrash className="w-5 h-5" />
-            Delete Event
+            Delete
           </button>
+
+          
         </div>
       </div>
     </div>

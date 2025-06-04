@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { buyTicket } from "../../store/eventsSlice";
+import type { EventBooking } from "../../store/eventsSlice";
 import { FaTimesCircle } from "react-icons/fa";
 
 interface PaymentProps {
   amount: number;
-  ticketDetails: any;
+  type: "ticket" | "tip" | "booking";
+  ticketDetails?: EventBooking;
+  tipDetails?: Record<string, unknown>;
+  bookingDetails?: Record<string, unknown>;
   onSuccess: () => void;
   onFailure: () => void;
   onClose: () => void;
@@ -13,7 +17,10 @@ interface PaymentProps {
 
 const Payment: React.FC<PaymentProps> = ({
   amount,
+  type,
   ticketDetails,
+  tipDetails,
+  bookingDetails,
   onSuccess,
   onFailure,
   onClose,
@@ -24,9 +31,34 @@ const Payment: React.FC<PaymentProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    if (!ticketDetails || !ticketDetails.ticketTypes || ticketDetails.ticketTypes.length === 0) {
-      setError("Please select at least one ticket type.");
-      return;
+    const payload: {
+      amount: number;
+      order?: unknown[];
+      tip?: Record<string, unknown>;
+      booking?: Record<string, unknown>;
+    } = { amount };
+    if (type === "ticket") {
+      if (
+        !ticketDetails ||
+        !ticketDetails.ticketTypes ||
+        ticketDetails.ticketTypes.length === 0
+      ) {
+        setError("Please select at least one ticket type.");
+        return;
+      }
+      payload.order = ticketDetails.ticketTypes;
+    } else if (type === "tip") {
+      if (!tipDetails) {
+        setError("Tip details missing.");
+        return;
+      }
+      payload.tip = tipDetails;
+    } else if (type === "booking") {
+      if (!bookingDetails) {
+        setError("Booking details missing.");
+        return;
+      }
+      payload.booking = bookingDetails;
     }
 
     const fetchPaymentUrl = async () => {
@@ -36,9 +68,11 @@ const Payment: React.FC<PaymentProps> = ({
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount, order: ticketDetails.ticketTypes }),
+            body: JSON.stringify(payload),
           }
         );
+
+        console.log(response);
 
         if (!response.ok) {
           throw new Error("Failed to fetch payment URL.");
@@ -53,40 +87,33 @@ const Payment: React.FC<PaymentProps> = ({
     };
 
     fetchPaymentUrl();
-  }, [amount, ticketDetails]);
+  }, [amount, type, ticketDetails, tipDetails, bookingDetails]);
 
   useEffect(() => {
-    const checkIframeStatus = () => {
-      if (!iframeRef.current) return;
-
-      try {
-        const iframeDocument =
-          iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-
-        if (iframeDocument) {
-          const paymentStatusElement = iframeDocument.querySelector("#payment-form");
-          
-          
-          if (paymentStatusElement) {
-            const status = paymentStatusElement.textContent?.trim();
-            console.log("Payment Status:", status);
-
-            if (status === "Paid!") {
-              dispatch(buyTicket(ticketDetails));
-              onSuccess();
-            } else if (["Cancelled!", "Expired!"].includes(status)) {
-              onFailure();
-            }
+    const handleMessage = (event: MessageEvent) => {
+      // Optionally, check event.origin for security
+      if (event.data && typeof event.data === "object" && event.data.result) {
+        // Log the full object for debugging
+        console.log("Payment postMessage:", event.data);
+        // Example: check for successful payment
+        if (
+          event.data.result.code &&
+          event.data.result.code.startsWith("000.100")
+        ) {
+          if (type === "ticket" && ticketDetails) {
+            dispatch(buyTicket(ticketDetails));
           }
+          onSuccess();
+        } else {
+          onFailure();
         }
-      } catch (error) {
-        console.error("Error accessing iframe:", error);
       }
     };
-
-    const interval = setInterval(checkIframeStatus, 3000); // Poll every 3 seconds
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [dispatch, ticketDetails, onSuccess, onFailure]);
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [onSuccess, onFailure, type, ticketDetails, dispatch]);
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">

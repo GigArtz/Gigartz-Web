@@ -24,10 +24,11 @@ function ProfileTabs({ uid }) {
 
   useEffect(() => {
     if (profile) {
-      setUserEvents(profile.userEvents || []);
-      setUserReviews(profile.reviews || []);
-      setUserLikes(profile.likedEvents || []);
-      setUserGigGuide(profile.gigGuide || []);
+      setUserEvents(profile?.userEvents || []);
+      setUserReviews(profile?.reviews || []);
+      setUserLikes(profile?.likedEvents || []);
+      // There is no gigGuide, so use userEvents as gigGuide
+      setUserGigGuide([...(profile?.userEvents || [])]);
     } else {
       setUserEvents([]);
       setUserReviews([]);
@@ -47,7 +48,7 @@ function ProfileTabs({ uid }) {
           {[
             { key: "events", label: "Events" },
             { key: "reviews", label: "Reviews" },
-             { key: "guestList", label: "Guest Lists" },
+            { key: "guestList", label: "Guest Lists" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -93,7 +94,9 @@ function ProfileTabs({ uid }) {
             )}
 
             {activeTab === "guestList" && (
-              <p className="text-gray-500 text-center mt-4">No guest list(s) yet.</p>
+              <p className="text-gray-500 text-center mt-4">
+                No guest list(s) yet.
+              </p>
             )}
           </>
         )}

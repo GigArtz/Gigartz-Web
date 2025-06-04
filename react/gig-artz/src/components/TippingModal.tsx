@@ -89,8 +89,8 @@ const TippingModal: React.FC<TippingModalProps> = ({ isOpen, onClose }) => {
           {showPayment && (
             <Payment
               amount={selectedAmount === "" ? 0 : Number(selectedAmount)}
-              ticketDetails={{
-                type: "tip",
+              type="tip"
+              tipDetails={{
                 amount: selectedAmount === "" ? 0 : Number(selectedAmount),
               }}
               onSuccess={handlePaymentSuccess}

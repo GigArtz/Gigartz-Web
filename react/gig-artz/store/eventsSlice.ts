@@ -245,12 +245,13 @@ export const fetchAllEvents = () => async (dispatch: AppDispatch) => {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        // The request was made and the server responded with an error
-        console.error("Response error:", axiosError.response?.data);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to fetch user profile";
         dispatch(
-          eventsSlice.actions.fetchEventsFailure(
-            axiosError.response?.data?.error || "Failed to fetch user profile"
-          )
+          eventsSlice.actions.fetchEventsFailure(errorMsg)
         );
       } else if (axiosError.request) {
         // The request was made, but no response was received
@@ -295,11 +296,13 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to add event";
         dispatch(
-          eventsSlice.actions.createEventsFailure(
-            axiosError.response?.data || "Failed to add event"
-          )
+          eventsSlice.actions.createEventsFailure(errorMsg)
         );
       } else if (axiosError.request) {
         console.error("Request error:", axiosError.request);
@@ -411,11 +414,13 @@ export const addGuestsToGuestList =
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
           if (axiosError.response) {
-            console.error("Response error:", axiosError.response?.data);
+            const errorData = axiosError.response.data as Record<string, unknown>;
+            const errorMsg =
+              typeof errorData?.message === 'string' ? errorData.message :
+                typeof errorData?.error === 'string' ? errorData.error :
+                  "Failed to add guests";
             dispatch(
-              eventsSlice.actions.createGuestListFailure(
-                axiosError.response?.data?.error || "Failed to add guests"
-              )
+              eventsSlice.actions.createGuestListFailure(errorMsg)
             );
           } else if (axiosError.request) {
             console.error("Request error:", axiosError.request);
@@ -474,13 +479,16 @@ export const addReview =
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
           if (axiosError.response) {
-            console.error("Response error:", axiosError.response?.data);
+            const errorData = axiosError.response.data as Record<string, unknown>;
+            const errorMsg =
+              typeof errorData?.message === 'string' ? errorData.message :
+                typeof errorData?.error === 'string' ? errorData.error :
+                  "Failed to add review";
             dispatch(
-              eventsSlice.actions.createReviewFailure(
-                axiosError.response?.data?.error || "Failed to add review"
-              )
+              eventsSlice.actions.createReviewFailure(errorMsg)
             );
           } else if (axiosError.request) {
+            // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
             dispatch(
               eventsSlice.actions.createReviewFailure(
@@ -488,26 +496,24 @@ export const addReview =
               )
             );
           } else {
+            // Something else happened during the setup of the request
             console.error("Error setting up request:", axiosError.message);
             dispatch(
-              eventsSlice.actions.createReviewFailure(
-                axiosError.message || "Unexpected error occurred"
-              )
+              eventsSlice.actions.createReviewFailure(axiosError.message)
             );
           }
         } else {
+          // Handle non-Axios errors
           console.error("Unexpected error:", error);
           dispatch(
-            eventsSlice.actions.createReviewFailure(
-              "Unexpected error occurred"
-            )
+            eventsSlice.actions.createReviewFailure("Unexpected error occurred")
           );
         }
       }
     };
 
 
-    // Like an event
+// Like an event
 export const addLike = (eventId: string, userId: string) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.createLikeStart());
 
@@ -526,13 +532,16 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to add like";
         dispatch(
-          eventsSlice.actions.createLikeFailure(
-            axiosError.response?.data?.error || "Failed to add like"
-          )
+          eventsSlice.actions.createLikeFailure(errorMsg)
         );
       } else if (axiosError.request) {
+        // The request was made, but no response was received
         console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.createLikeFailure(
@@ -540,14 +549,14 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
           )
         );
       } else {
+        // Something else happened during the setup of the request
         console.error("Error setting up request:", axiosError.message);
         dispatch(
-          eventsSlice.actions.createLikeFailure(
-            axiosError.message || "Unexpected error occurred"
-          )
+          eventsSlice.actions.createLikeFailure(axiosError.message)
         );
       }
     } else {
+      // Handle non-Axios errors
       console.error("Unexpected error:", error);
       dispatch(
         eventsSlice.actions.createLikeFailure("Unexpected error occurred")
@@ -583,9 +592,11 @@ export const buyTicket = (
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        // Try to extract error message from response data
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to buy ticket";
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to buy ticket";
         dispatch(
           eventsSlice.actions.buyTicketFailure(errorMsg)
         );
@@ -626,21 +637,26 @@ export const scanTicket = (
       const axiosError = error as AxiosError;
       if (axiosError.response) {
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to scan ticket";
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to scan ticket";
         dispatch(
           eventsSlice.actions.scanTicketFailure(errorMsg)
         );
       } else if (axiosError.request) {
+        // The request was made, but no response was received
+        console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.scanTicketFailure(
             "No response received from server"
           )
         );
       } else {
+        // Something else happened during the setup of the request
+        console.error("Error setting up request:", axiosError.message);
         dispatch(
-          eventsSlice.actions.scanTicketFailure(
-            axiosError.message || "Unexpected error occurred"
-          )
+          eventsSlice.actions.scanTicketFailure(axiosError.message)
         );
       }
     } else {
@@ -659,7 +675,7 @@ export const reassignTicket = (
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.scanTicketStart()); // Reusing scanTicketStart for loading state
 
-  console.log(currentUserId,newUserId, ticketId)
+  console.log(currentUserId, newUserId, ticketId)
   try {
     console.log("Reassigning ticket...");
     const response = await axios.post(
@@ -673,13 +689,16 @@ export const reassignTicket = (
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to reassign ticket";
         dispatch(
-          eventsSlice.actions.scanTicketFailure(
-            axiosError.response?.data?.error || "Failed to reassign ticket"
-          )
+          eventsSlice.actions.scanTicketFailure(errorMsg)
         );
       } else if (axiosError.request) {
+        // The request was made, but no response was received
         console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.scanTicketFailure(
@@ -687,6 +706,7 @@ export const reassignTicket = (
           )
         );
       } else {
+        // Something else happened during the setup of the request
         console.error("Error setting up request:", axiosError.message);
         dispatch(
           eventsSlice.actions.scanTicketFailure(
@@ -716,7 +736,7 @@ export const updateEvent = (
       `https://gigartz.onrender.com/users/${userId}/userEvents`,
       { eventId, ...eventData }, // Spread the eventData to include all fields
       { headers: { "Content-Type": "application/json" } } // Ensure JSON format
-    
+
     );
     console.log("Event updated successfully:", response.data);
 
@@ -727,13 +747,16 @@ export const updateEvent = (
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        console.error("Response error:", axiosError.response?.data);
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to update event";
         dispatch(
-          eventsSlice.actions.createEventsFailure(
-            axiosError.response?.data?.error || "Failed to update event"
-          )
+          eventsSlice.actions.createEventsFailure(errorMsg)
         );
       } else if (axiosError.request) {
+        // The request was made, but no response was received
         console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.createEventsFailure(
@@ -741,6 +764,7 @@ export const updateEvent = (
           )
         );
       } else {
+        // Something else happened during the setup of the request
         console.error("Error setting up request:", axiosError.message);
         dispatch(
           eventsSlice.actions.createEventsFailure(
@@ -770,7 +794,10 @@ export const fetchGuestLists = (userId: string) => async (dispatch: AppDispatch)
       const axiosError = error as AxiosError;
       if (axiosError.response) {
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to fetch guest lists";
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to fetch guest lists";
         dispatch(
           eventsSlice.actions.fetchGuestListsFailure(errorMsg)
         );
@@ -808,21 +835,26 @@ export const fetchGuests = (guestListId: string) => async (dispatch: AppDispatch
       const axiosError = error as AxiosError;
       if (axiosError.response) {
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to fetch guests";
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to fetch guests";
         dispatch(
           eventsSlice.actions.fetchGuestsFailure(errorMsg)
         );
       } else if (axiosError.request) {
+        // The request was made, but no response was received
+        console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.fetchGuestsFailure(
             "No response received from server"
           )
         );
       } else {
+        // Something else happened during the setup of the request
+        console.error("Error setting up request:", axiosError.message);
         dispatch(
-          eventsSlice.actions.fetchGuestsFailure(
-            axiosError.message || "Unexpected error occurred"
-          )
+          eventsSlice.actions.fetchGuestsFailure(axiosError.message)
         );
       }
     } else {
@@ -852,7 +884,10 @@ export const resaleTicket = (
       const axiosError = error as AxiosError;
       if (axiosError.response) {
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to list ticket for resale";
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to list ticket for resale";
         dispatch(
           eventsSlice.actions.resaleTicketFailure(errorMsg)
         );
@@ -890,6 +925,7 @@ export const refundTicket = (
 ) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.refundTicketStart());
   try {
+    console.log({ userId, ticketId, bankDetails });
     await axios.post(
       `https://gigartz.onrender.com/refundTicket`,
       { userId, ticketId, bankDetails }
@@ -899,8 +935,12 @@ export const refundTicket = (
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
+        // Extract error message from response.data.message or response.data.error
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg = typeof errorData?.error === 'string' ? errorData.error : "Failed to process refund";
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to process refund";
         dispatch(
           eventsSlice.actions.refundTicketFailure(errorMsg)
         );

@@ -278,6 +278,9 @@ const AddEventForm: React.FC = () => {
     alert("Event submitted successfully!");
   };
 
+  
+
+
   return (
     <div className="justify-center items-center z-30">
       {loading && (
@@ -362,11 +365,111 @@ const AddEventForm: React.FC = () => {
 
 // Step 1: Basic Event Details
 const Step1 = ({ formData, handleChange }) => {
+  const categories = {
+    "Music & Concerts": [
+      "Live Bands",
+      "DJ Sets / Parties",
+      "Classical & Opera",
+      "Jazz & Blues",
+      "Hip-Hop / R&B",
+      "House / EDM / Amapiano",
+      "Afrobeat / African Contemporary",
+      "Indie / Alternative"
+    ],
+    "Performing Arts": [
+      "Theatre / Drama",
+      "Dance Performances",
+      "Comedy Shows",
+      "Poetry & Spoken Word",
+      "Cabaret / Variety Acts"
+    ],
+    "Social & Lifestyle": [
+      "Day Parties / Brunches",
+      "Wine Tastings / Mixology Events",
+      "Nightlife / Club Events",
+      "Fashion Shows / Runway Events",
+      "Food Markets / Pop-Ups"
+    ],
+    "Culture & Community": [
+      "Heritage Celebrations",
+      "Faith-Based Events",
+      "Community Fundraisers",
+      "Social Justice / Awareness Events"
+    ],
+    "Business & Networking": [
+      "Industry Panels",
+      "Conferences / Summits",
+      "Networking Mixers",
+      "Brand Launches / Promotions",
+      "Start-up Pitches / Demo Days"
+    ],
+    "Education & Workshops": [
+      "Creative Masterclasses (e.g. Art, Music, Writing)",
+      "Professional Development (e.g. Finance, Tech, Marketing)",
+      "Tech Bootcamps / Hackathons",
+      "Youth Empowerment Sessions"
+    ],
+    "Family & Kids": [
+      "Family Fun Days",
+      "Storytime / Puppet Shows",
+      "Educational Events for Children",
+      "Teen Talent Shows"
+    ],
+    "Sports & Fitness": [
+      "Tournaments (e.g. Football, Netball, Basketball)",
+      "Outdoor Adventures (e.g. Hikes, Camps)",
+      "Fitness Classes / Challenges",
+      "Esports / Gaming Tournaments"
+    ]
+  };
+
+  const handleNestedChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "mainCategory") {
+      handleChange({
+        target: {
+          name: "mainCategory",
+          value
+        }
+      });
+
+      // Reset subcategory and category on main change
+      handleChange({
+        target: {
+          name: "subCategory",
+          value: ""
+        }
+      });
+      handleChange({
+        target: {
+          name: "category",
+          value: ""
+        }
+      });
+    } else if (name === "subCategory") {
+      handleChange({
+        target: {
+          name: "subCategory",
+          value
+        }
+      });
+      // Update formData.category for backend submission
+      handleChange({
+        target: {
+          name: "category",
+          value
+        }
+      });
+    }
+  };
+
   return (
     <div className="space-y-2">
       <label className="block text-white text-lg font-semibold border-b border-gray-500 pb-3 mb-4 text-center">
         Event Details
       </label>
+
       <label className="block text-white">Event Name</label>
       <input
         type="text"
@@ -381,7 +484,6 @@ const Step1 = ({ formData, handleChange }) => {
       <div className="relative">
         <Autocomplete
           apiKey={import.meta.env.VITE_MAPS_API_KEY}
-          style={{}}
           className="input-field"
           defaultValue={formData.venue}
           onPlaceSelected={(place) => {
@@ -402,14 +504,38 @@ const Step1 = ({ formData, handleChange }) => {
       />
 
       <label className="block text-white">Event Category</label>
-      <input
-        type="text"
-        name="category"
-        value={formData.category}
-        onChange={handleChange}
+      <select
+        name="mainCategory"
+        value={formData.mainCategory}
+        onChange={handleNestedChange}
         className="input-field"
-        placeholder="Event Category"
-      />
+      >
+        <option value="">Select Category</option>
+        {Object.keys(categories).map((main) => (
+          <option key={main} value={main}>
+            {main}
+          </option>
+        ))}
+      </select>
+
+      {formData.mainCategory && (
+        <>
+          <label className="block text-white">Subcategory</label>
+          <select
+            name="subCategory"
+            value={formData.subCategory}
+            onChange={handleNestedChange}
+            className="input-field"
+          >
+            <option value="">Select Subcategory</option>
+            {categories[formData.mainCategory].map((sub) => (
+              <option key={sub} value={sub}>
+                {sub}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       <label className="block text-white">Event Type</label>
       <select
@@ -418,12 +544,14 @@ const Step1 = ({ formData, handleChange }) => {
         onChange={handleChange}
         className="input-field"
       >
+        <option value="">Select Type</option>
         <option value="Public">Public</option>
         <option value="Private">Private</option>
       </select>
     </div>
   );
 };
+
 
 // Step 2: Artist Lineup
 const Step2 = ({ formData, handleArtistChange, dispatch }) => (

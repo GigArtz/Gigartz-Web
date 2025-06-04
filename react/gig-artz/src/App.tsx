@@ -4,6 +4,7 @@ import store from "../store/store"; // Your Redux store
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // Import Router and Routes
 import Follow from "./pages/follow";
 import EventManager from "./pages/Events";
+import EventInsights from "./pages/EventInsights";
 
 import "./styles.css"; // Import your styles
 import Login from "./pages/Login"; // Login component with routing
@@ -247,6 +248,26 @@ function App() {
             }
           />
           <Route path="/reset-password" element={<Forgot />} />
+          <Route
+            path="/events/:eventId/insights"
+            element={
+              <>
+                <Drawer />
+                <EventInsights />
+                <SideBar />
+              </>
+            }
+          />
+          <Route
+            path="/events/insights"
+            element={
+              <>
+                <Drawer />
+                <EventInsights />
+                <SideBar />
+              </>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </Provider>

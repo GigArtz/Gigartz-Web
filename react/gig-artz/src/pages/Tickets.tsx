@@ -1,5 +1,9 @@
 import { fetchAUserProfile } from "../../store/profileSlice";
-import { reassignTicket, resaleTicket, refundTicket } from "../../store/eventsSlice";
+import {
+  reassignTicket,
+  resaleTicket,
+  refundTicket,
+} from "../../store/eventsSlice";
 import Header from "../components/Header";
 import React, { useEffect, useState } from "react";
 import { FaEllipsisV, FaEye, FaTimesCircle } from "react-icons/fa";
@@ -8,6 +12,8 @@ import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../store/store";
 // Use RootState for type safety
 import type { RootState } from "../../store/store";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Tickets() {
   const [menuOpen, setMenuOpen] = useState(null);
@@ -19,13 +25,26 @@ function Tickets() {
     accountName: "",
     accountNumber: "",
     bankName: "",
-    routingNumber: ""
+    routingNumber: "",
   });
   const [resalePrice, setResalePrice] = useState(0);
   const [sellToPublic, setSellToPublic] = useState(true);
   const dispatch = useDispatch<AppDispatch>();
-  const { userList, profile, userTickets } = useSelector((state: RootState) => state.profile);
+  const { userList, profile, userTickets } = useSelector(
+    (state: RootState) => state.profile
+  );
   const { uid } = useSelector((state: RootState) => state.auth);
+  const { error, success } = useSelector((state: RootState) => state.events); // Add this line
+
+  // Toast notifications for success and error
+  React.useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+    if (success) {
+      toast.success(success);
+    }
+  }, [error, success]);
 
   useEffect(() => {
     if (profile) {
@@ -81,7 +100,12 @@ function Tickets() {
   };
 
   const handleRefund = () => {
-    if (!bankDetails.accountName || !bankDetails.accountNumber || !bankDetails.bankName || !bankDetails.routingNumber) {
+    if (
+      !bankDetails.accountName ||
+      !bankDetails.accountNumber ||
+      !bankDetails.bankName ||
+      !bankDetails.routingNumber
+    ) {
       alert("Please fill in all bank details.");
       return;
     }
@@ -94,13 +118,32 @@ function Tickets() {
       alert("Please enter a valid resale price.");
       return;
     }
-    dispatch(resaleTicket(uid || profile?.id, selectedTicket.id, resalePrice, sellToPublic));
+    dispatch(
+      resaleTicket(
+        uid || profile?.id,
+        selectedTicket.id,
+        resalePrice,
+        sellToPublic
+      )
+    );
     closeModal();
   };
 
   return (
     <div className="main-content p-4">
       <Header title="Tickets" />
+      {/* ToastContainer for toast notifications */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className="flex flex-wrap md:grid md:grid-cols-2 gap-4">
         {tickets.map((ticket) => (
           <div
@@ -128,7 +171,7 @@ function Tickets() {
               <div className="flex ">
                 <a
                   href={ticket.pdfURL}
-                  target="_blank"
+                  target="_self"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:underline"
                 >
@@ -151,10 +194,16 @@ function Tickets() {
                   >
                     Reassign Ticket
                   </button>
-                  <button className="block w-full btn-primary text-left px-4 py-2 mb-2" onClick={() => openModal("refund", ticket)}>
+                  <button
+                    className="block w-full btn-primary text-left px-4 py-2 mb-2"
+                    onClick={() => openModal("refund", ticket)}
+                  >
                     Claim Refund
                   </button>
-                  <button className="block w-full btn-primary text-left px-4 py-2" onClick={() => openModal("resale", ticket)}>
+                  <button
+                    className="block w-full btn-primary text-left px-4 py-2"
+                    onClick={() => openModal("resale", ticket)}
+                  >
                     Resale Ticket
                   </button>
                 </div>
@@ -205,12 +254,16 @@ function Tickets() {
                   userList.filter(
                     (user) =>
                       user.name.toLowerCase().includes(email.toLowerCase()) ||
-                      user.emailAddress.toLowerCase().includes(email.toLowerCase())
+                      user.emailAddress
+                        .toLowerCase()
+                        .includes(email.toLowerCase())
                   ).length > 0 ? (
                     userList
                       .filter(
                         (user) =>
-                          user.name.toLowerCase().includes(email.toLowerCase()) ||
+                          user.name
+                            .toLowerCase()
+                            .includes(email.toLowerCase()) ||
                           user.emailAddress
                             .toLowerCase()
                             .includes(email.toLowerCase())
@@ -248,32 +301,51 @@ function Tickets() {
             )}
             {modalType === "refund" && (
               <>
-                <p className="text-gray-300 mb-3">Enter your bank details for refund:</p>
+                <p className="text-gray-300 mb-3">
+                  Enter your bank details for refund:
+                </p>
                 <input
                   type="text"
                   value={bankDetails.accountName}
-                  onChange={e => setBankDetails({ ...bankDetails, accountName: e.target.value })}
+                  onChange={(e) =>
+                    setBankDetails({
+                      ...bankDetails,
+                      accountName: e.target.value,
+                    })
+                  }
                   placeholder="Account Name"
                   className="input-field mb-2"
                 />
                 <input
                   type="text"
                   value={bankDetails.accountNumber}
-                  onChange={e => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
+                  onChange={(e) =>
+                    setBankDetails({
+                      ...bankDetails,
+                      accountNumber: e.target.value,
+                    })
+                  }
                   placeholder="Account Number"
                   className="input-field mb-2"
                 />
                 <input
                   type="text"
                   value={bankDetails.bankName}
-                  onChange={e => setBankDetails({ ...bankDetails, bankName: e.target.value })}
+                  onChange={(e) =>
+                    setBankDetails({ ...bankDetails, bankName: e.target.value })
+                  }
                   placeholder="Bank Name"
                   className="input-field mb-2"
                 />
                 <input
                   type="text"
                   value={bankDetails.routingNumber}
-                  onChange={e => setBankDetails({ ...bankDetails, routingNumber: e.target.value })}
+                  onChange={(e) =>
+                    setBankDetails({
+                      ...bankDetails,
+                      routingNumber: e.target.value,
+                    })
+                  }
                   placeholder="Routing Number"
                   className="input-field mb-2"
                 />
@@ -286,11 +358,13 @@ function Tickets() {
             )}
             {modalType === "resale" && (
               <>
-                <p className="text-gray-300 mb-3">Enter resale price and options:</p>
+                <p className="text-gray-300 mb-3">
+                  Enter resale price and options:
+                </p>
                 <input
                   type="number"
                   value={resalePrice}
-                  onChange={e => setResalePrice(Number(e.target.value))}
+                  onChange={(e) => setResalePrice(Number(e.target.value))}
                   placeholder="Resale Price"
                   className="input-field mb-2"
                   min={1}
@@ -299,7 +373,7 @@ function Tickets() {
                   <input
                     type="checkbox"
                     checked={sellToPublic}
-                    onChange={e => setSellToPublic(e.target.checked)}
+                    onChange={(e) => setSellToPublic(e.target.checked)}
                     className="mr-2"
                   />
                   Sell to Public

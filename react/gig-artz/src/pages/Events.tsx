@@ -232,6 +232,12 @@ const EventDetails = () => {
     setIsEditModalOpen(true);
   };
 
+  const handleInsights = (event: Event) => {
+    if (event && event.id) {
+      navigate(`/events/${event.id}/insights`);
+    }
+  };
+
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEventToEdit(null);
@@ -264,6 +270,10 @@ const EventDetails = () => {
               onDelete={() => {
                 console.log("Delete event");
                 setIsCRUDVisible(false); // Close modal after deleting
+              }}
+              onInsights={() => {
+                handleInsights(event);
+                setIsCRUDVisible(false); // Close modal after viewing insights
               }}
               event={event}
             />

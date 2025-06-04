@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaTimesCircle } from "react-icons/fa";
+import Payment from "./Payment";
 
 interface BookingFormData {
   eventDetails: string;
@@ -45,6 +46,12 @@ const BookingModal: React.FC<BookingModalProps> = ({
     venue: "",
     additionalInfo: "",
   });
+  const [showPayment, setShowPayment] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState<
+    (BookingFormData & { serviceName: string }) | null
+  >(null);
+  const [pendingAmount, setPendingAmount] = useState<number>(0);
+  const [step, setStep] = useState<1 | 2>(1);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -56,20 +63,70 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService) return;
-    onSubmit({ ...formData, serviceName: selectedService });
-    setFormData({
-      eventDetails: "",
-      date: "",
-      time: "",
-      venue: "",
-      additionalInfo: "",
-    });
+    // Find the selected service and get its price
+    const serviceObj = services.find(
+      (s, idx) => (s.name ?? s["serviceName"] ?? idx) === selectedService
+    );
+    let amount = 0;
+    if (serviceObj) {
+      // Prefer package price if packages exist and user selects one (not implemented here, can be extended)
+      if (
+        Array.isArray(serviceObj.packages) &&
+        serviceObj.packages.length > 0
+      ) {
+        // For now, just use the first package's price
+        amount = Number(
+          serviceObj.packages[0].price || serviceObj.packages[0].baseFee || 0
+        );
+      } else {
+        amount = Number(serviceObj.baseFee || serviceObj.price || 0);
+      }
+    }
+    setPendingBooking({ ...formData, serviceName: selectedService });
+    setPendingAmount(amount);
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    if (pendingBooking) {
+      onSubmit(pendingBooking);
+      setPendingBooking(null);
+    }
+  };
+
+  const handlePaymentFailure = () => {
+    setShowPayment(false);
+    setPendingBooking(null);
+  };
+
+  const handleServiceSelect = (key: string) => {
+    setSelectedService(key);
+    setStep(2);
+  };
+
+  const handleBackToService = () => {
     setSelectedService("");
+    setStep(1);
   };
 
   useEffect(() => {
     console.log(services);
   }, [services]);
+
+  useEffect(() => {
+    if (isOpen && services.length === 1) {
+      // Auto-select the only service and go to step 2
+      const onlyService = services[0];
+      const key = onlyService.name ?? onlyService.serviceName ?? 0;
+      setSelectedService(key);
+      setStep(2);
+    } else if (isOpen && services.length !== 1) {
+      // Reset selection if not single service
+      setSelectedService("");
+      setStep(1);
+    }
+  }, [isOpen, services]);
 
   if (!isOpen) return null;
 
@@ -91,132 +148,111 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </button>
           </div>
 
-          {/* Service Selection */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Select a Service
-            </label>
-            <div className="flex flex-col gap-2">
-              {services && services.length > 0 ? (
-                services.map((service, idx) => {
-                  // Support all formats: name, serviceName, packages, baseFee, additionalCost
-                  const key = service.name ?? service["serviceName"] ?? idx;
-                  const displayName =
-                    service.name ?? service["serviceName"] ?? "Unnamed Service";
-                  const description =
-                    service.description ?? service["description"] ?? "";
-                  const baseFee = service.baseFee ?? service["baseFee"];
-                  const additionalCosts =
-                    service.additionalCosts ??
-                    service["additionalCosts"] ??
-                    service["additionalCost"];
-                  const packages =
-                    service.packages ?? service["packages"] ?? [];
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      className={`border rounded p-2 text-left transition-colors duration-150 ${
-                        selectedService === key
-                          ? "border-teal-500 bg-gray-800 text-white"
-                          : "border-teal-300 bg-gray-700 text-teal-200 hover:bg-gray-600"
-                      }`}
-                      onClick={() =>
-                        selectedService === key
-                          ? setSelectedService("")
-                          : setSelectedService(key)
-                      }
-                    >
-                      <div className="font-semibold">{displayName}</div>
-                      {description && (
-                        <div className="text-xs text-gray-400 mt-1">
-                          {description}
-                        </div>
-                      )}
-                      {/* Show flat fields if present (old format) */}
-                      {baseFee && (
-                        <div className="text-xs text-gray-400">
-                          Base Fee: {baseFee}
-                          {additionalCosts &&
-                            ` | Additional: ${additionalCosts}`}
-                        </div>
-                      )}
-                      {/* Show packages summary if present */}
-                      {Array.isArray(packages) && packages.length > 0 && (
-                        <div className="text-xs text-teal-300 mt-1">
-                          {packages.map((pkg, idx) => (
-                            <span key={idx} className="block">
-                              {pkg.name} - Base Fee:{" "}
-                              {pkg["baseFee"] ?? pkg["price"]}{" "}
-                              {pkg["additionalCost"]
-                                ? `| Additional: ${pkg["additionalCost"]}`
-                                : ""}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="text-gray-400">No services available.</div>
-              )}
+          {/* Step 1: Service Selection */}
+          {step === 1 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Select a Service
+              </label>
+              <div className="flex flex-col gap-2">
+                {services && services.length > 0 ? (
+                  services.map((service, idx) => {
+                    // Always support both 'name' and 'serviceName' as keys
+                    const key = service.name ?? service.serviceName ?? idx;
+                    const displayName =
+                      service.name ?? service.serviceName ?? "Unnamed Service";
+                    const description =
+                      service.description ?? service["description"] ?? "";
+                    const baseFee = service.baseFee ?? service["baseFee"];
+                    const additionalCosts =
+                      service.additionalCosts ??
+                      service["additionalCosts"] ??
+                      service["additionalCost"];
+                    const packages =
+                      service.packages ?? service["packages"] ?? [];
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        className={`border rounded p-2 text-left transition-colors duration-150 ${
+                          selectedService === key
+                            ? "border-teal-500 bg-gray-800 text-white"
+                            : "border-teal-300 bg-gray-700 text-teal-200 hover:bg-gray-600"
+                        }`}
+                        onClick={() => handleServiceSelect(key)}
+                      >
+                        <div className="font-semibold">{displayName}</div>
+                        {description && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            {description}
+                          </div>
+                        )}
+                        {baseFee && (
+                          <div className="text-xs text-gray-400">
+                            Base Fee: {baseFee}
+                            {additionalCosts &&
+                              ` | Additional: ${additionalCosts}`}
+                          </div>
+                        )}
+                        {Array.isArray(packages) && packages.length > 0 && (
+                          <div className="text-xs text-teal-300 mt-1">
+                            {packages.map((pkg, idx) => (
+                              <span key={idx} className="block">
+                                {pkg.name} - Base Fee:{" "}
+                                {pkg["baseFee"] ?? pkg["price"]}{" "}
+                                {pkg["additionalCost"]
+                                  ? `| Additional: ${pkg["additionalCost"]}`
+                                  : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="text-gray-400">No services available.</div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Booking Form - only show if a service is selected */}
-          {selectedService &&
+          {/* Step 2: Booking Form Fields */}
+          {step === 2 &&
+            selectedService &&
             (() => {
-              // Find by name or serviceName
-              const serviceObj = services.find(
-                (s, idx) =>
-                  (s.name ?? s["serviceName"] ?? idx) === selectedService
-              );
+              // Find by both 'name' and 'serviceName' and fallback to idx
+              const serviceObj = services.find((s, idx) => {
+                const key = s.name ?? s.serviceName ?? idx;
+                return key === selectedService;
+              });
               if (!serviceObj) return null;
               const packages =
                 serviceObj.packages ?? serviceObj["packages"] ?? [];
               return (
                 <React.Fragment>
+                  {Array.isArray(packages) && packages.length > 0 && (
+                    <div className="mb-4">
+                      <p>
+                        Selected Package:{" "}
+                        {packages.map((pkg, idx) => (
+                          <span key={idx}>
+                            {pkg.name}
+                            {idx < packages.length - 1 ? ", " : ""}
+                          </span>
+                        ))}
+                      </p>
+                    </div>
+                  )}
                   <button
                     type="button"
-                    className="mb-2 text-teal-400 hover:underline text-sm"
-                    onClick={() => setSelectedService("")}
+                    className="mb-2 text-teal-400 hover:underline text-sm flex items-end"
+                    onClick={handleBackToService}
                   >
                     ← Back to Service Selection
                   </button>
-                  {/* Show packages if available */}
-                  {Array.isArray(packages) && packages.length > 0 && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-1 text-teal-300">
-                        Select a Package
-                      </label>
-                      <div className="flex flex-row gap-2 overflow-x-auto pb-2">
-                        {packages.map((pkg, idx) => (
-                          <div
-                            key={idx}
-                            className="min-w-[180px] border border-teal-400 rounded p-2 bg-gray-900"
-                          >
-                            <div className="font-semibold text-teal-200">
-                              {pkg.name}
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {pkg.description}
-                            </div>
-                            <div className="text-xs text-teal-300 mt-1">
-                              Price: {pkg["price"] ?? pkg["baseFee"]}
-                            </div>
-                            {pkg["additionalCost"] && (
-                              <div className="text-xs text-gray-400">
-                                Additional: {pkg["additionalCost"]}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
-                  <div className="border min-h-16 overflow-x-auto">
+                  <div className="min-h-16 overflow-x-auto">
                     <div className="mb-2">
                       <label className="block text-sm font-medium">
                         Event Details
@@ -278,12 +314,21 @@ const BookingModal: React.FC<BookingModalProps> = ({
                       />
                     </div>
                   </div>
-
                   <div className="flex justify-end gap-2">
                     <button type="submit" className="btn-primary">
                       Book
                     </button>
                   </div>
+                  {showPayment && (
+                    <Payment
+                      amount={pendingAmount}
+                      type="booking"
+                      bookingDetails={pendingBooking || {}}
+                      onSuccess={handlePaymentSuccess}
+                      onFailure={handlePaymentFailure}
+                      onClose={() => setShowPayment(false)}
+                    />
+                  )}
                 </React.Fragment>
               );
             })()}
