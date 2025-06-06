@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { FaSpinner } from "react-icons/fa";
 import ScrollableEventCol from "./ScrollableEventCol";
+import ProfileInsights from "../pages/ProfileInsights";
 
 function MyProfileTabs({ uid }) {
   const { profile, userList, userEvents, userTickets, likedEvents, loading, error } =
@@ -43,6 +44,7 @@ function MyProfileTabs({ uid }) {
           {[
             { key: "events", label: "Events" },
             { key: "reviews", label: "Reviews" },
+            { key: "insights", label: "Insights" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -86,6 +88,17 @@ function MyProfileTabs({ uid }) {
 
             {activeTab === "reviews" && (
               <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
+            )}
+
+            {activeTab === "insights" && (
+             <ProfileInsights
+                uid={uid}
+                profile={profile}
+                userList={userList}
+                userEvents={userEvents}
+                userTickets={userTickets}
+                likedEvents={likedEvents}
+              />
             )}
           </>
         )}
