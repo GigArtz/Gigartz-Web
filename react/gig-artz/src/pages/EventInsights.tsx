@@ -101,8 +101,9 @@ const EventInsights: React.FC = () => {
 
   // For general insights, show a dropdown to pick a specific event
   return (
-    <div className="p-6 max-w-5xl mx-auto text-white">
+    <div className="main-content p-6 text-white">
       <h1 className="text-3xl font-bold mb-6">Event Insights Dashboard</h1>
+      
       <div className="flex gap-4 mb-6">
         {eventId ? (
           <button

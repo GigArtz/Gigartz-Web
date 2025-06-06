@@ -5,7 +5,7 @@ import { RootState } from "../../store/store";
 
 function WalletTabs({ uid }) {
   // Use RootState for type safety
-  const { loading, error, userBookings, userBookingsRequests } = useSelector(
+  const { loading, error, userBookings, userBookingsRequests, userEventProfit } = useSelector(
     (state: RootState) => state.profile
   );
 
@@ -70,6 +70,236 @@ function WalletTabs({ uid }) {
     }
   };
 
+  // --- New: Demo event revenue data ---
+  const eventRevenueData = [
+    {
+      id: "CnKf8wmJkm96J2dOnYR2",
+      vipTicketCount: 2,
+      totalPlatformRevenue: 80,
+      totalSales: 400,
+      eventInfo: {
+        eventType: "Public",
+        comments: [],
+        likes: 0,
+        title: "Fall of the stars",
+        ticketsAvailable: {
+          Vip: {
+            price: "200",
+            ticketReleaseDate: "2025-02-25T09:15:00.000Z",
+            ticketReleaseTime: "2025-02-14T04:25:00.000Z",
+            quantity: "50",
+          },
+        },
+        eventStartTime: "2025-02-14T00:08:00.000Z",
+        eventEndTime: "2025-02-14T03:08:00.000Z",
+        description: "Dance with the stars",
+        hostName: "Tshepo",
+        venue: "Australia",
+        promoterId: "jPzLK6KsU5bxFMSX7HFpBtc1Adz1",
+        gallery: [],
+        time: "",
+        date: "2025-02-28T09:08:00.000Z",
+        category: "Jazz",
+        artistLineUp: ["DJ eve"],
+        tip: false,
+        complimentaryTicket: false,
+        eventVideo: "",
+      },
+      totalRevenue: 320,
+    },
+    {
+      id: "EaVX28vBQF45M8ECNp4i",
+      totalPlatformRevenue: 70,
+      vipTicketCount: 1,
+      eventInfo: {
+        description: "some text",
+        ticketsAvailable: {
+          VIP: {
+            ticketReleaseDate: "2025-11-02",
+            quantity: "20",
+            ticketReleaseTime: "04:50",
+            price: "350",
+          },
+          Student: {
+            ticketReleaseTime: "10:00",
+            price: "100",
+            quantity: "20",
+            ticketReleaseDate: "2025-03-23",
+          },
+        },
+        likes: 0,
+        date: "2025-03-29",
+        eventStartTime: "06:00",
+        category: "event",
+        eventType: "Public",
+        venue: "Venue",
+        title: "Names",
+        gallery: [
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventImages%2F1742619739345_20250317_120138.jpg?alt=media&token=833d753b-c836-42e8-a27a-4a83c54e4d64",
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventImages%2F1742619745445_20250317_120125.jpg?alt=media&token=ea9d4f2a-1ab0-41ec-9da8-a6ee12a78f45",
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventImages%2F1742619752222_20250317_120145.jpg?alt=media&token=c73e58d1-840d-4e69-84b9-7c319d3a6d4e",
+        ],
+        eventEndTime: "10:00",
+        promoterId: "jPzLK6KsU5bxFMSX7HFpBtc1Adz1",
+        hostName: "Tshepo",
+        tip: false,
+        complimentaryTicket: false,
+        comments: [],
+        artistLineUp: ["james"],
+        eventVideo:
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventVideos%2F1742619715440_Screen%20Recording%202025-03-04%20111351.mp4?alt=media&token=f4c74837-7fd5-4293-8df6-01fef4bbe136",
+        time: "06:00",
+      },
+      totalSales: 350,
+      totalRevenue: 280,
+    },
+    {
+      id: "aJb8VxdEUM4tvE5HOIdR",
+      vipTicketCount: 4,
+      totalSales: 800,
+      totalRevenue: 640,
+      totalPlatformRevenue: 160,
+      eventInfo: {
+        artistLineUp: ["Dacing DJ"],
+        gallery: [],
+        category: "Jazz",
+        title: "Soul dance",
+        tip: false,
+        venue: "Kimberley",
+        eventStartTime: "2025-02-13T15:24:00.000Z",
+        eventType: "Public",
+        likes: 0,
+        ticketsAvailable: {
+          vip: {
+            ticketReleaseDate: "2025-02-20T12:03:00.000Z",
+            ticketReleaseTime: "2025-02-13T16:03:00.000Z",
+            quantity: "10",
+            price: "200",
+          },
+        },
+        promoterId: "jPzLK6KsU5bxFMSX7HFpBtc1Adz1",
+        date: "2025-02-21T12:00:00.000Z",
+        time: "",
+        comments: [],
+        description: "Dance with the soul",
+        eventEndTime: "2025-02-13T15:30:00.000Z",
+        hostName: "Tshepo",
+        complimentaryTicket: false,
+        eventVideo: "",
+      },
+    },
+    {
+      id: "cf6TmHu9dt5Fpy0d3bD5",
+      eventInfo: {
+        ticketsAvailable: {
+          VIP: {
+            quantity: "50",
+            price: "350",
+            ticketReleaseDate: "2025-03-22",
+            ticketReleaseTime: "09:09",
+          },
+        },
+        venue: "FNB",
+        eventEndTime: "23:55",
+        artistLineUp: ["Jazziq", "MoMo"],
+        comments: [],
+        eventVideo: "",
+        time: "20:00",
+        tip: false,
+        description: "Enjoy men sweating 😓 ",
+        date: "2025-03-22",
+        complimentaryTicket: false,
+        eventType: "Public",
+        hostName: "Tshepo",
+        category: "Sports",
+        gallery: [],
+        promoterId: "jPzLK6KsU5bxFMSX7HFpBtc1Adz1",
+        likes: 1,
+        eventStartTime: "20:00",
+        title: "Rugby",
+      },
+      vipTicketCount: 2,
+      totalSales: 700,
+      totalPlatformRevenue: 140,
+      totalRevenue: 560,
+    },
+    {
+      id: "nkWXDH5qh2iJaXii6tx7",
+      totalPlatformRevenue: 10,
+      eventInfo: {
+        artistLineUp: ["Birds"],
+        eventType: "Public",
+        likes: 0,
+        time: "06:00",
+        date: "2025-03-25",
+        eventEndTime: "06:45",
+        title: "Sunrise 🌅 ",
+        eventStartTime: "06:00",
+        hostName: "Tshepo",
+        complimentaryTicket: false,
+        description: "Smell the coffee",
+        gallery: [],
+        eventVideo: "",
+        ticketsAvailable: {
+          General: {
+            quantity: "10",
+            ticketReleaseTime: "05:00",
+            ticketReleaseDate: "2025-03-23",
+            price: "50",
+          },
+        },
+        tip: false,
+        category: "Nature",
+        promoterId: "jPzLK6KsU5bxFMSX7HFpBtc1Adz1",
+        comments: [],
+        venue: "Outside",
+      },
+      totalRevenue: 40,
+      generalTicketCount: 1,
+      totalSales: 50,
+    },
+    {
+      id: "qmlOev8WBmlZRNDYJphO",
+      totalPlatformRevenue: 100,
+      totalSales: 500,
+      totalRevenue: 400,
+      vipTicketCount: 1,
+      eventInfo: {
+        title: "name",
+        description: "nmae",
+        hostName: "Tshepo",
+        promoterId: "jPzLK6KsU5bxFMSX7HFpBtc1Adz1",
+        date: "2025-03-22",
+        comments: [],
+        venue: "name",
+        eventStartTime: "20:48",
+        tip: false,
+        artistLineUp: ["name"],
+        time: "20:48",
+        complimentaryTicket: false,
+        eventVideo:
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventVideos%2F1742582785106_Screen%20Recording%202025-03-04%20111351.mp4?alt=media&token=526870d8-c705-4892-842f-be51b094979e",
+        ticketsAvailable: {
+          VIP: {
+            price: "500",
+            ticketReleaseDate: "2025-03-22",
+            ticketReleaseTime: "20:52",
+            quantity: "50",
+          },
+        },
+        likes: 0,
+        eventEndTime: "01:45",
+        eventType: "Public",
+        category: "nmae",
+        gallery: [
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventImages%2F1742582793418_20250317_120138.jpg?alt=media&token=1b3b3573-ef98-453a-8024-8d488791dbc5",
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventImages%2F1742582799114_20250317_120125.jpg?alt=media&token=922f841e-4d07-4e81-ad79-8d8d672f1ee9",
+          "https://firebasestorage.googleapis.com/v0/b/test-1c2c1.appspot.com/o/eventImages%2F1742582805354_20250317_120145.jpg?alt=media&token=feb277b8-3a38-4c34-836a-5a7f26efb152",
+        ],
+      },
+    },
+  ];
+
   return (
     <div className=" rounded-lg shadow-md">
       {/* Tabs */}
@@ -80,6 +310,8 @@ function WalletTabs({ uid }) {
             { key: "earnings", label: "Earnings" },
             { key: "payouts", label: "Payouts" },
             { key: "bookings", label: "Bookings" },
+            // --- New tab for Event Revenue ---
+            { key: "eventRevenue", label: "Event Revenue" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -115,7 +347,7 @@ function WalletTabs({ uid }) {
               <div className="text-white space-y-4">
                 <div className="bg-gray-800 p-4 rounded-md">
                   <h3 className="text-lg font-semibold">Wallet Balance</h3>
-                  <p className="text-2xl font-bold mt-2">R {'0' || '00'}</p>
+                  <p className="text-2xl font-bold mt-2">R {"0" || "00"}</p>
                   <button className="mt-3 w-36 btn-primary rounded-3xl">
                     Withdraw Funds
                   </button>
@@ -299,6 +531,83 @@ function WalletTabs({ uid }) {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* --- New: Event Revenue Tab --- */}
+            {activeTab === "eventRevenue" && (
+              <div className="text-white space-y-4">
+                <h3 className="text-lg font-semibold mb-4">Event Revenue</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-gray-800 rounded-lg">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left">Event</th>
+                        <th className="px-4 py-2 text-left">Date</th>
+                        <th className="px-4 py-2 text-left">Venue</th>
+                        <th className="px-4 py-2 text-left">Total Sales</th>
+                        <th className="px-4 py-2 text-left">Total Revenue</th>
+                        <th className="px-4 py-2 text-left">
+                          Platform Revenue
+                        </th>
+                        <th className="px-4 py-2 text-left">VIP Tickets</th>
+                        <th className="px-4 py-2 text-left">Gallery</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userEventProfit?.map((event) => (
+                        <tr key={event.id} className="border-b border-gray-700">
+                          <td className="px-4 py-2">
+                            {event.eventInfo?.title || "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.eventInfo?.date
+                              ? new Date(
+                                  event.eventInfo.date
+                                ).toLocaleDateString()
+                              : "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.eventInfo?.venue || "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.totalSales || "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.totalRevenue || "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.totalPlatformRevenue || "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.vipTicketCount ||
+                              event.generalTicketCount ||
+                              "-"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {event.eventInfo?.gallery &&
+                            event.eventInfo.gallery.length > 0 ? (
+                              <div className="flex gap-1">
+                                {event.eventInfo.gallery
+                                  .slice(0, 2)
+                                  .map((img, idx) => (
+                                    <img
+                                      key={idx}
+                                      src={img}
+                                      alt="gallery"
+                                      className="w-10 h-10 object-cover rounded"
+                                    />
+                                  ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </>

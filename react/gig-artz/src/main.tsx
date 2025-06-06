@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { getMessaging, onMessage } from "firebase/messaging";
+import { getMessaging, onMessage, getToken } from "firebase/messaging";
 
 import App from "./App";
 import firebaseApp from "./config/firebase";
@@ -54,7 +54,6 @@ const initializeMessaging = async () => {
   // Request permission
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
-    console.warn("Notification permission not granted.");
     return;
   }
 
@@ -64,19 +63,17 @@ const initializeMessaging = async () => {
       vapidKey: VAPID_KEY,
       serviceWorkerRegistration: registration,
     });
-    console.log("FCM token:", token);
+    if (token) {
+      const { setToken } = await import("../store/notificationSlice");
+      const store = (await import("../store/store")).default;
+      store.dispatch(setToken(token));
+    }
   } catch (err) {
-    console.error("Failed to get FCM token:", err);
+    // Optionally log error
   }
 
   // Listen for foreground messages
   onMessage(messaging, (payload) => {
-    console.log("Foreground push notification:", payload);
-
-    // Debug: Log notification permission and Notification API support
-    console.log("Notification.permission:", Notification.permission);
-    console.log("Notification API supported:", "Notification" in window);
-
     const notificationTitle = payload.notification?.title || "New Notification";
     const notificationOptions = {
       body: payload.notification?.body || "You have a new message",
@@ -84,7 +81,6 @@ const initializeMessaging = async () => {
     };
 
     if (!("Notification" in window)) {
-      console.error("This browser does not support notifications.");
       alert("This browser does not support notifications.");
       return;
     }
@@ -92,16 +88,11 @@ const initializeMessaging = async () => {
     if (Notification.permission === "granted") {
       try {
         new Notification(notificationTitle, notificationOptions);
-        console.log("Notification shown via Notification API.");
       } catch (err) {
-        console.error("Notification API error:", err);
         alert("Notification API error: " + err);
         alert(notificationTitle + "\n" + notificationOptions.body);
       }
     } else {
-      console.warn(
-        "Notification permission is not granted. Showing alert instead."
-      );
       alert(notificationTitle + "\n" + notificationOptions.body);
     }
   });

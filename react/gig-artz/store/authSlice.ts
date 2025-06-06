@@ -219,7 +219,7 @@ export const loginUser = (email: string, password: string, rememberMe?: boolean)
       notify(dispatch, {
         type: "login",
         data: {
-          username: response.data.user.userName || response.data.user.emailAddress,
+          username: response.data.user.userName || response.data.user.userProfile?.emailAddress,
           date: new Date().toISOString(),
         },
       });

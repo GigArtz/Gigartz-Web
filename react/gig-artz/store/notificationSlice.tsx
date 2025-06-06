@@ -1,7 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import { AppDispatch } from "./store";
 
+// --- Types ---
 export interface Notification {
   id: string;
   type: string;
@@ -17,13 +19,43 @@ interface NotificationState {
   error: string | null;
 }
 
+// --- Local Storage Helpers ---
+const NOTIFICATIONS_KEY = "gigartz_notifications";
+
+function saveNotificationsToStorage(notifications: Notification[]) {
+  try {
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+  } catch {}
+}
+
+function loadNotificationsFromStorage(): Notification[] {
+  try {
+    const data = localStorage.getItem(NOTIFICATIONS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+// --- Initial State ---
 const initialState: NotificationState = {
-  notifications: [],
+  notifications: loadNotificationsFromStorage(),
   token: null,
   loading: false,
   error: null,
 };
 
+// --- Helper Function ---
+const createNotification = (
+  payload: Omit<Notification, "id" | "createdAt">
+): Notification => ({
+  ...payload,
+  id: uuidv4(),
+  createdAt: new Date().toISOString(),
+  read: false,
+});
+
+// --- Slice ---
 const notificationSlice = createSlice({
   name: "notification",
   initialState,
@@ -35,71 +67,36 @@ const notificationSlice = createSlice({
       state,
       action: PayloadAction<Omit<Notification, "id" | "createdAt">>
     ) {
-      const newNotification: Notification = {
-        ...action.payload,
-        id: Math.random().toString(36).substr(2, 9),
-        createdAt: new Date().toISOString(),
-        read: false,
-      };
+      const newNotification = createNotification(action.payload);
       state.notifications.unshift(newNotification);
-      console.log("[NotificationSlice] addNotification", newNotification);
-      // Send push notification if token exists
-      if (state.token) {
-        const notificationToSend = {
-          token: state.token,
-          body: "You have a new notification",
-          title: "New Notification",
-        };
-        axios
-          .post("https://gigartz.onrender.com/device", notificationToSend)
-          .then((res) => {
-            console.log(
-              "[NotificationSlice] Push notification sent:",
-              res.data
-            );
-          })
-          .catch((error) => {
-            console.error("Failed to send notification to backend:", error);
-            state.error = "Failed to send notification to backend";
-          });
-      } else {
-        console.warn(
-          "[NotificationSlice] No device token set, push notification not sent."
-        );
-      }
-      console.log(
-        "[NotificationSlice] addNotification to backend",
-        action.payload
-      );
+      saveNotificationsToStorage(state.notifications);
+      console.log("[NotificationSlice] Added notification", newNotification);
     },
     markAsRead(state, action: PayloadAction<string>) {
       const notification = state.notifications.find(
         (n) => n.id === action.payload
       );
       if (notification) notification.read = true;
-      console.log(
-        "[NotificationSlice] markAsRead",
-        action.payload,
-        notification
-      );
+      saveNotificationsToStorage(state.notifications);
     },
     clearNotifications(state) {
       state.notifications = [];
-      console.log("[NotificationSlice] clearNotifications");
+      saveNotificationsToStorage(state.notifications);
     },
     removeNotification(state, action: PayloadAction<string>) {
       state.notifications = state.notifications.filter(
         (n) => n.id !== action.payload
       );
-      console.log("[NotificationSlice] removeNotification", action.payload);
+      saveNotificationsToStorage(state.notifications);
     },
     setError(state, action: PayloadAction<string>) {
       state.error = action.payload;
-      console.log("[NotificationSlice] setError", action.payload);
     },
     resetError(state) {
       state.error = null;
-      console.log("[NotificationSlice] resetError");
+    },
+    loadNotificationsFromLocalStorage(state) {
+      state.notifications = loadNotificationsFromStorage();
     },
   },
 });
@@ -112,16 +109,25 @@ export const {
   removeNotification,
   setError,
   resetError,
+  loadNotificationsFromLocalStorage,
 } = notificationSlice.actions;
 
-// Async thunk to send notification to backend
+// --- Thunk ---
 export const sendNotificationToBackend =
-  (notification: { token: string; body: string; title: string }) =>
+  ({ token, title, body }: { token: string; title: string; body: string }) =>
   async (dispatch: AppDispatch) => {
     try {
-      await axios.post("https://gigartz.onrender.com/device", notification);
-    } catch {
-      dispatch(setError("Failed to send notification to backend"));
+      const response = await axios.post("https://gigartz.onrender.com/device", {
+        token,
+        title,
+        body,
+      });
+      console.log("[Thunk] Push notification sent:", response.data);
+    } catch (error: any) {
+      console.error("[Thunk] Failed to send notification:", error);
+      dispatch(
+        setError(error.message || "Failed to send notification to backend")
+      );
     }
   };
 
