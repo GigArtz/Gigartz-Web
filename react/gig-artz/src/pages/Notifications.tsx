@@ -1,8 +1,14 @@
 import React from "react";
 import Notification from "../components/Notification";
 import { FaArrowLeft } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
 
 function Notifications() {
+  // Get notifications from Redux
+  const notifications = useSelector(
+    (state: RootState) => state.notification.notifications
+  );
   return (
     <div className="main-content">
       <div className="p-2">
@@ -13,13 +19,13 @@ function Notifications() {
 
         {/* Notifications List */}
         <div className="max-h-[75vh] overflow-y-auto space-y-3">
-          <Notification type="follower" data={{ username: "JohnDoe" }} />
-          <Notification type="ticket" data={{ event: "Rock Concert 2025" }} />
-          <Notification
-            type="booking"
-            data={{ service: "Hotel Room", date: "March 25, 2025" }}
-          />
-          <Notification type="tip" data={{ username: "Alice", amount: "20" }} />
+          {notifications.length === 0 ? (
+            <div className="text-white text-center">No notifications yet.</div>
+          ) : (
+            notifications.map((n) => (
+              <Notification key={n.id} type={n.type} data={n.data} />
+            ))
+          )}
         </div>
       </div>
     </div>

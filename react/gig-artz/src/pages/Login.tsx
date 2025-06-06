@@ -9,12 +9,17 @@ import {
   loginUser,
   socialLogin,
 } from "../../store/authSlice";
+import {
+  setToken,
+  sendNotificationToBackend,
+} from "../../store/notificationSlice";
 import { FaFacebook, FaGoogle, FaSpinner } from "react-icons/fa";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/White.png";
 import { AppDispatch } from "../../store/store";
+import { requestNotificationPermission } from "../helpers/requestNotificationPermission";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -50,9 +55,30 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       toast.success("Login Successful! Welcome back!");
+      // Request notification permission and save token to Redux and backend
+      const getTokenAndSave = async () => {
+        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+        if (!vapidKey) {
+          console.warn("VAPID key is missing in environment variables.");
+          return;
+        }
+        const token = await requestNotificationPermission(vapidKey);
+        if (token) {
+          dispatch(setToken(token));
+          // Optionally send to backend as well
+          dispatch(
+            sendNotificationToBackend({
+              token,
+              body: "Welcome back!",
+              title: "Login Successful",
+            })
+          );
+        }
+      };
+      getTokenAndSave();
       navigate("/home");
     }
-  }, [user, navigate]);
+  }, [user, navigate, dispatch]);
 
   useEffect(() => {
     if (error) {

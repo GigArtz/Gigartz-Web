@@ -3,6 +3,17 @@ import { db } from "../src/config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import axios, { AxiosError } from "axios";
 import { AppDispatch } from "./store";
+import { addNotification } from "./notificationSlice";
+import { notify } from "../src/helpers/notify";
+
+// Extend the Window interface to include 'store'
+declare global {
+  interface Window {
+    store?: {
+      dispatch?: Function;
+    };
+  }
+}
 
 // User Profile Interface
 export interface UserProfile {
@@ -122,6 +133,7 @@ const profileSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     createBookingFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -136,6 +148,7 @@ const profileSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     getProfileSuccess(state, action: PayloadAction<UserProfile>) {
       state.loading = false;
@@ -146,6 +159,26 @@ const profileSlice = createSlice({
       state.loading = false;
       state.profile = action.payload;
       state.error = null;
+      // Notification now handled in thunk
+    },
+    // Example: Add notification for tipping (if tipping logic is present)
+    tipReceivedSuccess(state, action: PayloadAction<{ amount: number; from: string }>) {
+      state.loading = false;
+      state.success = `Tip received from ${action.payload.from}`;
+      state.error = null;
+      // Notification now handled in thunk
+    },
+    switchUserProfileSuccess(state, action: PayloadAction<UserProfile>) {
+      state.loading = false;
+      state.profile = action.payload;
+      state.error = null;
+      // Notification now handled in thunk
+    },
+    reviewReceivedSuccess(state, action: PayloadAction<{ from: string; rating: number; comment: string }>) {
+      state.loading = false;
+      state.success = `Review received from ${action.payload.from}`;
+      state.error = null;
+      // Notification now handled in thunk
     },
     fetchProfileFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -366,6 +399,11 @@ export const updateUserProfile =
 
         // Fetch updated profile data
         await dispatch(fetchUserProfile(uid));
+        // Send notification after successful update
+        notify(dispatch, {
+          type: "profile_update",
+          data: { name: updatedData.name, date: new Date().toLocaleDateString() },
+        });
         console.log(updateProfile);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -426,6 +464,11 @@ export const switchUserProfile =
         dispatch(
           profileSlice.actions.updateProfileSuccess(response.data.updatedProfile)
         );
+        // Send profile switch notification
+        notify(dispatch, {
+          type: "profile_switch",
+          data: { name: response.data.updatedProfile?.name, date: new Date().toLocaleDateString() },
+        });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -556,6 +599,11 @@ export const followUser =
             (response.data as ErrorResponse)?.message || "Followed successfully"
           )
         );
+        // Send follower notification
+        notify(dispatch, {
+          type: "follower",
+          data: { username: response.data?.message || followingId },
+        });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -623,6 +671,11 @@ export const bookFreelancer =
             "Freelancer booked successfully!"
           )
         );
+        // Send booking notification
+        notify(dispatch, {
+          type: "booking",
+          data: { service: bookingData.eventDetails, date: bookingData.date },
+        });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;

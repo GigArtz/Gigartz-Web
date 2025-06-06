@@ -11,7 +11,6 @@ import {
 } from "firebase/auth";
 import { createUser, fetchUserProfile, UserProfile } from "./profileSlice";
 import { AppDispatch } from "./store";
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 // User Interface
 export interface User {
@@ -212,6 +211,19 @@ export const loginUser = (email: string, password: string, rememberMe?: boolean)
         uid: uid,
       }));
 
+      // --- LOGIN NOTIFICATION ---
+      // Use notify utility to dispatch a login notification
+      // Import notify at the top if not already
+      // Notification type: 'login', data: { username, date }
+      const { notify } = await import("../src/helpers/notify");
+      notify(dispatch, {
+        type: "login",
+        data: {
+          username: response.data.user.userName || response.data.user.emailAddress,
+          date: new Date().toISOString(),
+        },
+      });
+
       console.log("Login Successful!");
     }
   } catch (error: unknown) {
@@ -268,6 +280,16 @@ export const socialLogin = (provider: "facebook" | "google" | "twitter") => asyn
     await dispatch(createUser({ uid: user.uid, customUser }));
 
     dispatch(authSlice.actions.loginSuccess({ user: customUser, uid: user.uid }));
+
+    // --- LOGIN NOTIFICATION (SOCIAL) ---
+    const { notify } = await import("../src/helpers/notify");
+    notify(dispatch, {
+      type: "login",
+      data: {
+        username: customUser.userName || customUser.emailAddress,
+        date: new Date().toISOString(),
+      },
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error during social login:", error.message);

@@ -3,6 +3,7 @@ import authReducer from './authSlice';  // Auth slice
 import profileReducer from './profileSlice';  // Profile slice
 import eventsReducer from './eventsSlice';  // Events slice
 import messageReducer from './messageSlice'; // Message slice
+import notificationReducer from './notificationSlice'; // Notification slice
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     profile: profileReducer,  // Handles profile state
     events: eventsReducer,  // Handles events state
     messages: messageReducer,
+    notification: notificationReducer,
   },
 
   middleware: (getDefaultMiddleware) =>

@@ -1,5 +1,11 @@
 import React from "react";
-import { FaUserPlus, FaTicketAlt, FaCalendarCheck, FaGift, FaInfoCircle } from "react-icons/fa";
+import {
+  FaUserPlus,
+  FaTicketAlt,
+  FaCalendarCheck,
+  FaGift,
+  FaInfoCircle,
+} from "react-icons/fa";
 
 const notificationTypes = {
   follower: {
@@ -12,11 +18,19 @@ const notificationTypes = {
   },
   booking: {
     icon: <FaCalendarCheck className="text-purple-500" />,
-    message: (data) => `Your booking for ${data.service} on ${data.date} is confirmed!`,
+    message: (data) =>
+      `Your booking for ${data.service} on ${data.date} is confirmed!`,
   },
   tip: {
     icon: <FaGift className="text-yellow-500" />,
     message: (data) => `${data.username} sent you a tip of $${data.amount}!`,
+  },
+  login: {
+    icon: <FaInfoCircle className="text-teal-400" />,
+    message: (data) =>
+      `Login successful! Welcome back, ${data.username || "user"}. (${new Date(
+        data.date
+      ).toLocaleString()})`,
   },
   general: {
     icon: <FaInfoCircle className="text-gray-500" />,
@@ -41,3 +55,4 @@ export default Notification;
 // <Notification type="ticket" data={{ event: "Rock Concert 2025" }} />
 // <Notification type="booking" data={{ service: "Hotel Room", date: "March 25, 2025" }} />
 // <Notification type="tip" data={{ username: "Alice", amount: "20" }} />
+// <Notification type="login" data={{ username: "JaneDoe", date: "2023-10-10T14:48:00.000Z" }} />

@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { buyTicket } from "../../store/eventsSlice";
 import type { EventBooking } from "../../store/eventsSlice";
 import { FaTimesCircle } from "react-icons/fa";
+import Loader from "./Loader";
 
 interface PaymentProps {
   amount: number;
@@ -131,7 +132,10 @@ const Payment: React.FC<PaymentProps> = ({
             <p className="mt-4">{error}</p>
           </div>
         ) : !url ? (
-          <p className="text-lg">Loading payment gateway...</p>
+          <div>
+            <h2 className="text-xl font-bold text-teal-500">Initializing...</h2>
+            <p className="mt-4">Please wait while we set up your payment.</p>
+          </div>
         ) : (
           <iframe
             ref={iframeRef}

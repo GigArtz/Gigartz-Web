@@ -2,6 +2,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppDispatch } from "./store";
 import axios, { AxiosError } from "axios";
+import { notify } from "../src/helpers/notify";
 
 interface TicketPrice {
   platinum: number;
@@ -100,6 +101,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     createLikeFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -109,6 +111,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     createReviewFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -118,6 +121,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     createGuestListFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -132,6 +136,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     fetchEventsFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -149,6 +154,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     buyTicketFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -179,6 +185,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     resaleTicketFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -193,6 +200,7 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.success = action.payload;
       state.error = null;
+      // Notification now handled in thunk
     },
     refundTicketFailure(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -292,6 +300,11 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
     dispatch(
       eventsSlice.actions.createEventsSuccess("Event added successfully!")
     );
+    // Send event notification
+    notify(dispatch, {
+      type: "event",
+      data: { message: "Event added successfully!" },
+    });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
@@ -348,7 +361,11 @@ export const createGuestList =
             "Guest list created successfully!"
           )
         );
-
+        // Send guest list notification
+        notify(dispatch, {
+          type: "guestlist",
+          data: { message: "Guest list created successfully!" },
+        });
         // Optionally return the new guestListId for the next step
         return response.data.guestListId;
       } catch (error: unknown) {
@@ -410,6 +427,11 @@ export const addGuestsToGuestList =
             "Guests added successfully!"
           )
         );
+        // Send guest list notification
+        notify(dispatch, {
+          type: "guestlist",
+          data: { message: "Guests added successfully!" },
+        });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -475,6 +497,11 @@ export const addReview =
             "Review added successfully!"
           )
         );
+        // Send review notification
+        notify(dispatch, {
+          type: "review",
+          data: { message: "Review added successfully!" },
+        });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -528,6 +555,11 @@ export const addLike = (eventId: string, userId: string) => async (dispatch: App
     dispatch(
       eventsSlice.actions.createLikeSuccess("Like added successfully!")
     );
+    // Send like notification
+    notify(dispatch, {
+      type: "like",
+      data: { message: "Like added successfully!" },
+    });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
@@ -588,6 +620,11 @@ export const buyTicket = (
       ticketData
     );
     dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));
+    // Send ticket notification
+    notify(dispatch, {
+      type: "ticket",
+      data: { event: ticketData.eventName },
+    });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
@@ -879,6 +916,11 @@ export const resaleTicket = (
       { userId, ticketId, resalePrice, sellToPublic }
     );
     dispatch(eventsSlice.actions.resaleTicketSuccess("Ticket listed for resale successfully!"));
+    // Send resale notification
+    notify(dispatch, {
+      type: "resale",
+      data: { message: "Ticket listed for resale successfully!" },
+    });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
@@ -931,6 +973,11 @@ export const refundTicket = (
       { userId, ticketId, bankDetails }
     );
     dispatch(eventsSlice.actions.refundTicketSuccess("Refund processed successfully!"));
+    // Send refund notification
+    notify(dispatch, {
+      type: "refund",
+      data: { message: "Refund processed successfully!" },
+    });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
