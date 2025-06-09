@@ -308,10 +308,10 @@ const AgeGenderBar = ({
 
 const ProfileInsights: React.FC = () => (
   <div className="p-6 max-w-7xl mx-auto  min-h-screen text-gray-100">
-    <h1 className="text-3xl font-bold mb-6 text-teal-400">Profile Insights</h1>
+    <h1 className="text-3xl font-bold mb-6 ">Profile Insights</h1>
 
     {/* Freelance Service Insights */}
-    <h2 className="text-xl text-teal font-semibold mb-2">
+    <h2 className="text-xl text-teal font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Freelance Service Insights
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -404,7 +404,7 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Social & Community Engagement */}
-    <h2 className="text-xl font-semibold mb-2 text-teal-300">
+    <h2 className="text-xl font-semibold mb-2  pb-2 text-teal-400 border-b border-gray-800">
       Social & Community Engagement
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -513,7 +513,7 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Promotional & Marketing Insights */}
-    <h2 className="text-xl font-semibold mb-2 text-teal-300">
+    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Promotional & Marketing Insights
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -557,7 +557,7 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Comparative & Trend Data */}
-    <h2 className="text-xl font-semibold mb-2 text-teal-300">
+    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Comparative & Trend Data
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -621,7 +621,7 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Audience Demographics */}
-    <h2 className="text-xl font-semibold mb-2 text-teal-300">
+    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Audience Demographics
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -654,7 +654,7 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Review & Reputation Insights */}
-    <h2 className="text-xl font-semibold mb-2 text-teal-300">
+    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Review & Reputation Insights
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">

@@ -32,7 +32,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
 
   return (
     <div
-      className="flex items-center scroll-smooth snap-x w-full max-w-lg p-3 rounded-lg cursor-pointer hover:bg-gray-900 transition duration-300 shadow-md hover:shadow-lg"
+      className="flex items-center scroll-smooth delay-150 ease-in-out hover:-translate-y-1 hover:scale-90 w-full max-w-lg p-3 rounded-lg cursor-pointer hover:bg-gray-900 transition duration-300 shadow-md hover:shadow-lg"
       onClick={handleClick}
     >
       {/* Profile Info + Button in a row with gap */}

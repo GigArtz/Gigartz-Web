@@ -135,7 +135,7 @@ function Drawer() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
+        className={`fixed top-0 left-12 h-full w-[65%] md:w-[20%] lg:w-[18%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
         ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
@@ -148,11 +148,11 @@ function Drawer() {
             <div className="h-4 w-32 mx-auto bg-gray-800 rounded" />
           </div>
         ) : (
-          <div className="p-4 border-b border-gray-700 text-center">
+          <div className="p-4 pl-8 border-b border-gray-700 text-center">
             <img
               src={profile?.profilePicUrl || avatar}
               alt="Profile"
-              className="w-16 h-16 md:w-20 md:h-20 min-w-16 min-h-16 max-w-20 max-h-20 mx-auto rounded-full border-2 border-teal-500 object-cover cursor-pointer"
+              className="w-14 h-14 md:w-20 md:h-20 min-w-14 min-h-14 max-w-20 max-h-20 rounded-full border-2 mx-auto border-teal-500 object-cover cursor-pointer"
               onClick={toggleDrawer}
             />
             <p

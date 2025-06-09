@@ -29,9 +29,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
   return (
     <Link
       to={`/events/?eventId=${event?.eventId || event?.id}`}
-      className="block w-full h-full"
+      className="block w-full h-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-90"
     >
-      <div className="w-full h-full flex flex-col min-w-0 rounded-xl shadow-lg border border-gray-800 cursor-pointer transition-transform">
+      <div className="w-full h-full flex flex-col min-w-0 rounded-xl shadow-lg border border-gray-800 cursor-pointer transition-transform ">
         {/* Image */}
         <img
           className={`w-full object-cover object-top rounded-t-xl ${

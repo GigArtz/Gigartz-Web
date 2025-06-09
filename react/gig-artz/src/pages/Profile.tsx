@@ -97,7 +97,7 @@ export default function Profile() {
                 src={profile?.coverProfile || blueBackground}
                 alt="Cover"
                 onClick={() => coverInputRef.current?.click()}
-                className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4 cursor-pointer"
+                className="rounded-2xl w-full h-40 object-cover sm:h-30 md:h-52 mb-4 cursor-pointer"
               />
               <input
                 type="file"
@@ -169,7 +169,6 @@ export default function Profile() {
                   <div className="flex">
                     <div className="flex gap-2 my-2">
                       {(Array.isArray(profile?.genre) ? profile.genre : [])
-                        .slice(0, 4)
                         .map((genre, index) => (
                           <div key={index}>
                             <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">

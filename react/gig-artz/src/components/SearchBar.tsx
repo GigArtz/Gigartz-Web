@@ -1,4 +1,5 @@
 import React from "react";
+import { FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 export default function SearchBar() {
@@ -25,20 +26,7 @@ export default function SearchBar() {
             placeholder="Search..."
           />
           <button type="submit" className="absolute right-0 top-0 mt-2 mr-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 15l5-5m0 0l-5-5m5 5H4"
-              />
-            </svg>
+            <FaSearch className="text-gray-400 mt-1" />
           </button>
         </form>
       </div>

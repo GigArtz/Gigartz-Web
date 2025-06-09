@@ -5,7 +5,7 @@ import { fetchAllProfiles } from "../../store/profileSlice";
 import UserCard from "./UserCard";
 import { AppDispatch } from "../../store/store";
 import { fetchAllEvents } from "../../store/eventsSlice";
-import { FaSpinner } from "react-icons/fa";
+import { FaFilter, FaSearch, FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
 import ScrollableEventCol from "./ScrollableEventCol";
@@ -108,22 +108,14 @@ function ExploreTabs() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="absolute right-0 top-0 mt-2 mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 15l5-5m0 0l-5-5m5 5H4"
-                />
-              </svg>
-            </button>
+            <div className="button-group flex gap-3">
+              <button className="absolute right-5 top-0 mt-2 mr-3">
+                <FaSearch className="absolute right-2 top-1 text-gray-400" />
+              </button>
+              <button type="button" className="absolute right-0 top-0 mt-2 mr-3">
+                <FaFilter className="absolute right-2 top-1 text-gray-400" />
+              </button>
+            </div>
           </form>
         </div>
       </div>

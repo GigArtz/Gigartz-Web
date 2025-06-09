@@ -14,6 +14,8 @@ export interface Review {
   createdAt: string;
   user: User;
   rating: number;
+  imageUrls?: string[]; // Multiple images
+  videoUrl?: string; // Single video
 }
 
 interface ReviewCardProps {
@@ -30,7 +32,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   };
 
   return (
-    <div className="flex w-full items-start p-4 bg-[#060512] rounded-lg shadow-md">
+    <div className="flex w-full items-start p-4 bg-[#060512] shadow-md border-b border-gray-800 transition-colors duration-200">
       {/* User Avatar */}
       <img
         src={review.user.profilePicUrl || "/avatar.png"}
@@ -71,6 +73,58 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
 
         {/* Review Text */}
         <p className="text-sm text-gray-300 mt-1">{review.text}</p>
+
+        {/* Images and/or Video Section */}
+        {(review.imageUrls?.length || review.videoUrl) && (
+          <div className="mt-3 w-full">
+            {/* Single image or video fills card */}
+            {((review.imageUrls?.length === 1 && !review.videoUrl) ||
+              (!review.imageUrls?.length && review.videoUrl)) && (
+              <>
+                {review.imageUrls?.length === 1 && (
+                  <img
+                    src={review.imageUrls[0]}
+                    alt="Review Media"
+                    className="w-full max-h-64 object-cover rounded-md border border-gray-700"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                )}
+                {!review.imageUrls?.length && review.videoUrl && (
+                  <video
+                    src={review.videoUrl}
+                    controls
+                    className="w-full max-h-64 object-cover rounded-md border border-gray-700"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Multiple images and/or video: grid */}
+            {((review.imageUrls?.length && review.imageUrls.length > 1) ||
+              (review.imageUrls?.length && review.videoUrl)) && (
+              <div className="grid grid-cols-2 gap-2">
+                {review.imageUrls?.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Review Media ${idx + 1}`}
+                    className="w-full h-32 object-cover rounded-md border border-gray-700"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                ))}
+                {review.videoUrl && (
+                  <video
+                    src={review.videoUrl}
+                    controls
+                    className="w-full h-32 object-cover rounded-md border border-gray-700"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

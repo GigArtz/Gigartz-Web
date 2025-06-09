@@ -196,6 +196,10 @@ function GuestList() {
     showToast("Guest added successfully!", "success");
   };
 
+  useEffect(() => {
+    console.log("Selected List ", selectedList)
+  }, [selectedList]);
+
   return (
     <div className="main-content p-6">
       <div className="relative flex justify-end h-20 mb-12 top-0">
@@ -260,6 +264,7 @@ function GuestList() {
                     e.stopPropagation();
                     setEditingList(list);
                     setNewListName(list.name);
+                    setSelectedList(list);
                     setShowListModal(true);
                   }}
                   className="text-white hover:text-blue-400 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -286,11 +291,11 @@ function GuestList() {
       {/* Modal for editing/adding guests to a list */}
       {selectedList && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="p-4 md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
+          <div className="p-4 min-w-96  md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Edit Guest List {selectedList.name}
+                Editing List: <span className="text-teal-500">{selectedList.guestListName}</span>
               </h3>
               <button
                 onClick={() => setSelectedList(null)}
@@ -299,8 +304,10 @@ function GuestList() {
                 <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
               </button>
             </div>
+            
 
-            <ul className="space-y-2 mb-3">
+            <ul className="space-y-2 mb-3 overflow-y-auto max-h-60">
+              <p>Existing Members</p>
               {selectedList.guests && selectedList.guests.length > 0 ? (
                 selectedList.guests.map((guest, index) => (
                   <li
@@ -333,6 +340,7 @@ function GuestList() {
             </ul>
 
             <div className="flex flex-col gap-2">
+              <p>Add Members</p>
               <input
                 type="email"
                 value={newGuestName}
@@ -345,7 +353,7 @@ function GuestList() {
                 autoFocus
               />
 
-              <ul className="text-gray-300 grid overflow-y-auto max-h-60">
+              <ul className="text-gray-300 grid overflow-y-auto max-h-32">
                 {userList &&
                 userList.filter(
                   (user) =>
@@ -423,7 +431,7 @@ function GuestList() {
               type="text"
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              placeholder="Enter list name"
+              placeholder={selectedList?.guestListName || "Enter list name"}
               className="input-field mb-3"
               autoFocus
             />

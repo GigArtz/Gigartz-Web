@@ -113,12 +113,18 @@ const Monetization = () => {
 
     setLoading(true); // Start loader
 
+    console.log("Switching profile with data:", {
+      uid,
+      acceptBookings,
+      acceptTips, // log acceptTips for debugging
+    });
+
     try {
       await dispatch(
         switchUserProfile(
           uid,
           selectedCategories,
-          acceptTips,
+          acceptTips, // use current state value
           acceptBookings,
           services
         )

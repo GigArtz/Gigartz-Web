@@ -86,7 +86,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               <img
                 src={userProfile?.userProfile?.coverProfile || cover}
                 alt="Cover"
-                className="w-full h-40 object-cover sm:h-30 md:h-52 mb-4"
+                className="w-full h-40 object-cover rounded-2xl sm:h-30 md:h-52 mb-4"
               />
               <img
                 src={userProfile?.userProfile?.profilePicUrl || avatar}

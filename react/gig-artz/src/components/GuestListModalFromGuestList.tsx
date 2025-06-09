@@ -13,9 +13,14 @@ const GuestListModalFromGuestList: React.FC<
   GuestListModalFromGuestListProps
 > = ({ isOpen, onClose, onAddGuest }) => {
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
+  const [selectedListName, setSelectedListName] = useState<string | null>(null);
   const [guestEmail, setGuestEmail] = useState("");
   const guestLists = JSON.parse(localStorage.getItem("guestLists") || "[]");
   const userList = useSelector((state: RootState) => state.profile.userList);
+
+  const handleSelectedListChange = () => {
+    
+  };
 
   const handleAddGuest = () => {
     if (selectedListId && guestEmail.trim()) {
@@ -32,12 +37,12 @@ const GuestListModalFromGuestList: React.FC<
       <div className="bg-dark p-6 rounded-lg w-96">
         {/* Modal Header */}
         <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-semibold text-white">
             Add to Guest List
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+            className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
           >
             <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
           </button>

@@ -50,7 +50,7 @@ const Home: React.FC = () => {
   );
 
   // Add state for selected tab
-  const [selectedTab, setSelectedTab] = useState("events");
+  const [selectedTab, setSelectedTab] = useState("reviews");
 
   const followingUserIds: string[] = []; // TODO: Replace with actual following user IDs
   const filteredEvents =
@@ -74,6 +74,11 @@ const Home: React.FC = () => {
       },
       eventTitle: "Jazz Night",
       rating: 4,
+      imageUrls: [
+        "https://picsum.photos/200/300?random=1",
+        "https://picsum.photos/200/300?random=5",
+      ],
+      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
       comment: "Amazing event! Loved the atmosphere and the music.",
       date: "2024-06-01",
       text: "Amazing event! Loved the atmosphere and the music.",
@@ -87,6 +92,7 @@ const Home: React.FC = () => {
       },
       eventTitle: "Rock Fest",
       rating: 5,
+      imageUrls: ["https://picsum.photos/200/300?random=2"],
       comment: "Best concert ever! Can't wait for the next one.",
       date: "2024-05-28",
       text: "Best concert ever! Can't wait for the next one.",
@@ -100,6 +106,10 @@ const Home: React.FC = () => {
       },
       eventTitle: "Art Expo",
       rating: 3,
+      imageUrls: [
+        "https://picsum.photos/200/300?random=3",
+        "https://picsum.photos/200/300?random=4",
+      ],
       comment: "Interesting exhibits, but the venue was crowded.",
       date: "2024-05-20",
       text: "Interesting exhibits, but the venue was crowded.",
@@ -121,8 +131,8 @@ const Home: React.FC = () => {
       <div className="tabs">
         <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
-            { key: "events", label: "Events" },
             { key: "reviews", label: "Reviews" },
+            { key: "events", label: "Events" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -157,7 +167,6 @@ const Home: React.FC = () => {
             <ReviewsGallery key={"gallery"} gallery={dummyGallery} />
           )}
         </div>
-        
       )}
 
       {/* Bottom Navigation (Only visible on small screens) */}

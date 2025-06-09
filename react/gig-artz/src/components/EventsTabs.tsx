@@ -102,7 +102,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
             See All
           </span>
         </div>
-        <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth snap-x space-x-2 ">
+        <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 ">
           {userList && userList.length > 0 ? (
             userList
               .filter((user) => user.roles?.freelancer) // ✅ Filter first
@@ -110,7 +110,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
                 // Patch: UserCard expects 'uid', but userList has 'id'.
                 const userWithUid = { ...user, uid: user.id };
                 return (
-                  <div key={user.id} className="mb-2 w-full flex flex-row">
+                  <div key={user.id} className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-90 snap-start flex flex-row">
                     <UserCard user={userWithUid} />
                   </div>
                 );

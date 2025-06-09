@@ -449,7 +449,7 @@ export const switchUserProfile =
     async (dispatch: AppDispatch) => {
       dispatch(profileSlice.actions.updateProfileStart());
 
-      console.log(userId, acceptTips, genre, acceptBookings, services);
+      console.log(userId, "tips: ", acceptTips, genre, acceptBookings, services);
 
       try {
         // Send the updated profile data to the API endpoint
