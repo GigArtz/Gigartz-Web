@@ -4,6 +4,7 @@ import {
   FaFileImage,
   FaPaperclip,
   FaSpinner,
+  FaStar,
 } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
@@ -146,7 +147,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
         </div>
         <div className="flex justify-between items-center mt-2 border-t pt-2 border-gray-600">
           {/* File and Broadcast Buttons */}
-          <div className="relative flex items-center gap-2 text-teal-500">
+          <div className="relative flex items-center sm:gap-2 text-teal-500">
             {/* Hidden File Input */}
             <input
               type="file"
@@ -170,10 +171,9 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
             >
               <FaBullhorn className="w-5 h-5" />
             </button>
-          </div>
-          {/* Star Rating */}
-          <div className="flex justify-center mb-2">
-            <div className="flex items-center mt-3 space-x-1">
+
+             {/* Desktop View - Stars */}
+            <div className="flex flex-row sm:flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   type="button"
@@ -183,17 +183,21 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
                     star <= rating ? "text-yellow-400" : "text-gray-500"
                   }`}
                 >
-                  ★
+                  <FaStar className="w-5 h-5" />
                 </button>
               ))}
             </div>
+
+           
           </div>
-          <div className="flex flex-row gap-3 align-baseline">
+       
+
+          <div className="flex flex-row gap-1 sm:gap-3 align-baseline">
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary mt-2 rounded-3xl transition w-20 flex items-center justify-center"
+              className="btn-primary mt-2 rounded-3xl transition w-12 sm:w-20 flex items-center justify-center"
             >
               {loading ? (
                 <div className="flex items-center justify-center bg-opacity-50 z-50">
@@ -206,7 +210,6 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
           </div>
         </div>
       </div>
-     
     </form>
   );
 };

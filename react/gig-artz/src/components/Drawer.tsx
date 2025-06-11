@@ -15,6 +15,7 @@ import {
   FaArrowLeft,
   FaEllipsisH,
   FaTimesCircle,
+  FaPlus,
 } from "react-icons/fa";
 import avatar from "../assets/avater.png";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -23,6 +24,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
 import { fetchUserProfile } from "../../store/profileSlice";
+import CommentForm from "./CommentForm";
 import Loader from "./Loader";
 
 function Drawer() {
@@ -33,8 +35,22 @@ function Drawer() {
   const { profile, loading } = useSelector((state: RootState) => state.profile);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalCommentOpen, setIsCommentModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
+
+  const [isMoreExpanded, setIsMoreExpanded] = useState(false);
+
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+
+  // Add this handler:
+  const handleAddOption = (option: string) => {
+    setIsAddDropdownOpen(false);
+    if (option === "event") {
+      openModal(); // existing event modal
+    } else if (option === "review") {
+      setIsCommentModalOpen(true);
+    }
+  };
 
   // Fetch user profile on mount or user change
   useEffect(() => {
@@ -110,10 +126,45 @@ function Drawer() {
     setIsDrawerOpen(false);
   };
 
+  function handleCommentSubmit(comment: string, rating: number) {
+    // Placeholder: You can dispatch an action or call an API here
+    // For now, just log the comment and rating
+    console.log("Submitted comment:", comment, "Rating:", rating);
+    // Optionally, show a toast or notification to the user
+    // Example: toast.success("Review submitted!");
+  }
+
   return (
     <div className="relative flex">
       {/* Modal */}
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
+
+      {/* Comment Modals */}
+      {isModalCommentOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          {/* Modal Container */}
+          <div className="bg-dark rounded-lg shadow-xl p-6 w-full max-w-xl relative animate-fade-in">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsCommentModalOpen(false)}
+              className="absolute top-2 right-2 text-white text-xl hover:text-red-400 focus:outline-none"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+
+            {/* Comment Form */}
+            <CommentForm
+              buttonText="Submit"
+              loading={loading}
+              onSubmit={(comment, rating) => {
+                handleCommentSubmit(comment, rating);
+                setIsCommentModalOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Top bar for mobile */}
       <div className="md:hidden fixed top-0 left-0 w-full bg-[#060512] shadow-md z-30 p-2 flex justify-between items-center">
@@ -211,63 +262,62 @@ function Drawer() {
               <div className="border-gray-700 pt-4">
                 <button
                   className="w-full flex items-center px-2 py-2 rounded-2xl text-sm font-semibold text-white bg-dark hover:bg-gray-700 transition mb-2"
-                  onClick={() => setIsMoreModalOpen(true)}
+                  onClick={() => setIsMoreExpanded((open) => !open)}
                   type="button"
                 >
                   <FaEllipsisH className="w-5 h-5 me-3" />
                   <span className="text-white hover:bg-gray-700">More</span>
                 </button>
-              </div>
-
-              {/* More Modal */}
-              {isMoreModalOpen && (
-                <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-20">
-                  <div className="bg-dark border border-teal-500 rounded-2xl shadow-2xl shadow-teal-500 pt-8 px-2 pb-2 ps-4 max-w-xs relative animate-fade-in">
-                    <button
-                      className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
-                      onClick={() => setIsMoreModalOpen(false)}
-                      aria-label="Close"
-                    >
-                      <FaTimesCircle className="w-4 h-4" />
-                    </button>
-                    <ul className="space-y-2">
-                      {moreNavItems.map((item, index) => (
-                        <li key={index}>
-                          <a
-                            onClick={() => {
-                              handleNavClick(item);
-                              setIsMoreModalOpen(false);
-                            }}
-                            className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                              ${
-                                item.label === "Sign Out"
-                                  ? "text-white hover:bg-red-600"
-                                  : "text-white hover:bg-gray-700"
-                              }`}
-                          >
-                            <item.icon className="w-5 h-5" />
-                            <span>{item.label}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {/* Create Button */}
-              <div className="flex flex-row font-medium px-2 py-1 mt-4 mb-5 justify-center">
-                <button
-                  onClick={openModal}
-                  type="button"
-                  className="inline-flex items-center text-white text-lg justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
-                >
-                  Create
-                </button>
+                {isMoreExpanded && (
+                  <ul className="space-y-2 mt-2">
+                    {moreNavItems.map((item, index) => (
+                      <li key={index}>
+                        <a
+                          onClick={() => handleNavClick(item)}
+                          className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
+              ${
+                item.label === "Sign Out"
+                  ? "text-white hover:bg-red-600"
+                  : "text-white hover:bg-gray-700"
+              }`}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </>
           )}
         </nav>
+        {/* Create Button */}
+        <div className="flex flex-row font-medium px-2 py-1 mt-4 justify-center relative">
+          <button
+            onClick={() => setIsAddDropdownOpen((open) => !open)}
+            type="button"
+            className="inline-flex items-center text-white text-lg pb-4 justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
+          >
+            <FaPlus className="w-5" /> Post
+          </button>
+          {isAddDropdownOpen && (
+            <div className="absolute top-12 left-0 w-full bg-dark text-center rounded-xl shadow-lg z-50 animate-fade-in">
+              <button
+                className="inline-flex items-center text-white text-lg justify-center w-36 h-10 btn-primary rounded-full mb-2"
+                onClick={() => handleAddOption("event")}
+              >
+                Event
+              </button>
+              <button
+                className="inline-flex items-center text-white text-lg justify-center w-36 h-10 btn-primary rounded-full"
+                onClick={() => handleAddOption("review")}
+              >
+                Review
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Overlay for mobile drawer */}
