@@ -29,18 +29,19 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
   return (
     <Link
       to={`/events/?eventId=${event?.eventId || event?.id}`}
-      className="block w-full h-60 sm:h-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1"
+      className="block w-full h-58 sm:h-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1"
     >
-      <div className="w-full h-full flex flex-col min-w-0 rounded-xl shadow-lg border border-gray-800 cursor-pointer transition-transform ">
+      <div className="w-full h-full flex flex-col min-w-0 rounded-xl shadow-lg border border-gray-800 bg-gray-900 cursor-pointer transition-transform ">
         {/* Image */}
         <img
           className={`w-full object-cover object-top rounded-t-xl hover:scale-95 hover:rounded-xl ${
             cardSize === "sm"
-              ? "h-30 sm:h-48"
+              ? "h-30 sm:h-40"
               : cardSize === "md"
-              ? "h-32 md:h-56 p-0 rounded-t-2xl "
+              ? "h-40 md:h-56 p-0 rounded-t-2xl "
               : "h-64"
           }`}
+         
           src={event?.gallery?.length ? event.gallery[0] : image} // Ensures array check
           alt={event?.title || "Event Image"}
         />
@@ -59,8 +60,21 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
               {event.title}
             </h5>
 
-            {cardSize === "lg" && (
-              <div className="flex gap-2">
+           
+          </div>
+          
+
+          {/* Date */}
+          <p className="mb-3 text-gray-400 flex items-center text-xs md:text-sm">
+            {new Date(event?.date).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </p>
+
+           {cardSize === "lg" && (
+              <div className="flex border-t border-gray-800 pt-2 px-2 gap-2">
                 <EventActions
                   event={event}
                   profile={profile}
@@ -71,16 +85,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
                 />
               </div>
             )}
-          </div>
-
-          {/* Date */}
-          <p className="mb-3 text-gray-400 flex items-center text-xs md:text-sm">
-            {new Date(event?.date).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </p>
         </div>
       </div>
     </Link>

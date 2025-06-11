@@ -336,7 +336,7 @@ function ExploreTabs() {
           {[
             { key: "top", label: "Top" },
             { key: "latest", label: "Latest" },
-            { key: "events", label: "Events" },
+            { key: "gigs", label: "Gigs" },
             { key: "people", label: "People" },
           ].map(({ key, label }) => (
             <li key={key}>
@@ -468,7 +468,7 @@ function ExploreTabs() {
               <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
             )}
 
-            {activeTab === "events" && (
+            {activeTab === "gigs" && (
               <div className="mt-2 w-full p-2 rounded-xl">
                 <ScrollableEventCol
                   events={filteredEvents}

@@ -6,7 +6,7 @@ import { RootState, AppDispatch } from "../../store/store";
 import EventsTabs from "../components/EventsTabs";
 import ReviewCard from "../components/ReviewCard"; // Import ReviewCard
 import ReviewsGallery from "../components/ReviewsGallery";
-import { Comment } from "@material-ui/icons";
+import { Review } from "@material-ui/icons";
 import CommentForm from "../components/CommentForm";
 import AdCard from "../components/AdCard";
 
@@ -17,11 +17,11 @@ interface TicketPrice {
   goldenCircle: number;
   general: number;
 }
-interface Comment {
+interface Review {
   userId: string;
   timestamp: { seconds: number; nanoseconds: number };
-  comment: string;
-  replies: Comment[];
+  review: string;
+  replies: Review[];
 }
 interface Event {
   id: string;
@@ -30,7 +30,7 @@ interface Event {
   mapLink: string;
   title: string;
   gallery: string[];
-  comments: Comment[];
+  comments: Review[];
   eventType: string;
   eventVideo: string;
   city: string;
@@ -82,7 +82,7 @@ const Home: React.FC = () => {
         "https://picsum.photos/200/300?random=5",
       ],
       videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      comment: "Amazing event! Loved the atmosphere and the music.",
+      review: "Amazing event! Loved the atmosphere and the music.",
       date: "2024-06-01",
       text: "Amazing event! Loved the atmosphere and the music.",
       createdAt: "2024-06-01T12:00:00Z",
@@ -96,7 +96,7 @@ const Home: React.FC = () => {
       eventTitle: "Rock Fest",
       rating: 5,
       imageUrls: ["https://picsum.photos/200/300?random=2"],
-      comment: "Best concert ever! Can't wait for the next one.",
+      review: "Best concert ever! Can't wait for the next one.",
       date: "2024-05-28",
       text: "Best concert ever! Can't wait for the next one.",
       createdAt: "2024-05-28T15:30:00Z",
@@ -113,7 +113,7 @@ const Home: React.FC = () => {
         "https://picsum.photos/200/300?random=3",
         "https://picsum.photos/200/300?random=4",
       ],
-      comment: "Interesting exhibits, but the venue was crowded.",
+      review: "Interesting exhibits, but the venue was crowded.",
       date: "2024-05-20",
       text: "Interesting exhibits, but the venue was crowded.",
       createdAt: "2024-05-20T09:45:00Z",
@@ -127,7 +127,7 @@ const Home: React.FC = () => {
       eventTitle: "Food Truck Fiesta",
       rating: 5,
       imageUrls: ["https://picsum.photos/200/300?random=6"],
-      comment: "Incredible food, great vibes, and perfect weather!",
+      review: "Incredible food, great vibes, and perfect weather!",
       date: "2024-06-02",
       text: "Incredible food, great vibes, and perfect weather! Every stall had something unique. Definitely bringing more friends next time. Loved the live band too!",
       createdAt: "2024-06-02T18:00:00Z",
@@ -141,7 +141,7 @@ const Home: React.FC = () => {
       eventTitle: "Outdoor Movie Night",
       rating: 4,
       imageUrls: ["https://picsum.photos/200/300?random=7"],
-      comment: "Cozy and fun evening under the stars.",
+      review: "Cozy and fun evening under the stars.",
       date: "2024-06-03",
       text: "Cozy and fun evening under the stars. The sound system could’ve been better, but overall it was a lovely night with friends and snacks.",
       createdAt: "2024-06-03T20:30:00Z",
@@ -155,7 +155,7 @@ const Home: React.FC = () => {
       eventTitle: "Tech Meetup 2024",
       rating: 2,
       imageUrls: [],
-      comment: "Not well organized. Speakers were late.",
+      review: "Not well organized. Speakers were late.",
       date: "2024-06-04",
       text: "Not well organized. The speakers were late, some sessions were canceled without notice, and the venue had poor Wi-Fi. Hoping for a better experience next year.",
       createdAt: "2024-06-04T10:15:00Z",
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
       eventTitle: "Book Fair",
       rating: 5,
       imageUrls: ["https://picsum.photos/200/300?random=8"],
-      comment: "Book heaven! Found so many great deals.",
+      review: "Book heaven! Found so many great deals.",
       date: "2024-06-05",
       text: "Book heaven! Found so many great deals and rare finds. The author signing corner was a highlight. Loved the children's reading area too. Great family-friendly vibe!",
       createdAt: "2024-06-05T11:00:00Z",
@@ -191,7 +191,7 @@ const Home: React.FC = () => {
         <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
             { key: "reviews", label: "Reviews" },
-            { key: "events", label: "Events" },
+            { key: "events", label: "Gigs" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -218,12 +218,12 @@ const Home: React.FC = () => {
 
       {selectedTab === "reviews" && (
         <div className="flex flex-col gap-4 p-4">
-          {/* Comment Form */}
+          {/* Review Form */}
           <CommentForm
             placeholder="Share your experience..."
             buttonText="Post Review"
-            onSubmit={(comment) => {
-              console.log("Comment submitted:", comment);
+            onSubmit={(review) => {
+              console.log("Review submitted:", review);
               // TODO: Hook into API/state update
             }}
           />

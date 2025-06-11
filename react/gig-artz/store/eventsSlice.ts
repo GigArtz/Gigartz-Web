@@ -16,11 +16,11 @@ interface Timestamp {
   nanoseconds: number;
 }
 
-interface Comment {
+interface Review {
   userId: string;
   timestamp: Timestamp;
-  comment: string;
-  replies: Comment[];
+  review: string;
+  replies: Review[];
 }
 
 interface TicketAvailability {
@@ -42,7 +42,7 @@ interface Event {
   mapLink: string;
   title: string;
   gallery: string[];
-  comments: Comment[];
+  comments: Review[];
   eventType: string;
   eventVideo: string;
   city: string;

@@ -126,10 +126,10 @@ function Drawer() {
     setIsDrawerOpen(false);
   };
 
-  function handleCommentSubmit(comment: string, rating: number) {
+  function handleCommentSubmit(review: string, rating: number) {
     // Placeholder: You can dispatch an action or call an API here
-    // For now, just log the comment and rating
-    console.log("Submitted comment:", comment, "Rating:", rating);
+    // For now, just log the review and rating
+    console.log("Submitted review:", review, "Rating:", rating);
     // Optionally, show a toast or notification to the user
     // Example: toast.success("Review submitted!");
   }
@@ -139,30 +139,28 @@ function Drawer() {
       {/* Modal */}
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
-      {/* Comment Modals */}
+      {/* Review Modals */}
       {isModalCommentOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
           {/* Modal Container */}
           <div className="bg-dark rounded-lg shadow-xl p-6 w-full max-w-xl relative animate-fade-in">
-  
-
             {/* Modal Header */}
             <div className="flex items-end justify-end p-2 md:p-5 rounded-t">
               {/* Close Button */}
               <button
-                 onClick={() => setIsCommentModalOpen(false)}
+                onClick={() => setIsCommentModalOpen(false)}
                 className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
               >
                 <FaTimesCircle className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Comment Form */}
+            {/* Review Form */}
             <CommentForm
               buttonText="Submit"
               loading={loading}
-              onSubmit={(comment, rating) => {
-                handleCommentSubmit(comment, rating);
+              onSubmit={(review, rating) => {
+                handleCommentSubmit(review, rating);
                 setIsCommentModalOpen(false);
               }}
             />

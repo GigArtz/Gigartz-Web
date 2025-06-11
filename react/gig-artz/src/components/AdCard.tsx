@@ -33,7 +33,7 @@ const AdCard: React.FC<AdCardProps> = ({
       {...wrapperProps}
       className="block transition-transform hover:-translate-y-1 duration-300 ease-in-out"
     >
-      <div className="relative rounded-xl shadow-md h-60 sm:h-full  border border-gray-800 bg-gray-900 overflow-hidden flex flex-col h-full">
+      <div className="relative rounded-xl shadow-md border border-gray-800 bg-gray-900 overflow-hidden flex flex-col h-full">
         {/* Badge */}
         {badge && (
           <div className="absolute top-3 left-3 bg-teal-500 text-white text-xs font-semibold px-2 py-1 rounded">
@@ -47,9 +47,9 @@ const AdCard: React.FC<AdCardProps> = ({
           alt={title}
           className={`w-full object-cover object-center transition group-hover:scale-105 ${
             size === "sm"
-              ? "h-30 sm:h-48"
+              ? "h-32 sm:h-56"
               : size === "md"
-              ? "h-40 md:h-56"
+              ? "h-52 md:h-56"
               : "h-64"
           }`}
         />

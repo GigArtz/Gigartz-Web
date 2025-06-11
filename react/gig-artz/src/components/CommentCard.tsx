@@ -8,7 +8,7 @@ interface User {
   profilePicUrl?: string;
 }
 
-interface Comment {
+interface Review {
   id: string;
   text: string;
   createdAt: string;
@@ -17,15 +17,15 @@ interface Comment {
 }
 
 interface CommentCardProps {
-  comment: Comment;
+  review: Review;
 }
 
-const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
+const CommentCard: React.FC<CommentCardProps> = ({ review }) => {
   const navigate = useNavigate();
 
   const handleUserClick = () => {
-    if (comment.user.uid) {
-      navigate(`/people/${comment.user.uid}`);
+    if (review.user.uid) {
+      navigate(`/people/${review.user.uid}`);
     }
   };
 
@@ -33,25 +33,25 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
     <div className="flex w-full  items-start p-4 bg-[#060512] rounded-lg shadow-md">
       {/* Profile Picture */}
       <img
-        src={comment.user.profilePicUrl || "/avatar.png"}
+        src={review.user.profilePicUrl || "/avatar.png"}
         alt="User Avatar"
         className="w-10 h-10 rounded-full border-2 border-teal-400 cursor-pointer"
         onClick={handleUserClick}
       />
 
-      {/* Comment Content */}
+      {/* Review Content */}
       <div className="ml-3 flex-1">
         <div className="flex items-center justify-between">
           <div className="cursor-pointer" onClick={handleUserClick}>
             <h3 className="text-sm font-semibold text-white">
-              {comment.user.name || "Unknown"}
+              {review.user.name || "Unknown"}
             </h3>
             <p className="text-xs text-gray-400">
-              @{comment.user.userName || "username"}
+              @{review.user.userName || "username"}
             </p>
           </div>
           <span className="text-xs text-gray-500">
-            {new Date(comment.createdAt).toLocaleString()}
+            {new Date(review.createdAt).toLocaleString()}
           </span>
         </div>
 
@@ -61,7 +61,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
             <span
               key={index}
               className={`text-sm ${
-                index < comment.rating ? "text-yellow-400" : "text-gray-500"
+                index < review.rating ? "text-yellow-400" : "text-gray-500"
               }`}
             >
               ★
@@ -69,8 +69,8 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
           ))}
         </div>
 
-        {/* Comment Text */}
-        <p className="text-sm text-gray-300 mt-1">{comment.text}</p>
+        {/* Review Text */}
+        <p className="text-sm text-gray-300 mt-1">{review.text}</p>
       </div>
     </div>
   );

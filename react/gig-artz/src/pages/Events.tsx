@@ -54,7 +54,7 @@ const EventDetails = () => {
   const { uid } = useSelector((state: RootState) => state.auth);
   const { profile } = useSelector((state: RootState) => state.profile);
 
-  // Comments Modal
+  // Reviews Modal
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
 
   // Share Modal
@@ -281,7 +281,7 @@ const EventDetails = () => {
         </div>
       )}
 
-      {/* Comments Modal */}
+      {/* Reviews Modal */}
       {isCommentsVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
           <CommentsModal

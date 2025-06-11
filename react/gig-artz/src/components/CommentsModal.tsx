@@ -14,7 +14,7 @@ interface User {
   profilePicUrl?: string;
 }
 
-interface Comment {
+interface Review {
   id: string;
   text: string;
   createdAt: string;
@@ -40,7 +40,7 @@ const CommentsModal: React.FC<CommentsProps> = ({
   isCommentsVisible,
   onClose,
 }) => {
-  const [comments, setComments] = useState<Comment[]>([]); // Start with empty, fill only with new comments
+  const [comments, setComments] = useState<Review[]>([]); // Start with empty, fill only with new comments
   const dispatch = useDispatch<AppDispatch>();
   const uid = useSelector((state: RootState) => state.auth.uid);
   const { error, success, loading } = useSelector(
@@ -53,14 +53,10 @@ const CommentsModal: React.FC<CommentsProps> = ({
     (state: RootState) => state.profile.userList
   ) as { userName: string }[];
 
-
   // Filter userList to only include users with a userName and name
-  const filteredUser = userList.filter(
-    (user) => user?.userName && user?.name && user?.profilePicUrl
-  )?.find((u) => u.userName === user?.userName
-
-  );
-
+  const filteredUser = userList
+    .filter((user) => user?.userName && user?.name && user?.profilePicUrl)
+    ?.find((u) => u.userName === user?.userName);
 
   const handleCommentSubmit = (commentText: string, rating: number) => {
     // Only dispatch, do not update UI yet
@@ -72,7 +68,7 @@ const CommentsModal: React.FC<CommentsProps> = ({
         rating,
       })
     );
-    // Store pending comment in state for later
+    // Store pending review in state for later
     setPendingComment({ commentText, rating });
   };
 
@@ -83,7 +79,7 @@ const CommentsModal: React.FC<CommentsProps> = ({
   } | null>(null);
   React.useEffect(() => {
     if (success && pendingComment) {
-      const newComment: Comment = {
+      const newComment: Review = {
         id: `${Date.now()}`,
         text: pendingComment.commentText,
         createdAt: new Date().toISOString(),
@@ -102,32 +98,28 @@ const CommentsModal: React.FC<CommentsProps> = ({
   }, [success, pendingComment, user, dispatch]);
 
   const handleToastClose = () => {
-  setShowToast(false);
-};
+    setShowToast(false);
+  };
 
-// Fetch comments when modal opens
+  // Fetch comments when modal opens
   useEffect(() => {
     if (isCommentsVisible) {
       // Simulate fetching comments from event
-      const fetchedComments: Comment[] = event.comments.map((comment: any) => ({
-        id: comment.id,
-        text: comment.reviewText,
-        createdAt: comment.date,
+      const fetchedComments: Review[] = event.comments.map((review: any) => ({
+        id: review.id,
+        text: review.reviewText,
+        createdAt: review.date,
         user: {
-          uid: comment.userId,
+          uid: review.userId,
           name: filteredUser?.name,
           userName: filteredUser?.userName,
           profilePicUrl: filteredUser?.profilePicUrl,
         },
-        rating: comment.rating || 0, // Default to 0 if no rating
+        rating: review.rating || 0, // Default to 0 if no rating
       }));
       setComments(fetchedComments);
     }
   }, [isCommentsVisible, event.comments]);
-
-
-
-
 
   if (!isCommentsVisible) return null;
 
@@ -137,7 +129,7 @@ const CommentsModal: React.FC<CommentsProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-500 ">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Comments
+            Reviews
           </h3>
           <button
             onClick={onClose}
@@ -147,24 +139,24 @@ const CommentsModal: React.FC<CommentsProps> = ({
           </button>
         </div>
 
-        {/* Comments List */}
+        {/* Reviews List */}
         <div className="p-4 space-y-4">
           {comments.length > 0 ? (
-            comments.map((comment) => (
-              <CommentCard key={comment.id} comment={comment} />
+            comments.map((review) => (
+              <CommentCard key={review.id} review={review} />
             ))
           ) : (
             <p className="text-gray-400 text-sm">No comments yet.</p>
           )}
 
-          {/* Comment Form */}
+          {/* Review Form */}
           <CommentForm onSubmit={handleCommentSubmit} loading={loading} />
         </div>
       </div>
       {showToast && error && (
         <Toast message={error} type="error" onClose={handleToastClose} />
       )}
-      {/* Only show success toast if there is a success and no pending comment */}
+      {/* Only show success toast if there is a success and no pending review */}
       {showToast && success && !pendingComment && (
         <Toast message={success} type="success" onClose={handleToastClose} />
       )}

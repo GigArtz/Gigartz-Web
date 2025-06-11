@@ -12,12 +12,12 @@ import { RootState } from "store/store";
 interface CommentFormProps {
   placeholder?: string;
   buttonText: string;
-  onSubmit: (comment: string, rating: number) => void;
+  onSubmit: (review: string, rating: number) => void;
   loading?: boolean;
 }
 
 const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
-  const [comment, setComment] = useState("");
+  const [review, setComment] = useState("");
   const [rating, setRating] = useState(0);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [dropdownUsers, setDropdownUsers] = useState<string[]>([]);
@@ -39,8 +39,8 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim()) return;
-    onSubmit(comment, rating);
+    if (!review.trim()) return;
+    onSubmit(review, rating);
     setComment("");
     setRating(0);
     setTaggedUser(null);
@@ -73,11 +73,11 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
     if (!textareaRef.current) return;
     const textarea = textareaRef.current;
     const cursor = textarea.selectionStart;
-    const textUpToCursor = comment.slice(0, cursor);
+    const textUpToCursor = review.slice(0, cursor);
     const match = /@([\w]*)$/.exec(textUpToCursor);
     if (match) {
       const before = textUpToCursor.slice(0, match.index);
-      const after = comment.slice(cursor);
+      const after = review.slice(cursor);
       const newComment = before + `@${userName} ` + after;
       setComment(newComment);
       setShowUserDropdown(false);
@@ -116,14 +116,14 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
   return (
     <form onSubmit={handleSubmit} className="w-full py-4">
       <div className="flex flex-col input-field border-gray-800 bg-dark rounded-lg shadow-md p-4">
-        {/* Comment Input */}
+        {/* Review Input */}
         <div className="relative w-full">
           <textarea
             ref={textareaRef}
-            value={comment}
+            value={review}
             onChange={handleCommentChange}
             onKeyDown={handleTextareaKeyDown}
-            placeholder="Write your comment..."
+            placeholder="Write your review..."
             className="w-full bg-dark"
             rows={3}
             required
@@ -172,7 +172,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
               <FaBullhorn className="w-5 h-5" />
             </button>
 
-             {/* Desktop View - Stars */}
+            {/* Desktop View - Stars */}
             <div className="flex flex-row sm:flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -187,10 +187,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
                 </button>
               ))}
             </div>
-
-           
           </div>
-       
 
           <div className="flex flex-row gap-1 sm:gap-3 align-baseline">
             {/* Submit Button */}

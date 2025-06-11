@@ -33,7 +33,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
   // Helper to handle See All navigation with tab selection
   const handleSeeAll = (section: string) => {
-    let tab = "events";
+    let tab = "gigs";
     if (section === "Popular Freelancers") {
       tab = "people";
     }
@@ -125,7 +125,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
       <div className="mt-2 w-full p-2 rounded-xl">
         <div className="flex flex-row justify-between items-center">
           <h2 className="text-xl text-white font-semibold mb-4">
-            Events Near You
+            Gigs Near You
           </h2>
           <span
             className="text-teal-500 text-sm hover:underline cursor-pointer"

@@ -174,7 +174,7 @@ const profileSlice = createSlice({
       state.error = null;
       // Notification now handled in thunk
     },
-    reviewReceivedSuccess(state, action: PayloadAction<{ from: string; rating: number; comment: string }>) {
+    reviewReceivedSuccess(state, action: PayloadAction<{ from: string; rating: number; review: string }>) {
       state.loading = false;
       state.success = `Review received from ${action.payload.from}`;
       state.error = null;

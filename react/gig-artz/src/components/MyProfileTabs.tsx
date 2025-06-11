@@ -42,7 +42,7 @@ function MyProfileTabs({ uid }) {
       <div className="tabs">
         <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
           {[
-            { key: "events", label: "Events" },
+            { key: "events", label: "Gigs" },
             { key: "reviews", label: "Reviews" },
           ].map(({ key, label }) => (
             <li key={key}>

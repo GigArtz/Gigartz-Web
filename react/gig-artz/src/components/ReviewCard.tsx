@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FaBookmark,
   FaEllipsisV,
   FaExclamationTriangle,
   FaHeart,
+  FaRetweet,
   FaSave,
   FaShareAlt,
   FaThumbsUp,
@@ -41,8 +42,41 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     }
   };
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Toggles the "More" modal
+  const toggleModal = () => setIsModalOpen(!isModalOpen);
+
+  // Handle Report action
+  const handleReport = () => {
+    console.log("Event reported!");
+    setIsModalOpen(false); // Close modal after action
+  };
+
+  const [liked, setLiked] = useState(false);
+
+  function handleLike(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    event.preventDefault();
+    setLiked((prev) => !prev);
+    // Optionally, trigger API call to like/unlike the review here
+  }
+
+  function handleSave(event: MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleRepost(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    event.preventDefault();
+    // Optionally, trigger API call to repost the review here
+    console.log("Repost clicked!");
+  }
+
+  function shareEvent(event: MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    throw new Error("Function not implemented.");
+  }
+
   return (
-    <div className="flex w-full items-start p-2 bg-[#060512] shadow-md rounded-2xl border border-gray-800 transition-colors ">
+    <div className="flex w-full items-start p-2 bg-gray-900 shadow-md rounded-2xl border border-gray-800 transition-colors ">
       {/* Review Content */}
       <div className="m-2 flex-1">
         <div className="flex items-center justify-between">
@@ -109,27 +143,72 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
           <p className="text-gray-500 mt-2">No media attached.</p>
         )}
 
-        {/* Like or share comment */}
+        {/* Like or share review */}
         <div className="mt-3 flex flex-wrap gap-1 md:gap-2 border-t p-2 border-gray-700 pt-2 px-4 justify-between">
-          <button className="flex items-center text-gray-500 hover:text-red-400 transition-colors">
-            <FaHeart className="mr-1 w-3 h-3" />
-             <span className="hidden md:block">Like</span>
+          {/* Like Button */}
+          <button
+            onClick={handleLike}
+            className="flex items-center text-gray-500 hover:text-red-400 transition-colors"
+          >
+            <FaHeart className="mr-1 w-3 h-3 md:w-4 md:h-4" />
           </button>
-          <button className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm">
-            <FaBookmark className="mr-1 w-3 h-3" />
-            <span className="hidden md:block">Save</span>
+
+          {/* Save Button */}
+          <button
+            onClick={handleSave}
+            className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
+          >
+            <FaBookmark className="mr-1 w-3 h-3 md:w-4 md:h-4" />
           </button>
-          <button className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm">
-            <FaShareAlt className="mr-1 w-3 h-3" />
-            <span className="hidden md:block">Share</span>
+
+          {/* Repost Button */}
+          <button
+            onClick={handleRepost}
+            className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
+          >
+            <FaRetweet className="mr-1 w-4 h-4 md:w-5 md:h-5" />
           </button>
-          <button className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm">
-            <FaExclamationTriangle className="mr-1 w-3 h-3" />
-            <span className="hidden md:block">Report</span>
+
+          {/* Share Button */}
+          <button
+            onClick={shareEvent}
+            className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
+          >
+            <FaShareAlt className="mr-1 w-3 h-3 md:w-4 md:h-4" />
           </button>
-          <button className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm">
+
+         
+
+          {/* More Button (Three dots) */}
+          <button
+            onClick={toggleModal}
+            className="flex w-3 h-3 md:w-4 md:h-4 items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
+          >
             <FaEllipsisV />
           </button>
+
+          {/* Modal for Report */}
+          {isModalOpen && (
+            <div
+              className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50"
+              onClick={() => setIsModalOpen(false)}
+            >
+              <div
+                className="bg-dark rounded-lg p-4 w-1/3 max-w-sm"
+                onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
+              >
+                <h3 className="text-lg font-semibold mb-4">More Options</h3>
+                <div className="flex flex-col space-y-3">
+                  <button
+                    onClick={handleReport}
+                    className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Report Event
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
