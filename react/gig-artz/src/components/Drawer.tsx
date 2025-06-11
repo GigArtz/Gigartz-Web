@@ -144,14 +144,18 @@ function Drawer() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
           {/* Modal Container */}
           <div className="bg-dark rounded-lg shadow-xl p-6 w-full max-w-xl relative animate-fade-in">
-            {/* Close Button */}
-            <button
-              onClick={() => setIsCommentModalOpen(false)}
-              className="absolute top-2 right-2 text-white text-xl hover:text-red-400 focus:outline-none"
-              aria-label="Close"
-            >
-              &times;
-            </button>
+  
+
+            {/* Modal Header */}
+            <div className="flex items-end justify-end p-2 md:p-5 rounded-t">
+              {/* Close Button */}
+              <button
+                 onClick={() => setIsCommentModalOpen(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
+              >
+                <FaTimesCircle className="w-6 h-6" />
+              </button>
+            </div>
 
             {/* Comment Form */}
             <CommentForm

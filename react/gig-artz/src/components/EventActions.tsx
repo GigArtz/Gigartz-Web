@@ -47,7 +47,7 @@ const EventActions: React.FC<EventActionsProps> = ({
     <div className="flex gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
       {/* Comments */}
       <p className="flex items-center cursor-pointer" onClick={showComments}>
-        <FaComment className="w-4 h-4 hover:text-teal-500 mr-2" />
+        <FaComment className=" w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
         {event?.comments?.length}
       </p>
 
@@ -55,7 +55,7 @@ const EventActions: React.FC<EventActionsProps> = ({
       <p className="flex items-center cursor-pointer">
         <FaHeart
           onClick={() => handleLike(event?.id, uid || profile?.id)}
-          className={`w-4 h-4 mr-2 ${
+          className={`w-3 h-3 md:w-4 md:h-4 mr-2 ${
             likedEvents?.includes(event.id)
               ? "text-red-500"
               : "hover:text-red-500"
@@ -69,7 +69,7 @@ const EventActions: React.FC<EventActionsProps> = ({
       <p className="flex items-center cursor-pointer">
         <FaRegBookmark
           onClick={shareEvent}
-          className="w-4 h-4 hover:text-teal-500 mr-2"
+          className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2"
         />
       </p>
 
@@ -77,7 +77,7 @@ const EventActions: React.FC<EventActionsProps> = ({
       <p className="flex items-center cursor-pointer">
         <FaExclamationTriangle
           onClick={shareEvent}
-          className="w-4 h-4 hover:text-teal-500 mr-2"
+          className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2"
         />
       </p>
 
@@ -85,7 +85,7 @@ const EventActions: React.FC<EventActionsProps> = ({
       <p className="flex items-center cursor-pointer">
         <FaShareAlt
           onClick={shareEvent}
-          className="w-4 h-4 hover:text-teal-500 mr-2"
+          className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2"
         />
       </p>
 

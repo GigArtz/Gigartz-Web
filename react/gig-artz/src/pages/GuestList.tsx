@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
-import { FaTimesCircle, FaTrash, FaEdit, FaUserPlus } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaTrash,
+  FaEdit,
+  FaUserPlus,
+  FaUsers,
+} from "react-icons/fa";
 import Toast from "../components/Toast";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store/store";
@@ -270,27 +276,44 @@ function GuestList() {
             <div
               key={list.id}
               onClick={() => setSelectedList(list)}
-              className={`h-min cursor-pointer bg-gray-800 rounded-3xl p-4 flex border-2 border-teal-500 mb-3 justify-between items-center transition-transform duration-200 shadow-lg hover:scale-[1.025] hover:border-teal-300 hover:shadow-xl ${
-                selectedList && selectedList.id === list.id
-                  ? "ring-2 ring-teal-400"
-                  : ""
-              }`}
+              className={`cursor-pointer p-5 flex justify-between items-center bg-slate-900 rounded-3xl mb-3 shadow-md transition-all duration-200
+    hover:scale-[1.025] hover:shadow-xl
+    ${
+      selectedList?.id === list.id
+        ? "border-teal-400 ring-2 ring-teal-300"
+        : "border-teal-600 hover:border-teal-400"
+    }`}
             >
-              <span className="text-white font-semibold text-base tracking-wide">
-                {list.guestListName}
-              </span>
+              <div className="flex items-center gap-3">
+                {/* List icon */}
+                <div className="p-2 bg-gray-700 rounded-full text-white">
+                  <FaUsers className="w-5 h-5" />
+                </div>
+
+                {/* Guest List Name */}
+                <span className="text-white font-semibold text-base tracking-wide">
+                  {list.guestListName || "Unnamed List"}
+                </span>
+              </div>
+
               <div className="flex gap-2">
+                {/* Add Guest */}
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsGuestListModalOpen(true);
                     setEditingList(list);
                     setShowFloatingMenu(false);
                   }}
-                  className="text-white hover:text-green-400 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  title="Add Guest"
+                  className="group relative text-white hover:text-green-400 hover:bg-gray-700 p-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-green-400"
                 >
                   <FaUserPlus className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-black text-xs text-white px-2 py-1 rounded shadow">
+                    Add Guest
+                  </span>
                 </button>
+
+                {/* Edit List */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -299,20 +322,26 @@ function GuestList() {
                     setSelectedList(list);
                     setShowListModal(true);
                   }}
-                  className="text-white hover:text-blue-400 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  title="Edit List"
+                  className="group relative text-white hover:text-blue-400 hover:bg-gray-700 p-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
                   <FaEdit className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-black text-xs text-white px-2 py-1 rounded shadow">
+                    Edit
+                  </span>
                 </button>
+
+                {/* Delete List */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteList();
                   }}
-                  className="text-red-400 hover:text-red-600 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                  title="Delete List"
+                  className="group relative text-red-400 hover:text-red-600 hover:bg-gray-700 p-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-red-400"
                 >
-                  <FaTrash className="w-4 h-4" /> here
+                  <FaTrash className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-black text-xs text-white px-2 py-1 rounded shadow">
+                    Delete
+                  </span>
                 </button>
               </div>
             </div>
@@ -339,7 +368,11 @@ function GuestList() {
             </div>
 
             <div className="flex flex-col gap-2">
-               {selectedList.guests && selectedList.guests.length > 0 ? <p>Existing Members</p> : <p></p> }
+              {selectedList.guests && selectedList.guests.length > 0 ? (
+                <p>Existing Members</p>
+              ) : (
+                <p></p>
+              )}
               <ul className="space-y-2 mb-3 overflow-y-auto max-h-60">
                 {selectedList.guests && selectedList.guests.length > 0 ? (
                   selectedList.guests.map((guest, index) => (
@@ -375,7 +408,7 @@ function GuestList() {
               </ul>
             </div>
 
-{/* 
+            {/* 
             <div className="flex flex-col gap-2">
               <p>Add Members</p>
               <input
@@ -447,7 +480,7 @@ function GuestList() {
             </div>
          
           */}
-           </div>
+          </div>
         </div>
       )}
 
