@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CommentCard from "./CommentCard";
 import CommentForm from "./CommentForm";
-import { Event, addReview } from "../../store/eventsSlice"; // Assuming Event type is defined here
+import { addReview, resetError } from "../../store/eventsSlice";
+import Toast from "./Toast";
 import { FaTimesCircle } from "react-icons/fa";
+import { RootState, AppDispatch } from "../../store/store";
 
 interface User {
   uid?: string;
@@ -21,8 +23,13 @@ interface Comment {
 }
 
 interface CommentsProps {
-  user: User;
-  event: Event;
+  user: {
+    uid?: string;
+    name?: string;
+    userName?: string;
+    profilePicUrl?: string;
+  };
+  event: { id: string; comments: unknown[] };
   isCommentsVisible: boolean;
   onClose: () => void;
 }
@@ -33,30 +40,94 @@ const CommentsModal: React.FC<CommentsProps> = ({
   isCommentsVisible,
   onClose,
 }) => {
-  const [comments, setComments] = useState<Comment[]>(event.comments || []);
-  const dispatch = useDispatch();
-  const { uid } = useSelector((state) => state.auth);
+  const [comments, setComments] = useState<Comment[]>([]); // Start with empty, fill only with new comments
+  const dispatch = useDispatch<AppDispatch>();
+  const uid = useSelector((state: RootState) => state.auth.uid);
+  const { error, success, loading } = useSelector(
+    (state: RootState) => state.events
+  );
+  const [showToast, setShowToast] = useState(true);
+
+  // Fetch userList from Redux store
+  const userList = useSelector(
+    (state: RootState) => state.profile.userList
+  ) as { userName: string }[];
+
+
+  // Filter userList to only include users with a userName and name
+  const filteredUser = userList.filter(
+    (user) => user?.userName && user?.name && user?.profilePicUrl
+  )?.find((u) => u.userName === user?.userName
+
+  );
+
 
   const handleCommentSubmit = (commentText: string, rating: number) => {
-    const newComment: Comment = {
-      id: `${Date.now()}`,
-      text: commentText,
-      createdAt: new Date().toISOString(),
-      user,
-      rating,
-    };
-    setComments([...comments, newComment]);
-
-    // Dispatch the addReview function
+    // Only dispatch, do not update UI yet
     dispatch(
       addReview(event.id, {
-        userId: uid || user?.id,
-        title: "User Review", // Example title
+        userId: uid || user?.uid,
+        title: "User Review",
         reviewText: commentText,
         rating,
       })
     );
+    // Store pending comment in state for later
+    setPendingComment({ commentText, rating });
   };
+
+  // Add this state and effect
+  const [pendingComment, setPendingComment] = useState<{
+    commentText: string;
+    rating: number;
+  } | null>(null);
+  React.useEffect(() => {
+    if (success && pendingComment) {
+      const newComment: Comment = {
+        id: `${Date.now()}`,
+        text: pendingComment.commentText,
+        createdAt: new Date().toISOString(),
+        user,
+        rating: pendingComment.rating,
+      };
+      setComments((prev) => [...prev, newComment]);
+      setPendingComment(null);
+      // Only reset success, not error, to avoid hiding unrelated errors
+      dispatch(resetError());
+    }
+    // If success and no pendingComment, reset success (prevents loop)
+    if (success && !pendingComment) {
+      dispatch(resetError());
+    }
+  }, [success, pendingComment, user, dispatch]);
+
+  const handleToastClose = () => {
+  setShowToast(false);
+};
+
+// Fetch comments when modal opens
+  useEffect(() => {
+    if (isCommentsVisible) {
+      // Simulate fetching comments from event
+      const fetchedComments: Comment[] = event.comments.map((comment: any) => ({
+        id: comment.id,
+        text: comment.reviewText,
+        createdAt: comment.date,
+        user: {
+          uid: comment.userId,
+          name: filteredUser?.name,
+          userName: filteredUser?.userName,
+          profilePicUrl: filteredUser?.profilePicUrl,
+        },
+        rating: comment.rating || 0, // Default to 0 if no rating
+      }));
+      setComments(fetchedComments);
+    }
+  }, [isCommentsVisible, event.comments]);
+
+
+
+
 
   if (!isCommentsVisible) return null;
 
@@ -87,9 +158,16 @@ const CommentsModal: React.FC<CommentsProps> = ({
           )}
 
           {/* Comment Form */}
-          <CommentForm user={user} onSubmit={handleCommentSubmit} />
+          <CommentForm onSubmit={handleCommentSubmit} loading={loading} />
         </div>
       </div>
+      {showToast && error && (
+        <Toast message={error} type="error" onClose={handleToastClose} />
+      )}
+      {/* Only show success toast if there is a success and no pending comment */}
+      {showToast && success && !pendingComment && (
+        <Toast message={success} type="success" onClose={handleToastClose} />
+      )}
     </div>
   );
 };

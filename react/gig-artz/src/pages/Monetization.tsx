@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Loader from "../components/Loader";
 import ServicesForm from "../components/ServicesForm";
 import { useNavigate } from "react-router-dom";
+import { categories } from "../constants/Categories";
 
 const Monetization = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -57,53 +58,6 @@ const Monetization = () => {
 
     console.log(services);
   }, [services]);
-
-  const categories = [
-    // Music & Sound
-    "DJ",
-    "Live Performer / Vocalist",
-    "Session Musician",
-    "Sound Engineer / Tech",
-    "Music Producer",
-    // Event Support & Operations
-    "Event Host / MC",
-    "Photographer",
-    "Videographer",
-    "Security Personnel",
-    "Usher / Hospitality Crew",
-    "Stage Manager",
-    // Creative Services
-    "Graphic Designer (e.g. Posters, Promo Materials)",
-    "Social Media Manager",
-    "Content Creator / Influencer",
-    "Copywriter / Press Kit Writer",
-    "Motion Graphics / Editor",
-    // Food & Beverage
-    "Chef / Caterer",
-    "Mixologist / Bartender",
-    "Barista",
-    "Mobile Bar / Food Truck Operator",
-    // Style & Beauty
-    "Make-Up Artist",
-    "Hair Stylist",
-    "Wardrobe Stylist",
-    "Nail Technician",
-    // Performance Artists
-    "Dancer / Choreographer",
-    "Actor / Skit Performer",
-    "Poet / Spoken Word Artist",
-    "Comedian",
-    // Technical Services
-    "Lighting Technician",
-    "Sound Setup / PA Technician",
-    "AV Technician",
-    "Livestream Operator",
-    // Business & Logistics
-    "Transport Provider (e.g. Crew/Guest Shuttle)",
-    "Event Planner / Coordinator",
-    "Legal & Contracts Consultant",
-    "Finance & Budgeting Support",
-  ];
 
   const handleSwitch = async () => {
     if (!agreedToTerms) {

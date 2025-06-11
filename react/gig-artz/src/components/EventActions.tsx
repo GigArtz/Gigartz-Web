@@ -1,4 +1,4 @@
-import { FaComment, FaHeart, FaShareAlt } from "react-icons/fa";
+import { FaComment, FaExclamationTriangle, FaHeart, FaRegBookmark, FaShareAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { UserProfile } from "../../store/profileSlice";
 import { useSelector } from "react-redux";
@@ -44,7 +44,7 @@ const EventActions: React.FC<EventActionsProps> = ({
   }, [event?.id, profile, likedEvents]);
 
   return (
-    <div className="flex gap-4 text-gray-400 text-sm md:text-base">
+    <div className="flex gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
       {/* Comments */}
       <p className="flex items-center cursor-pointer" onClick={showComments}>
         <FaComment className="w-4 h-4 hover:text-teal-500 mr-2" />
@@ -64,6 +64,23 @@ const EventActions: React.FC<EventActionsProps> = ({
         {event?.likes}
       </p>
 
+      
+      {/* Save */}
+      <p className="flex items-center cursor-pointer">
+        <FaRegBookmark
+          onClick={shareEvent}
+          className="w-4 h-4 hover:text-teal-500 mr-2"
+        />
+      </p>
+
+      {/* Report */}
+      <p className="flex items-center cursor-pointer">
+        <FaExclamationTriangle
+          onClick={shareEvent}
+          className="w-4 h-4 hover:text-teal-500 mr-2"
+        />
+      </p>
+
       {/* Share */}
       <p className="flex items-center cursor-pointer">
         <FaShareAlt
@@ -71,6 +88,8 @@ const EventActions: React.FC<EventActionsProps> = ({
           className="w-4 h-4 hover:text-teal-500 mr-2"
         />
       </p>
+
+
     </div>
   );
 };

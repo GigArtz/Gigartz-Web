@@ -113,6 +113,10 @@ const People: React.FC = () => {
     setIsBookingModalOpen(false);
   };
 
+  const handleSocialLinks = () => {
+    console.log(userProfile);
+  }
+
   if (loading) {
     return (
       <div className="main-content">
@@ -133,6 +137,7 @@ const People: React.FC = () => {
         onAddGuest={handleAddGuestToList}
         onTip={handleTipFreelancer}
         onBook={handleBookFreelancer}
+        onSocialLinks={handleSocialLinks}
         isFollowing={isFollowing}
       />
       {/* Profile Tabs */}

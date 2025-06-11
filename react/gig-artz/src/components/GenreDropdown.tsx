@@ -1,46 +1,6 @@
 import React, { useState } from "react";
 
-const genres = [
-    { name: "General", id: 0 },
-    {
-        name: "Musician",
-        id: 1,
-        disabled: true,
-        items: [
-            { name: "Vocalist", id: 100 },
-            { name: "Instrumentalist", id: 101 },
-            { name: "Group", id: 102 },
-        ],
-    },
-    {
-        name: "Digital creator",
-        id: 2,
-        disabled: true,
-        items: [
-            { name: "Blogger", id: 200 },
-            { name: "Influencer", id: 201 },
-            { name: "Producer", id: 202 },
-        ],
-    },
-    {
-        name: "Health",
-        id: 3,
-        disabled: true,
-        items: [
-            { name: "Fitness", id: 300 },
-            { name: "Beauty", id: 301 },
-        ],
-    },
-    {
-        name: "Establishment",
-        id: 4,
-        disabled: true,
-        items: [
-            { name: "Restaurant", id: 400 },
-            { name: "Club", id: 401 },
-        ],
-    },
-];
+import { genres } from "../constants/Categories"; // Assuming genres is an array of genre objects
 
 const GenreDropdown: React.FC = () => {
     const [selectedGenres, setSelectedGenres] = useState<number[]>([]);

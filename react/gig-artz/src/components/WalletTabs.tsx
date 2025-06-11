@@ -311,7 +311,7 @@ function WalletTabs({ uid }) {
             { key: "payouts", label: "Payouts" },
             { key: "bookings", label: "Bookings" },
             // --- New tab for Event Revenue ---
-            { key: "eventRevenue", label: "Event Revenue" },
+            { key: "events", label: "Events" },
           ].map(({ key, label }) => (
             <li key={key}>
               <button
@@ -535,7 +535,7 @@ function WalletTabs({ uid }) {
             )}
 
             {/* --- New: Event Revenue Tab --- */}
-            {activeTab === "eventRevenue" && (
+            {activeTab === "events" && (
               <div className="text-white space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Event Revenue</h3>
                 <div className="overflow-x-auto">

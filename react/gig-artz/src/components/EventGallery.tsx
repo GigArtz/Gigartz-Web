@@ -26,9 +26,9 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
   };
 
   return (
-    <div className="py-3">
+    <div className="">
       <div
-        className={`flex gap-3 mb-4 overflow-y-auto pb-1 snap-y${
+        className={`flex gap-3 mb-2 overflow-y-auto pb-1 snap-y${
           images.length === 2 ? "flex-col-2" : ""
         }`}
       >
@@ -38,8 +38,8 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
             src={img}
             alt={`Event ${index + 1}`}
             onClick={() => openModal(index)}
-            className={`h-80 object-cover object-top flex-shrink-0 rounded-lg ${
-              images.length === 2 ? "w-[49%]" : "w-80"
+            className={`h-80 object-cover object-top flex-shrink-0 rounded-lg duration-200 delay-150 ease-in-out hover:-translate-y-1 hover:scale-95 ${
+              images.length === 2 ? "md:w-[48%] w-[47%] h-[60%]" : "w-[99%]"
             }`}
           />
         ))}

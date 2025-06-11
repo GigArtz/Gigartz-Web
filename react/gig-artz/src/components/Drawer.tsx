@@ -135,7 +135,7 @@ function Drawer() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-12 h-full w-[65%] md:w-[20%] lg:w-[18%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
+        className={`fixed top-0  md:left-[2%] xl:left-[2%] h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
         ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}

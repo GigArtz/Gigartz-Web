@@ -14,6 +14,12 @@ function ProfileSectionUI() {
           <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
           <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
           <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
+          <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
+        </div>
+         <div className="flex gap-2 mt-4">
+          <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
+          <div className="h-5 w-16 bg-gray-500 rounded-full"></div>
+        
         </div>
       </div>
     </div>

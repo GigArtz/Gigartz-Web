@@ -348,7 +348,6 @@ export const createGuestList =
       dispatch(eventsSlice.actions.createGuestListStart());
 
       try {
-        console.log("Creating guest list...");
         const response = await axios.post(
           `https://gigartz.onrender.com/guest-list/create`,
           guestListData
@@ -483,6 +482,7 @@ export const addReview =
   }) =>
     async (dispatch: AppDispatch) => {
       dispatch(eventsSlice.actions.createReviewStart());
+      console.log(reviewData);
 
       try {
         console.log("Adding review...");
@@ -1008,6 +1008,73 @@ export const refundTicket = (
       dispatch(
         eventsSlice.actions.refundTicketFailure("Unexpected error occurred")
       );
+    }
+  }
+};
+
+// Update guest list name
+export const updateGuestList = (userId: string, guestListId: string, guestListName: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createGuestListStart());
+  try {
+    await axios.put(
+      `https://gigartz.onrender.com/guest-list/edit`,
+      { userId, guestListId, guestListName }
+    );
+    dispatch(eventsSlice.actions.createGuestListSuccess("Guest list updated successfully!"));
+    notify(dispatch, {
+      type: "guestlist",
+      data: { message: "Guest list updated successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to update guest list";
+        dispatch(eventsSlice.actions.createGuestListFailure(errorMsg));
+      } else if (axiosError.request) {
+        dispatch(eventsSlice.actions.createGuestListFailure("No response received from server"));
+      } else {
+        dispatch(eventsSlice.actions.createGuestListFailure(axiosError.message || "Unexpected error occurred"));
+      }
+    } else {
+      dispatch(eventsSlice.actions.createGuestListFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Delete guest from guest list
+export const deleteGuestFromGuestList = (userId: string, guestListId: string, guestId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createGuestListStart());
+  try {
+    await axios.delete(`https://gigartz.onrender.com/guest-list/delete`, {
+      data: { userId, guestListId, guestId }
+    });
+    dispatch(eventsSlice.actions.createGuestListSuccess("Guest deleted successfully!"));
+    notify(dispatch, {
+      type: "guestlist",
+      data: { message: "Guest deleted successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to delete guest";
+        dispatch(eventsSlice.actions.createGuestListFailure(errorMsg));
+      } else if (axiosError.request) {
+        dispatch(eventsSlice.actions.createGuestListFailure("No response received from server"));
+      } else {
+        dispatch(eventsSlice.actions.createGuestListFailure(axiosError.message || "Unexpected error occurred"));
+      }
+    } else {
+      dispatch(eventsSlice.actions.createGuestListFailure("Unexpected error occurred"));
     }
   }
 };

@@ -1,30 +1,80 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
+import React, { useState, useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store/store";
+import { addGuestsToGuestList } from "../../store/eventsSlice";
+import Toast from "./Toast";
 import { FaTimesCircle } from "react-icons/fa";
 
 interface GuestListModalFromGuestListProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddGuest: (listId: number, guestEmail: string) => void;
+  preFilledEmail?: string;
 }
 
 const GuestListModalFromGuestList: React.FC<
   GuestListModalFromGuestListProps
-> = ({ isOpen, onClose, onAddGuest }) => {
-  const [selectedListId, setSelectedListId] = useState<number | null>(null);
-  const [selectedListName, setSelectedListName] = useState<string | null>(null);
-  const [guestEmail, setGuestEmail] = useState("");
-  const guestLists = JSON.parse(localStorage.getItem("guestLists") || "[]");
-  const userList = useSelector((state: RootState) => state.profile.userList);
+> = ({ isOpen, onClose, preFilledEmail }) => {
+  const dispatch: AppDispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { userGuestList, userList } = useSelector(
+    (state: RootState) => state.profile
+  );
+  const { loading, error, success } = useSelector(
+    (state: RootState) => state.events
+  );
+  const guestLists = useMemo(() => userGuestList || [], [userGuestList]);
 
-  const handleSelectedListChange = () => {
-    
+  const [selectedListId, setSelectedListId] = useState<number | null>(() => {
+    const storedListId = Number(localStorage.getItem("selectedListId"));
+    return guestLists.some((list) => list.id === storedListId)
+      ? storedListId
+      : null;
+  });
+  const [guestEmail, setGuestEmail] = useState(preFilledEmail || "");
+  const [toast, setToast] = useState<{ message: string; type: string } | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      const storedListId = Number(localStorage.getItem("selectedListId"));
+      if (guestLists.some((list) => list.id === storedListId)) {
+        setSelectedListId(storedListId);
+      } else {
+        setSelectedListId(null);
+      }
+    }
+  }, [isOpen, guestLists]);
+
+  useEffect(() => {
+    if (success) {
+      setToast({ message: success, type: "success" });
+      dispatch({ type: "events/resetError" });
+    } else if (error) {
+      setToast({ message: error, type: "error" });
+      dispatch({ type: "events/resetError" });
+    }
+  }, [success, error, dispatch]);
+
+  const handleListChange = (listId: number) => {
+    setSelectedListId(listId);
+    localStorage.setItem("selectedListId", String(listId));
   };
 
-  const handleAddGuest = () => {
-    if (selectedListId && guestEmail.trim()) {
-      onAddGuest(selectedListId, guestEmail);
+  const handleAddGuest = async () => {
+    if (selectedListId && guestEmail.trim() && user) {
+      const guest = userList?.find((u) => u.emailAddress === guestEmail.trim());
+      if (!guest) {
+        setToast({
+          message: "No matching guest found with this email!",
+          type: "error",
+        });
+        return;
+      }
+      // Convert selectedListId to string for thunk
+      await dispatch(
+        addGuestsToGuestList(user.uid, String(selectedListId), guest.userName)
+      );
       setGuestEmail("");
       onClose();
     }
@@ -47,20 +97,23 @@ const GuestListModalFromGuestList: React.FC<
             <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
           </button>
         </div>
-
         <h3 className="text-lg font-semibold mb-4">Add to Guest List</h3>
         <select
           value={selectedListId || ""}
-          onChange={(e) => setSelectedListId(Number(e.target.value))}
+          onChange={(e) => handleListChange(Number(e.target.value))}
           className="input-field mb-4 w-full"
+          disabled={guestLists.length === 0}
         >
           <option value="">Select a guest list</option>
-          {guestLists.map((list: { id: number; name: string }) => (
+          {guestLists.map((list) => (
             <option key={list.id} value={list.id}>
-              {list.name}
+              {list.guestListName}
             </option>
           ))}
         </select>
+        {guestLists.length === 0 && (
+          <p className="text-red-500 text-sm">No guest lists available.</p>
+        )}
         <input
           type="email"
           value={guestEmail}
@@ -68,33 +121,26 @@ const GuestListModalFromGuestList: React.FC<
           placeholder="Enter guest email"
           className="input-field mb-4 w-full"
         />
-        <ul className="text-gray-300">
-          {userList
-            ?.filter((user) => user.emailAddress.includes(guestEmail))
-            .map((user) => (
-              <li
-                key={user.emailAddress}
-                className="text-sm cursor-pointer hover:text-blue-400"
-                onClick={() => setGuestEmail(user.emailAddress)}
-              >
-                {user.name || "Unnamed User"} ({user.emailAddress})
-              </li>
-            ))}
-        </ul>
+        <p className="text-sm text-gray-400 mb-4">
+          You can add guests to your guest list, they will receive an email
+          invitation.
+        </p>
         <div className="flex justify-end gap-4">
           <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-          <button
             onClick={handleAddGuest}
-            className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+            className="px-4 py-2 btn-primary rounded-2xl hover:bg-blue-600 text-white"
+            disabled={!selectedListId || !guestEmail.trim() || loading}
           >
-            Add
+            {loading ? "Adding..." : "Add"}
           </button>
         </div>
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
     </div>
   );

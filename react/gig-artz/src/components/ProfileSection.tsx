@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   FaCalendarPlus,
   FaEnvelope,
+  FaLink,
   FaMapMarkerAlt,
   FaMoneyBillAlt,
   FaPlus,
@@ -19,6 +20,8 @@ import { fetchAUserProfile } from "../../store/profileSlice";
 import { useParams } from "react-router-dom"; // Added for URL params
 import Profile from "@/pages/Profile";
 import ProfileSectionUI from "./ProfileSectionUI";
+import GuestListModalFromGuestList from "./GuestListModalFromGuestList";
+import SocialLinksModal from "./SocialLinksModal";
 
 interface UserProfile {
   name?: string;
@@ -65,6 +68,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   useEffect(() => {
     if (uid) {
       dispatch(fetchAUserProfile(uid));
+
+      // Check if the user is following the current profile
     }
   }, [uid, dispatch]);
 
@@ -74,6 +79,45 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   // Check if user is following current profile
   const isFollowingUser = userFollowing?.some((user) => user.id === uid);
+
+  // Handle profile tags
+  const [showAllTags, setShowAllTags] = useState(false);
+  const defaultTagCount = 3; // or whatever your default number is
+
+  const [showSocialLinksModal, setShowSocialLinksModal] = useState(false);
+  const [formattedSocialLinks, setFormattedSocialLinks] = useState<
+    { platform: string; url: string }[]
+  >([]);
+
+  const handleSocialLinks = () => {
+    if (!userProfile?.userProfile) return;
+
+    const profile = userProfile;
+
+    const knownPlatforms = [
+      "twitter",
+      "facebook",
+      "instagram",
+      "linkedin",
+      "youtube",
+      "tiktok",
+      "website",
+    ];
+
+    const socialLinks = knownPlatforms
+      .filter((key) => profile[key]) // only include non-empty
+      .map((platform) => ({
+        platform,
+        url: profile[platform], // assume it's either a label or URL
+      }));
+
+    console.log("✅ Social Links:", socialLinks);
+
+    // You can now open the modal and pass these:
+    setShowSocialLinksModal(true);
+    setFormattedSocialLinks(socialLinks);
+  };
+
 
   return (
     <div className="">
@@ -150,6 +194,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                       {isFollowingUser ? "Following" : "Follow"}
                     </button>
                   </Tooltip>
+                  <Tooltip text="Link Tree">
+                    <button
+                      onClick={handleSocialLinks}
+                      className="border p-[0.25rem] rounded-full border-teal-300 text-gray-400 hover:text-teal-400"
+                    >
+                      <FaLink className="w-3 h-3" />
+                    </button>
+                  </Tooltip>
                 </div>
                 <h1 className="text-2xl font-bold">
                   {userProfile?.userProfile?.name || "Name"}
@@ -187,20 +239,45 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                       </p>
                     </div>
                     <div className="flex">
-                      {userProfile?.userProfile?.genre?.length > 0 && (
-                        <div className="flex gap-2 my-2">
-                          {userProfile.userProfile.genre
-                            .slice(0, 3)
-                            .map((genre, index) => (
+                      {Array.isArray(userProfile?.userProfile?.genre) &&
+                        userProfile.userProfile.genre.length > 0 && (
+                          <div className="flex items-center">
+                            <div className="flex gap-2 my-2 overflow-x-auto whitespace-nowrap px-1 hide-scrollbar md:max-w-96 max-w-56 pb-1">
+                              {userProfile.userProfile.genre
+                                ?.slice(
+                                  0,
+                                  showAllTags
+                                    ? userProfile.userProfile.genre.length
+                                    : defaultTagCount
+                                )
+                                .map((genre, index) => (
+                                  <p
+                                    key={index}
+                                    className="text-xs inline-block px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400"
+                                  >
+                                    {typeof genre === "string"
+                                      ? genre
+                                      : genre.name}
+                                  </p>
+                                ))}
+                            </div>
+
+                            {userProfile.userProfile.genre.length >
+                              defaultTagCount && (
                               <p
-                                key={index}
-                                className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400"
+                                className="ml-1 text-xs text-gray-500 cursor-pointer hover:text-teal-400"
+                                onClick={() => setShowAllTags((prev) => !prev)}
                               >
-                                {genre.name || genre}
+                                {showAllTags
+                                  ? "See less"
+                                  : `+${
+                                      userProfile.userProfile.genre.length -
+                                      defaultTagCount
+                                    } more`}
                               </p>
-                            ))}
-                        </div>
-                      )}
+                            )}
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -209,7 +286,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           </div>
         )}
       </div>
-      <GuestListModal
+      <GuestListModalFromGuestList
         isOpen={isGuestListModalOpen}
         onClose={() => setIsGuestListModalOpen(false)}
         onAddGuest={onAddGuest}
@@ -225,6 +302,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         onSubmit={onBook}
+      />
+      <SocialLinksModal
+        isOpen={showSocialLinksModal}
+        onClose={() => setShowSocialLinksModal(false)}
+        links={formattedSocialLinks}
+        userName={userProfile?.userProfile?.userName || ""}
       />
       <FollowersModal
         title="Followers"

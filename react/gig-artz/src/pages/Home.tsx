@@ -6,6 +6,9 @@ import { RootState, AppDispatch } from "../../store/store";
 import EventsTabs from "../components/EventsTabs";
 import ReviewCard from "../components/ReviewCard"; // Import ReviewCard
 import ReviewsGallery from "../components/ReviewsGallery";
+import { Comment } from "@material-ui/icons";
+import CommentForm from "../components/CommentForm";
+import AdCard from "../components/AdCard";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -115,6 +118,62 @@ const Home: React.FC = () => {
       text: "Interesting exhibits, but the venue was crowded.",
       createdAt: "2024-05-20T09:45:00Z",
     },
+    {
+      id: "4",
+      user: {
+        name: "David Kim",
+        avatar: "https://randomuser.me/api/portraits/men/4.jpg",
+      },
+      eventTitle: "Food Truck Fiesta",
+      rating: 5,
+      imageUrls: ["https://picsum.photos/200/300?random=6"],
+      comment: "Incredible food, great vibes, and perfect weather!",
+      date: "2024-06-02",
+      text: "Incredible food, great vibes, and perfect weather! Every stall had something unique. Definitely bringing more friends next time. Loved the live band too!",
+      createdAt: "2024-06-02T18:00:00Z",
+    },
+    {
+      id: "5",
+      user: {
+        name: "Ella Rivera",
+        avatar: "https://randomuser.me/api/portraits/women/5.jpg",
+      },
+      eventTitle: "Outdoor Movie Night",
+      rating: 4,
+      imageUrls: ["https://picsum.photos/200/300?random=7"],
+      comment: "Cozy and fun evening under the stars.",
+      date: "2024-06-03",
+      text: "Cozy and fun evening under the stars. The sound system could’ve been better, but overall it was a lovely night with friends and snacks.",
+      createdAt: "2024-06-03T20:30:00Z",
+    },
+    {
+      id: "6",
+      user: {
+        name: "Frank Dorsey",
+        avatar: "https://randomuser.me/api/portraits/men/6.jpg",
+      },
+      eventTitle: "Tech Meetup 2024",
+      rating: 2,
+      imageUrls: [],
+      comment: "Not well organized. Speakers were late.",
+      date: "2024-06-04",
+      text: "Not well organized. The speakers were late, some sessions were canceled without notice, and the venue had poor Wi-Fi. Hoping for a better experience next year.",
+      createdAt: "2024-06-04T10:15:00Z",
+    },
+    {
+      id: "7",
+      user: {
+        name: "Grace Liu",
+        avatar: "https://randomuser.me/api/portraits/women/7.jpg",
+      },
+      eventTitle: "Book Fair",
+      rating: 5,
+      imageUrls: ["https://picsum.photos/200/300?random=8"],
+      comment: "Book heaven! Found so many great deals.",
+      date: "2024-06-05",
+      text: "Book heaven! Found so many great deals and rare finds. The author signing corner was a highlight. Loved the children's reading area too. Great family-friendly vibe!",
+      createdAt: "2024-06-05T11:00:00Z",
+    },
   ];
 
   // Dummny galery data
@@ -159,12 +218,52 @@ const Home: React.FC = () => {
 
       {selectedTab === "reviews" && (
         <div className="flex flex-col gap-4 p-4">
-          {dummyReviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
+          {/* Comment Form */}
+          <CommentForm
+            placeholder="Share your experience..."
+            buttonText="Post Review"
+            onSubmit={(comment) => {
+              console.log("Comment submitted:", comment);
+              // TODO: Hook into API/state update
+            }}
+          />
 
-          {dummyGallery.length > 0 && (
-            <ReviewsGallery key={"gallery"} gallery={dummyGallery} />
+          {/* Reviews with Ads injected */}
+          {dummyReviews?.length > 0 ? (
+            dummyReviews
+              .reduce((acc, review, index) => {
+                acc.push({ type: "review", data: review });
+
+                // Inject an ad after every 3 reviews (but not at the end)
+                if ((index + 1) % 3 === 0 && index + 1 < dummyReviews.length) {
+                  acc.push({ type: "ad", key: `ad-${index}` });
+                }
+
+                return acc;
+              }, [])
+              .map((item, idx) =>
+                item.type === "review" ? (
+                  <ReviewCard key={item.data.id} review={item.data} />
+                ) : (
+                  <AdCard
+                    key={item.key}
+                    title="Boost Your Business"
+                    description="Place your ad here to reach local audiences."
+                    ctaLabel="Advertise Now"
+                    ctaLink="/advertise"
+                    image="https://picsum.photos/seed/reviewad/400/200"
+                    badge="Sponsored"
+                    size="sm"
+                  />
+                )
+              )
+          ) : (
+            <p className="text-gray-400 italic">No reviews yet.</p>
+          )}
+
+          {/* Optional Gallery */}
+          {dummyGallery?.length > 0 && (
+            <ReviewsGallery gallery={dummyGallery} />
           )}
         </div>
       )}
