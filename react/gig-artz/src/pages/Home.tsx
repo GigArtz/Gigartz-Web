@@ -6,7 +6,6 @@ import { RootState, AppDispatch } from "../../store/store";
 import EventsTabs from "../components/EventsTabs";
 import ReviewCard from "../components/ReviewCard"; // Import ReviewCard
 import ReviewsGallery from "../components/ReviewsGallery";
-import { Review } from "@material-ui/icons";
 import CommentForm from "../components/CommentForm";
 import AdCard from "../components/AdCard";
 

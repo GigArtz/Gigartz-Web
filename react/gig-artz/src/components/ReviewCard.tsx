@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaBookmark,
   FaEllipsisV,
@@ -11,6 +11,9 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import EventGallery from "./EventGallery";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllProfiles } from "../../store/profileSlice";
+import Loader from "./Loader";
 
 interface User {
   uid?: string;
@@ -36,6 +39,13 @@ interface ReviewCardProps {
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   const navigate = useNavigate();
 
+  const { userList, loading } = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchAllProfiles());
+  }, [dispatch]);
+
   const handleUserClick = () => {
     if (review.user.uid) {
       navigate(`/people/${review.user.uid}`);
@@ -55,7 +65,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
 
   const [liked, setLiked] = useState(false);
 
-  function handleLike(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+  // Find user reviewing
+  const findUser = (uid: string) => {
+    return userList?.find((user) => user?.id === uid);
+  };
+
+  const user = findUser(review?.userId); // assuming review has userId
+
+  function handleLike(
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ): void {
     event.preventDefault();
     setLiked((prev) => !prev);
     // Optionally, trigger API call to like/unlike the review here
@@ -65,7 +84,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     throw new Error("Function not implemented.");
   }
 
-  function handleRepost(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+  function handleRepost(
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ): void {
     event.preventDefault();
     // Optionally, trigger API call to repost the review here
     console.log("Repost clicked!");
@@ -78,22 +99,22 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   return (
     <div className="flex w-full items-start p-2 bg-gray-900 shadow-md rounded-2xl border border-gray-800 transition-colors ">
       {/* Review Content */}
-      <div className="mx-2 flex-1">
+      {!loading ? <div className="mx-2 flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* User Avatar */}
             <img
-              src={review?.user?.profilePicUrl || "/avatar.png"}
+              src={user?.profilePicUrl || "/avatar.png"}
               alt="User Avatar"
               className="w-10 h-10 rounded-full border-2 border-teal-400 cursor-pointer"
               onClick={handleUserClick}
             />
             <div className="cursor-pointer" onClick={handleUserClick}>
               <h3 className="text-sm font-semibold text-white">
-                {review?.user?.name || "Anonymous"}
+                {user?.name || "Anonymous"}
               </h3>
               <p className="text-xs text-gray-400">
-                @{review?.user?.userName || "username"}
+                @{user?.userName || "username"}
               </p>
             </div>
           </div>
@@ -117,7 +138,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         </div>
 
         {/* Review Text */}
-        <p className="text-sm text-gray-300 mt-1">{review?.text || review?.reviewText}</p>
+        <p className="text-sm text-gray-300 mt-1">
+          {review?.text || review?.reviewText}
+        </p>
 
         {/* Images and/or Video Section */}
         {(review.imageUrls?.length || review?.videoUrl) && (
@@ -150,7 +173,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             onClick={handleLike}
             className="flex items-center text-gray-500 hover:text-red-400 transition-colors"
           >
-            <FaHeart className="mr-1 w-3 h-3 md:w-4 md:h-4" /> <span className="pl-1">1</span>
+            <FaHeart className="mr-1 w-3 h-3 md:w-4 md:h-4" />{" "}
+            <span className="pl-1">1</span>
           </button>
 
           {/* Save Button */}
@@ -158,7 +182,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             onClick={handleSave}
             className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
           >
-            <FaBookmark className="mr-1 w-3 h-3 md:w-4 md:h-4" /> <span className="pl-1">1</span>
+            <FaBookmark className="mr-1 w-3 h-3 md:w-4 md:h-4" />{" "}
+            <span className="pl-1">1</span>
           </button>
 
           {/* Repost Button */}
@@ -166,7 +191,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             onClick={handleRepost}
             className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
           >
-            <FaRetweet className="mr-1 w-4 h-4 md:w-5 md:h-5" /> <span className="pl-1">1</span>
+            <FaRetweet className="mr-1 w-4 h-4 md:w-5 md:h-5" />{" "}
+            <span className="pl-1">1</span>
           </button>
 
           {/* Share Button */}
@@ -176,8 +202,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
           >
             <FaShareAlt className="mr-1 w-3 h-3 md:w-4 md:h-4" />
           </button>
-
-         
 
           {/* More Button (Three dots) */}
           <button
@@ -197,13 +221,15 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
                 className="bg-dark rounded-lg p-4 w-1/3 max-w-sm"
                 onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
               >
-                <h3 className="text-lg font-semibold mb-4 text-white">More Options</h3>
+                <h3 className="text-lg font-semibold mb-4 text-white">
+                  More Options
+                </h3>
                 <div className="flex flex-col space-y-3">
                   <button
                     onClick={handleReport}
                     className="py-2 px-4 flex gap-4 bg-dark text-gray-500 hover:bg-gray-800"
                   >
-                    <FaExclamationTriangle className="h-4 w-4"/>
+                    <FaExclamationTriangle className="h-4 w-4" />
                     Report Event
                   </button>
                 </div>
@@ -211,7 +237,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             </div>
           )}
         </div>
-      </div>
+      </div> : <Loader />}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import Loader from "../components/Loader";
 import ServicesForm from "../components/ServicesForm";
 import { useNavigate } from "react-router-dom";
 import { categories } from "../constants/Categories";
+import Header from "../components/Header";
 
 const Monetization = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -108,6 +109,7 @@ const Monetization = () => {
 
   return (
     <div className="main-content flex flex-col items-center justify-center">
+      
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Services Modal */}

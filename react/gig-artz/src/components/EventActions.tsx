@@ -13,6 +13,9 @@ import { useEffect, useState } from "react";
 import { UserProfile } from "../../store/profileSlice";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import ShareModal from "./ShareModal";
+import CommentsModal from "./CommentsModal";
+import { addLike } from "store/eventsSlice";
 
 interface EventActionsProps {
   event: Event;
@@ -61,16 +64,15 @@ const EventActions: React.FC<EventActionsProps> = ({
   // Toggles the "More" modal
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
-    // CRUD Modal
-    const [isCRUDVisible, setIsCRUDVisible] = useState(false);
-  
-    // Edit Event Modal
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
-    const [isCreator, setIsCreator] = useState(uid === event?.promoterId );
-  
+  // CRUD Modal
+  const [isCRUDVisible, setIsCRUDVisible] = useState(false);
 
-   const handleCRUD = () => {
+  // Edit Event Modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
+  const [isCreator, setIsCreator] = useState(uid === event?.promoterId);
+
+  const handleCRUD = () => {
     setIsCRUDVisible(true);
   };
 
@@ -84,6 +86,12 @@ const EventActions: React.FC<EventActionsProps> = ({
       navigate(`/events/${event.id}/insights`);
     }
   };
+
+  // Reviews Modal
+  const [isCommentsVisible, setIsCommentsVisible] = useState(false);
+
+  // Share Modal
+  const [isShareVisible, setIsShareVisible] = useState(false);
 
   const closeEditModal = () => {
     setIsEditModalOpen(false);
@@ -128,6 +136,29 @@ const EventActions: React.FC<EventActionsProps> = ({
             </div>
           </div>
         )}
+
+        {/* Reviews Modal */}
+        {isCommentsVisible && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+            <CommentsModal
+              user={profile}
+              event={event}
+              isCommentsVisible={isCommentsVisible}
+              onClose={() => setIsCommentsVisible(false)}
+            />
+          </div>
+        )}
+
+        {/* Share Modal */}
+        {isShareVisible && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+            <ShareModal
+              isVisible={isShareVisible}
+              shareUrl={window.location.href} // Gets the current URL
+              onClose={() => setIsShareVisible(false)}
+            />
+          </div>
+        )}
       </div>
       <div className="flex w-full justify-between gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
         {/* Reviews */}
@@ -170,8 +201,6 @@ const EventActions: React.FC<EventActionsProps> = ({
         <p className="flex items-center cursor-pointer" onClick={handleCRUD}>
           <FaEllipsisV className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
         </p>
-
-       
       </div>
     </>
   );

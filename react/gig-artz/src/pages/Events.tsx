@@ -17,6 +17,7 @@ import ShareModal from "../components/ShareModal";
 import EventActions from "../components/EventActions";
 import Payment from "../components/Payment";
 import EventGallery from "../components/EventGallery";
+import Header from "../components/Header";
 
 interface Event {
   id: string;
@@ -219,6 +220,7 @@ const EventDetails = () => {
 
   return (
     <div className="main-content px-4 md:px-8 mb-3">
+      <Header title= {event?.title} />
    
 
       {/* Reviews Modal */}

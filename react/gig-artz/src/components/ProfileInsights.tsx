@@ -307,14 +307,14 @@ const AgeGenderBar = ({
 };
 
 const ProfileInsights: React.FC = () => (
-  <div className="p-1 mx-auto  min-h-screen text-gray-100">
+  <div className="p-2 min-h-screen text-gray-100">
     <h1 className="text-3xl font-bold mb-6 ">Profile Insights</h1>
 
     {/* Freelance Service Insights */}
     <h2 className="text-xl text-teal font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Freelance Service Insights
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
       <div className="bg-gray-800 rounded shadow p-4 flex flex-col items-center">
         <div className="text-2xl font-bold text-teal-400">
           {serviceStats.total}
