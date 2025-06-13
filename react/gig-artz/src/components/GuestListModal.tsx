@@ -58,15 +58,15 @@ const GuestListModal: React.FC<GuestListModalProps & { editingList?: any }> = ({
       setToast({ message: "No guest list selected.", type: "error" });
       return;
     }
-    if (!guestEmail.trim()) {
-      setToast({ message: "Please enter a guest email.", type: "error" });
+    if (!newGuestName.trim()) {
+      setToast({ message: "Please enter a guest username.", type: "error" });
       return;
     }
     if (!user) {
       setToast({ message: "User not authenticated.", type: "error" });
       return;
     }
-    const guest = userList?.find((u) => u.emailAddress === guestEmail.trim());
+    const guest = userList?.find((u) => u.userName === newGuestName.trim());
     if (!guest) {
       setToast({
         message: "No matching guest found with this email!",
@@ -129,7 +129,7 @@ const GuestListModal: React.FC<GuestListModalProps & { editingList?: any }> = ({
                     user.name
                       .toLowerCase()
                       .includes(newGuestName.toLowerCase()) ||
-                    user.emailAddress
+                    user.userName
                       .toLowerCase()
                       .includes(newGuestName.toLowerCase())
                 ).length > 0 ? (
@@ -139,18 +139,17 @@ const GuestListModal: React.FC<GuestListModalProps & { editingList?: any }> = ({
                         user.name
                           .toLowerCase()
                           .includes(newGuestName.toLowerCase()) ||
-                        user.emailAddress
+                        user.userName
                           .toLowerCase()
                           .includes(newGuestName.toLowerCase())
                     )
                     .map((user) => (
                       <li
                         key={user.emailAddress}
-                        onClick={() => setNewGuestName(user.emailAddress)}
+                        onClick={() => setNewGuestName(user.userName)}
                         className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
                       >
                         <div className="flex justify-between gap-3">
-                          <p>modal</p>
                           <p className="flex items-center gap-2">
                             <img
                               src={user.profilePicUrl || "/avatar.png"}
@@ -179,9 +178,9 @@ const GuestListModal: React.FC<GuestListModalProps & { editingList?: any }> = ({
           <button
             onClick={handleAddGuest}
             className="btn-primary px-4 py-2"
-            disabled={!editingList || !guestEmail.trim() || loading}
+            disabled={!editingList || loading}
           >
-            {loading ? "Adding..." : "Add"}
+            {loading ? "Adding..." : "Add here"}
           </button>
         </div>
         {toast && (

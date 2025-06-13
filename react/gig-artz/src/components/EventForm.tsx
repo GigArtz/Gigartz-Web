@@ -318,7 +318,7 @@ const AddEventForm: React.FC = () => {
           {step > 1 && (
             <button
               onClick={() => setStep((prev) => prev - 1)}
-              className="text-teal-500 flex items-center"
+              className="border bg-teal-500 border-teal-500 rounded-2xl text-white w-28 text-sm p-2 flex items-center"
             >
               <FaArrowLeft className="mr-2" /> Previous
             </button>
@@ -327,10 +327,11 @@ const AddEventForm: React.FC = () => {
           {step < 6 && (
             <button
               onClick={() => setStep((prev) => prev + 1)}
-              className="text-teal-500 flex items-center"
+              className="border px-4 bg-teal-500 border-teal-500 rounded-2xl text-white w-20 text-sm p-2 flex items-center"
             >
               Next <FaArrowRight className="ml-2" />
             </button>
+            
           )}
 
           {
@@ -338,7 +339,7 @@ const AddEventForm: React.FC = () => {
             step === 6 && (
               <button
                 onClick={handleSubmit}
-                className="p-2 px-4 bg-teal-500 rounded-lg text-white"
+                className="px-4 btn-primary w-20 text-sm p-2  text-white"
               >
                 Submit
               </button>

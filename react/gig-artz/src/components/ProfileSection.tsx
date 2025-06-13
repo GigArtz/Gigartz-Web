@@ -118,7 +118,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     setFormattedSocialLinks(socialLinks);
   };
 
-
   return (
     <div className="">
       <div className="block justify-center items-center bg-dark rounded-lg shadow-md">
@@ -143,7 +142,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                   <div className="flex items-center gap-1">
                     <Tooltip text="Add to Guest List">
                       <button
-                        className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                        className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
                         onClick={() => setIsGuestListModalOpen(true)}
                       >
                         <FaPlus className="w-3 h-3" />
@@ -151,7 +150,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                     </Tooltip>
                     <Tooltip text="Send Message">
                       <button
-                        className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                        className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
                         onClick={onMessage}
                       >
                         <FaEnvelope className="w-3 h-3" />
@@ -163,7 +162,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                           <Tooltip text="Tip Freelancer">
                             <button
                               onClick={() => setIsTippingModalOpen(true)}
-                              className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                              className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
                             >
                               <FaMoneyBillAlt className="w-3 h-3" />
                             </button>
@@ -173,7 +172,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                           <Tooltip text="Book Freelancer">
                             <button
                               onClick={() => setIsBookingModalOpen(true)}
-                              className="border p-[0.25rem] rounded-full border-gray-300 text-gray-400 hover:text-teal-400"
+                              className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
                             >
                               <FaCalendarPlus className="w-3 h-3" />
                             </button>
@@ -197,7 +196,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                   <Tooltip text="Link Tree">
                     <button
                       onClick={handleSocialLinks}
-                      className="border p-[0.25rem] rounded-full border-teal-300 text-gray-400 hover:text-teal-400"
+                      className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
                     >
                       <FaLink className="w-3 h-3" />
                     </button>

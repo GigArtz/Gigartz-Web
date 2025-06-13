@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 
 interface ServicePackage {
   name: string;
-  baseFee: string;
   additionalCosts: string;
   price: string;
   description: string;
@@ -13,7 +12,6 @@ interface ServicePackage {
 interface Service {
   name: string;
   description: string;
-  offeringOptions?: string;
   baseFee?: string;
   additionalCosts?: string;
   packages?: ServicePackage[];
@@ -37,8 +35,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
   const isServiceComplete = (srv: Service) =>
     srv.name.trim() !== "" &&
     srv.description.trim() !== "" &&
-    srv.offeringOptions &&
-    srv.offeringOptions.trim() !== "" &&
     srv.baseFee &&
     srv.baseFee.trim() !== "" &&
     srv.additionalCosts &&
@@ -63,7 +59,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
       {
         name: "",
         description: "",
-        offeringOptions: "",
         baseFee: "",
         additionalCosts: "",
         packages: [],
@@ -87,7 +82,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
       .map((srv) => ({
         name: srv.name || "",
         description: srv.description || "",
-        offeringOptions: srv.offeringOptions || "",
         baseFee: srv.baseFee || "",
         additionalCosts: srv.additionalCosts || "",
         packages: srv.packages || [],
@@ -96,8 +90,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
         (srv) =>
           srv.name.trim() !== "" &&
           srv.description.trim() !== "" &&
-          srv.offeringOptions &&
-          srv.offeringOptions.trim() !== "" &&
           srv.baseFee &&
           srv.baseFee.trim() !== "" &&
           srv.additionalCosts &&
@@ -107,8 +99,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
           srv.packages.every(
             (pkg) =>
               pkg.name.trim() !== "" &&
-              pkg.baseFee &&
-              pkg.baseFee.trim() !== "" &&
               pkg.additionalCosts &&
               pkg.additionalCosts.trim() !== "" &&
               pkg.price &&
@@ -147,7 +137,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
       updatedServices[serviceIdx].packages = [];
     updatedServices[serviceIdx].packages!.push({
       name: "",
-      baseFee: "",
       additionalCosts: "",
       price: "",
       description: "",
@@ -234,17 +223,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
                       placeholder="Description"
                       onChange={(e) => handleServiceChange(index, e)}
                     />
-                    <label className="text-gray-300 mt-4">
-                      Offering Options
-                    </label>
-                    <input
-                      type="text"
-                      name="offeringOptions"
-                      className="input-field mb-2 mt-1"
-                      value={srv.offeringOptions || ""}
-                      placeholder="Offering Options"
-                      onChange={(e) => handleServiceChange(index, e)}
-                    />
+                  
                     <label className="text-gray-300 mt-4">Base Fee</label>
                     <input
                       type="text"
@@ -295,7 +274,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
               </div>
             ))}
             <button className="mt-2 w-full btn-secondary" onClick={addService}>
-              + Add Another Service
+              + Add Service
             </button>
           </div>
         )}
@@ -306,101 +285,90 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
             <div className="mb-2 text-gray-300">
               <strong>Service:</strong> {services[activeServiceIdx].name}
             </div>
-            <div className="">
-              {(services[activeServiceIdx].packages || []).map(
-                (pkg, pkgIdx) => (
-                  <div
-                    key={pkgIdx}
-                    className="bg-gray-900 p-2 rounded mb-2 flex flex-col gap-1"
-                  >
-                    <input
-                      type="text"
-                      placeholder="Package Name"
-                      className="input-field"
-                      value={pkg.name}
-                      onChange={(e) =>
-                        handlePackageChange(
-                          activeServiceIdx,
-                          pkgIdx,
-                          "name",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Base Fee"
-                      className="input-field"
-                      value={pkg.baseFee || ""}
-                      onChange={(e) =>
-                        handlePackageChange(
-                          activeServiceIdx,
-                          pkgIdx,
-                          "baseFee",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Additional Costs"
-                      className="input-field"
-                      value={pkg.additionalCosts || ""}
-                      onChange={(e) =>
-                        handlePackageChange(
-                          activeServiceIdx,
-                          pkgIdx,
-                          "additionalCosts",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Price"
-                      className="input-field"
-                      value={pkg.price}
-                      onChange={(e) =>
-                        handlePackageChange(
-                          activeServiceIdx,
-                          pkgIdx,
-                          "price",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      className="input-field"
-                      value={pkg.description}
-                      onChange={(e) =>
-                        handlePackageChange(
-                          activeServiceIdx,
-                          pkgIdx,
-                          "description",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="text-xs text-red-400 self-end mt-1"
-                      onClick={() => removePackage(activeServiceIdx, pkgIdx)}
+            <form>
+              <div className="">
+                {(services[activeServiceIdx].packages || []).map(
+                  (pkg, pkgIdx) => (
+                    <div
+                      key={pkgIdx}
+                      className="bg-gray-900 p-2 rounded mb-2 flex flex-col gap-1"
                     >
-                      Remove Package
-                    </button>
-                  </div>
-                )
-              )}
-              <button
-                type="button"
-                className="btn-secondary mt-1"
-                onClick={() => addPackage(activeServiceIdx)}
-              >
-                + Add Package
-              </button>
-            </div>
+                      <input
+                        type="text"
+                        placeholder="Package Name"
+                        className="input-field"
+                        value={pkg.name}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            activeServiceIdx,
+                            pkgIdx,
+                            "name",
+                            e.target.value
+                          )
+                        }
+                      />
+                     
+                      <input
+                        type="text"
+                        placeholder="Additional Costs"
+                        className="input-field"
+                        value={pkg.additionalCosts || ""}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            activeServiceIdx,
+                            pkgIdx,
+                            "additionalCosts",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Price"
+                        className="input-field"
+                        value={pkg.price}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            activeServiceIdx,
+                            pkgIdx,
+                            "price",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        className="input-field"
+                        value={pkg.description}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            activeServiceIdx,
+                            pkgIdx,
+                            "description",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="text-xs text-red-400 self-end mt-1"
+                        onClick={() => removePackage(activeServiceIdx, pkgIdx)}
+                      >
+                        Remove Package
+                      </button>
+                    </div>
+                  )
+                )}
+                <button
+                  type="button"
+                  className="btn-secondary mt-1"
+                  onClick={() => addPackage(activeServiceIdx)}
+                >
+                  + Add Package
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
@@ -409,8 +377,10 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
           {/* Only show Save on Step 2 */}
           {step === 2 && (
             <button className="btn-primary" onClick={handleSubmit}>
-              Confirm & Save
+              Save
             </button>
+
+            
           )}
         </div>
       </div>

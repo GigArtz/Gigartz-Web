@@ -38,20 +38,22 @@ const BookingModal: React.FC<BookingModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [selectedService, setSelectedService] = useState<string>("");
-  const [formData, setFormData] = useState<BookingFormData>({
+  const [step, setStep] = useState(1);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
     eventDetails: "",
     date: "",
     time: "",
     venue: "",
     additionalInfo: "",
   });
+
   const [showPayment, setShowPayment] = useState(false);
   const [pendingBooking, setPendingBooking] = useState<
     (BookingFormData & { serviceName: string }) | null
   >(null);
   const [pendingAmount, setPendingAmount] = useState<number>(0);
-  const [step, setStep] = useState<1 | 2>(1);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -102,7 +104,12 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
   const handleServiceSelect = (key: string) => {
     setSelectedService(key);
-    setStep(2);
+    setSelectedPackage(null); // reset package when switching service
+    setStep(2); // move to Step 2
+  };
+
+  const handlePackageSelect = (pkgId: string) => {
+    setSelectedPackage(pkgId);
   };
 
   const handleBackToService = () => {
@@ -175,10 +182,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
                         <button
                           type="button"
                           key={key}
-                          className={`border rounded p-2 text-left transition-colors duration-150 ${
+                          className={`p-2 rounded text-left transition-colors duration-150 ${
                             selectedService === key
-                              ? "border-teal-500 bg-gray-800 text-white"
-                              : "border-teal-300 bg-gray-700 text-teal-200 hover:bg-gray-600"
+                              ? "border-teal-500 bg-teal-800 text-white"
+                              : "border-teal-300 bg-gray-700 text-teal-200 hover:bg-teal-600"
                           }`}
                           onClick={() => handleServiceSelect(key)}
                         >
@@ -218,128 +225,217 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </div>
           )}
 
-        {/* Step 2: Booking Form Fields */}
-{step === 2 && selectedService && (() => {
-  // Normalize services to always be an array
-  const normalizedServices = Array.isArray(services) ? services : [services];
+          {/* Step 2: Package Selection */}
+          {step === 2 && selectedService && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Select a Package
+              </label>
 
-  // Match selected service by name, serviceName, or index fallback
-  const serviceObj = normalizedServices.find((s, idx) => {
-    const key = s.name ?? s.serviceName ?? idx;
-    return key === selectedService;
-  });
+              <div className="flex flex-col gap-2">
+                {(() => {
+                  const service = (
+                    Array.isArray(services) ? services : [services]
+                  ).find((s) => (s.name ?? s.serviceName) === selectedService);
 
-  if (!serviceObj) return null;
+                  if (!service)
+                    return <p className="text-gray-400">Service not found.</p>;
 
-  const packages = Array.isArray(serviceObj.packages)
-    ? serviceObj.packages
-    : [];
+                  const packages = Array.isArray(service.packages)
+                    ? service.packages
+                    : [];
 
-  return (
-    <React.Fragment>
-      {packages.length > 0 && (
-        <div className="mb-4">
-          <p>
-            Selected Package:{" "}
-            {packages.map((pkg, idx) => (
-              <span key={idx}>
-                {pkg.name}
-                {idx < packages.length - 1 ? ", " : ""}
-              </span>
-            ))}
-          </p>
-        </div>
-      )}
+                  return packages.length ? (
+                    packages.map((pkg, idx) => {
+                      const pkgId = pkg.id ?? `${selectedService}-pkg-${idx}`;
+                      return (
+                        <button
+                          type="button"
+                          key={pkgId}
+                          className={`p-2 rounded text-left transition-colors duration-150 ${
+                            selectedPackage === pkgId
+                              ? "border-teal-500 bg-teal-800 text-white"
+                              : "border-teal-300  text-teal-200 hover:bg-teal-800"
+                          }`}
+                          onClick={() => handlePackageSelect(pkgId)}
+                        >
+                          <div className="font-semibold">
+                            {pkg.name ?? "Unnamed Package"}
+                          </div>
+                          {pkg.description && (
+                            <div className="text-xs text-gray-400 mt-1">
+                              {pkg.description}
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-400">
+                            Base Fee: {pkg.baseFee ?? pkg.price}
+                            {pkg.additionalCost &&
+                              ` | Additional: ${pkg.additionalCost}`}
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <p className="text-gray-400">
+                      No packages available for this service.
+                    </p>
+                  );
+                })()}
+              </div>
 
-      <button
-        type="button"
-        className="mb-2 text-teal-400 hover:underline text-sm flex items-end"
-        onClick={handleBackToService}
-      >
-        ← Back to Service Selection
-      </button>
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="btn-primary w-44 text-sm"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedPackage}
+                  onClick={() => setStep(3)}
+                  className="btn-primary w-44 text-sm disabled:opacity-50"
+                >
+                  Continue →
+                </button>
+              </div>
+            </div>
+          )}
 
-      <div className="min-h-16 overflow-x-auto">
-        <div className="mb-2">
-          <label className="block text-sm font-medium">Event Details</label>
-          <input
-            type="text"
-            name="eventDetails"
-            value={formData.eventDetails}
-            onChange={handleChange}
-            className="input-field"
-            placeholder="Event details"
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block text-sm font-medium">Date</label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="input-field"
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block text-sm font-medium">Time</label>
-          <input
-            type="time"
-            name="time"
-            value={formData.time}
-            onChange={handleChange}
-            className="input-field"
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block text-sm font-medium">Venue</label>
-          <input
-            type="text"
-            name="venue"
-            value={formData.venue}
-            onChange={handleChange}
-            className="input-field"
-            placeholder="Venue"
-            required
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block text-sm font-medium">
-            Additional Info
-          </label>
-          <textarea
-            name="additionalInfo"
-            value={formData.additionalInfo}
-            onChange={handleChange}
-            placeholder="Additional information"
-            className="input-field"
-          />
-        </div>
-      </div>
+          {/* Step 3: Booking Form Fields */}
+          {step === 3 &&
+            selectedService &&
+            selectedPackage &&
+            (() => {
+              const normalizedServices = Array.isArray(services)
+                ? services
+                : [services];
 
-      <div className="flex justify-end gap-2">
-        <button type="submit" className="btn-primary">
-          Book
-        </button>
-      </div>
+              const serviceObj = normalizedServices.find((s, idx) => {
+                const key = s.name ?? s.serviceName ?? idx;
+                return key === selectedService;
+              });
 
-      {showPayment && (
-        <Payment
-          amount={pendingAmount}
-          type="booking"
-          bookingDetails={pendingBooking || {}}
-          onSuccess={handlePaymentSuccess}
-          onFailure={handlePaymentFailure}
-          onClose={() => setShowPayment(false)}
-        />
-      )}
-    </React.Fragment>
-  );
-})()}
+              if (!serviceObj) return null;
 
+              const packages = Array.isArray(serviceObj.packages)
+                ? serviceObj.packages
+                : [];
+
+              const selectedPkg = packages.find((pkg, idx) => {
+                const pkgId = pkg.id ?? `${selectedService}-pkg-${idx}`;
+                return pkgId === selectedPackage;
+              });
+
+              return (
+                <>
+                  {/* Summary */}
+                  <div className="mb-4 text-sm text-teal-200">
+                    <p>
+                      <strong>Service:</strong>{" "}
+                      {serviceObj.name ?? serviceObj.serviceName ?? "Unnamed"}
+                    </p>
+                    <p>
+                      <strong>Package:</strong>{" "}
+                      {selectedPkg?.name ?? "Unnamed Package"}
+                    </p>
+                  </div>
+
+                  {/* Back Navigation */}
+                  <button
+                    type="button"
+                    className="mb-2 text-teal-400 hover:underline text-sm flex items-end"
+                    onClick={() => setStep(2)}
+                  >
+                    ← Back to Package Selection
+                  </button>
+
+                  {/* Booking Form */}
+                  <div className="min-h-16 overflow-x-auto p-2">
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium p-1">
+                        Event Details
+                      </label>
+                      <input
+                        type="text"
+                        name="eventDetails"
+                        value={formData.eventDetails}
+                        onChange={handleChange}
+                        className="input-field"
+                        placeholder="Event details"
+                        required
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium p-1">Date</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={formData.date}
+                        onChange={handleChange}
+                        className="input-field"
+                        required
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium p-1">Time</label>
+                      <input
+                        type="time"
+                        name="time"
+                        value={formData.time}
+                        onChange={handleChange}
+                        className="input-field"
+                        required
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium p-1">Venue</label>
+                      <input
+                        type="text"
+                        name="venue"
+                        value={formData.venue}
+                        onChange={handleChange}
+                        className="input-field"
+                        placeholder="Venue"
+                        required
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium p-1">
+                        Additional Info
+                      </label>
+                      <textarea
+                        name="additionalInfo"
+                        value={formData.additionalInfo}
+                        onChange={handleChange}
+                        placeholder="Additional information"
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button type="submit" className="btn-primary">
+                      Book
+                    </button>
+                  </div>
+
+                  {/* Optional Payment Modal */}
+                  {showPayment && (
+                    <Payment
+                      amount={pendingAmount}
+                      type="booking"
+                      bookingDetails={pendingBooking || {}}
+                      onSuccess={handlePaymentSuccess}
+                      onFailure={handlePaymentFailure}
+                      onClose={() => setShowPayment(false)}
+                    />
+                  )}
+                </>
+              );
+            })()}
         </form>
       </div>
     </div>

@@ -1,10 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaSpinner, FaUserPlus, FaUsers } from "react-icons/fa";
 import ScrollableEventCol from "./ScrollableEventCol";
+import ReviewCard from "./ReviewCard";
+import { fetchGuestLists } from "../../store/eventsSlice";
+import axios from "axios";
 
 function ProfileTabs({ uid }) {
-  const { userList, loading, error } = useSelector((state) => state.profile);
+  const { userList, loading, error, userProfile, userGuestList } = useSelector(
+    (state) => state.profile
+  );
   const dispatch = useDispatch();
 
   const profile = useMemo(() => {
@@ -15,21 +20,7 @@ function ProfileTabs({ uid }) {
     return [...(profile?.userEvents || [])];
   }, [profile]);
 
-  const userGuestList = [
-    {
-      id: "E4CWlMP0EptCfbpHKo5L",
-      guestListName: "About",
-      guests: [
-        {
-          name: "Anoni Maas",
-          email: "ayandasontlaba6@gmail.com",
-          phoneNumber: "0684562312",
-        },
-        // more guests...
-      ],
-      createdAt: "2025-03-23T10:28:41.338Z",
-    },
-  ];
+
 
   const handleSubscribe = (guestListId: string) => {
     console.log(`Subscribed to guest list with id: ${guestListId}`);
@@ -38,6 +29,7 @@ function ProfileTabs({ uid }) {
   const [activeTab, setActiveTab] = useState("events");
   const [selectedList, setSelectedList] = useState(null);
 
+  
   return (
     <div>
       {/* Tabs */}
@@ -88,7 +80,19 @@ function ProfileTabs({ uid }) {
 
             {/* Reviews Tab */}
             {activeTab === "reviews" && (
-              <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
+              <div className="mt-4">
+                {userProfile?.userReviews?.length > 0 ? (
+                  <div className="space-y-4">
+                    {userProfile.userReviews.map((item, idx) => (
+                      <ReviewCard key={item.data?.id ?? idx} review={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center mt-4">
+                    No reviews yet...
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Guest List Tab */}

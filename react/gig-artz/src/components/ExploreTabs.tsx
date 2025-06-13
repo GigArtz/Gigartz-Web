@@ -60,7 +60,7 @@ function ExploreTabs() {
 
   // Helper to handle See All navigation with tab selection
   const handleSeeAll = (section: string) => {
-    let tab = "events";
+    let tab = "gigs";
     if (section === "Popular Freelancers" || section === "People") {
       tab = "people";
     }
@@ -412,13 +412,8 @@ function ExploreTabs() {
                       filteredUsers?.map((user) => (
                         <div className="mb-2" key={user.id}>
                           <UserCard
-                            user={{
-                              uid: user.id || "", // fallback to empty string if id is missing
-                              name: user.name,
-                              userName: user.userName,
-                              bio: user.bio,
-                              profilePicUrl: user.profilePicUrl,
-                            }}
+                            user={
+                              user}
                           />
                         </div>
                       ))

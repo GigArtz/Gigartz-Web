@@ -7,9 +7,12 @@ import {
   FaRetweet,
   FaShareAlt,
 } from "react-icons/fa";
+import CRUDModal from "../components/CRUDModal";
+import EditEventModal from "../components/EditEventModal";
 import { useEffect, useState } from "react";
 import { UserProfile } from "../../store/profileSlice";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 interface EventActionsProps {
   event: Event;
@@ -28,6 +31,7 @@ const EventActions: React.FC<EventActionsProps> = ({
   shareEvent,
   handleLike,
 }) => {
+  const navigate = useNavigate();
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
   const { likedEvents: profileLikedEvents } = useSelector(
     (state) => state.profile
@@ -57,71 +61,119 @@ const EventActions: React.FC<EventActionsProps> = ({
   // Toggles the "More" modal
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
+    // CRUD Modal
+    const [isCRUDVisible, setIsCRUDVisible] = useState(false);
+  
+    // Edit Event Modal
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
+    const [isCreator, setIsCreator] = useState(uid === event?.promoterId );
+  
+
+   const handleCRUD = () => {
+    setIsCRUDVisible(true);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEventToEdit(event);
+    setIsEditModalOpen(true);
+  };
+
+  const handleInsights = (event: Event) => {
+    if (event && event.id) {
+      navigate(`/events/${event.id}/insights`);
+    }
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEventToEdit(null);
+  };
   return (
-    <div className="flex w-full justify-between gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
-      {/* Reviews */}
-      <p className="flex items-center cursor-pointer" onClick={showComments}>
-        <FaComment className=" w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
-        {event?.comments?.length}
-      </p>
+    <>
+      <div>
+        {/* Edit Event Modal */}
+        {isEditModalOpen && (
+          <EditEventModal
+            isModalOpen={isEditModalOpen}
+            closeModal={closeEditModal}
+            event={eventToEdit}
+          />
+        )}
 
-      {/* Likes */}
-      <p className="flex items-center cursor-pointer">
-        <FaHeart
-          onClick={() => handleLike(event?.id, uid || profile?.id)}
-          className={`w-3 h-3 md:w-4 md:h-4 mr-2 ${
-            likedEvents?.includes(event.id)
-              ? "text-red-500"
-              : "hover:text-red-500"
-          }`}
-        />
-        {event?.likes}
-      </p>
-
-      {/* Share */}
-      <p className="flex items-center cursor-pointer">
-        <FaRetweet
-          onClick={shareEvent}
-          className="w-4 h-4 md:w-5 md:h-5 hover:text-teal-500 mr-2"
-        />
-      </p>
-
-      {/* Share */}
-      <p className="flex items-center cursor-pointer">
-        <FaShareAlt
-          onClick={shareEvent}
-          className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2"
-        />
-      </p>
-
-      {/* More (Three dots) */}
-      <p className="flex items-center cursor-pointer" onClick={toggleModal}>
-        <FaEllipsisV className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
-      </p>
-
-      {/* Modal */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50"
-          onClick={() => setIsModalOpen(false)}
-        >
+        {/* CRUD Modal */}
+        {isCRUDVisible && (
           <div
-            className="bg-dark rounded-lg p-4 w-1/3 max-w-sm"
-            onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
+            onClick={() => setIsCRUDVisible(false)} // Close on backdrop click
           >
-            <h3 className="text-lg text-white font-semibold mb-4">More Options</h3>
-            <div className="flex flex-col space-y-3">
-              <button className="py-2 px-4 bg-teal-500 text-white rounded hover:bg-teal-600">
-                Save Event
-              </button>
-              <button className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600">
-                Report Event
-              </button>
+            <div
+              className="bg-white rounded-lg p-6 shadow-lg relative"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+            >
+              <CRUDModal
+                setIsCRUDVisible={setIsCRUDVisible}
+                onEdit={handleEditEvent}
+                onDelete={() => {
+                  console.log("Delete event");
+                  setIsCRUDVisible(false); // Close modal after deleting
+                }}
+                onInsights={() => {
+                  handleInsights(event);
+                  setIsCRUDVisible(false); // Close modal after viewing insights
+                }}
+                event={event}
+                isCreator={isCreator}
+              />
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+      <div className="flex w-full justify-between gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
+        {/* Reviews */}
+        <p className="flex items-center cursor-pointer" onClick={showComments}>
+          <FaComment className=" w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
+          {event?.comments?.length}
+        </p>
+
+        {/* Likes */}
+        <p className="flex items-center cursor-pointer">
+          <FaHeart
+            onClick={() => handleLike(event?.id, uid || profile?.id)}
+            className={`w-3 h-3 md:w-4 md:h-4 mr-2 ${
+              likedEvents?.includes(event.id)
+                ? "text-red-500"
+                : "hover:text-red-500"
+            }`}
+          />
+          {event?.likes}
+        </p>
+
+        {/* Share */}
+        <p className="flex items-center cursor-pointer">
+          <FaRetweet
+            onClick={shareEvent}
+            className="w-4 h-4 md:w-5 md:h-5 hover:text-teal-500 mr-2"
+          />
+          {event?.likes}
+        </p>
+
+        {/* Share */}
+        <p className="flex items-center cursor-pointer">
+          <FaShareAlt
+            onClick={shareEvent}
+            className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2"
+          />
+        </p>
+
+        {/* More (Three dots) */}
+        <p className="flex items-center cursor-pointer" onClick={handleCRUD}>
+          <FaEllipsisV className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
+        </p>
+
+       
+      </div>
+    </>
   );
 };
 

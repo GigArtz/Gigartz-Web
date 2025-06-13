@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import {
   FaCalendar,
   FaClock,
-  FaEllipsisV,
   FaLocationArrow,
   FaRandom,
+  FaUserAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -14,8 +14,6 @@ import { addLike, buyTicket, fetchAllEvents } from "../../store/eventsSlice";
 import React from "react";
 import CommentsModal from "../components/CommentsModal";
 import ShareModal from "../components/ShareModal";
-import CRUDModal from "../components/CRUDModal";
-import EditEventModal from "../components/EditEventModal";
 import EventActions from "../components/EventActions";
 import Payment from "../components/Payment";
 import EventGallery from "../components/EventGallery";
@@ -60,12 +58,6 @@ const EventDetails = () => {
   // Share Modal
   const [isShareVisible, setIsShareVisible] = useState(false);
 
-  // CRUD Modal
-  const [isCRUDVisible, setIsCRUDVisible] = useState(false);
-
-  // Edit Event Modal
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
 
   // Payment Modal
   const [isPaymentVisible, setIsPaymentVisible] = useState(false);
@@ -223,63 +215,11 @@ const EventDetails = () => {
     navigate(`/people/${event.promoterId}`);
   };
 
-  const handleCRUD = () => {
-    setIsCRUDVisible(true);
-  };
 
-  const handleEditEvent = (event: Event) => {
-    setEventToEdit(event);
-    setIsEditModalOpen(true);
-  };
-
-  const handleInsights = (event: Event) => {
-    if (event && event.id) {
-      navigate(`/events/${event.id}/insights`);
-    }
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setEventToEdit(null);
-  };
 
   return (
     <div className="main-content px-4 md:px-8 mb-3">
-      {/* Edit Event Modal */}
-      {isEditModalOpen && (
-        <EditEventModal
-          isModalOpen={isEditModalOpen}
-          closeModal={closeEditModal}
-          event={eventToEdit}
-        />
-      )}
-
-      {/* CRUD Modal */}
-      {isCRUDVisible && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
-          onClick={() => setIsCRUDVisible(false)} // Close on backdrop click
-        >
-          <div
-            className="bg-white rounded-lg p-6 shadow-lg relative"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-          >
-            <CRUDModal
-              setIsCRUDVisible={setIsCRUDVisible}
-              onEdit={handleEditEvent}
-              onDelete={() => {
-                console.log("Delete event");
-                setIsCRUDVisible(false); // Close modal after deleting
-              }}
-              onInsights={() => {
-                handleInsights(event);
-                setIsCRUDVisible(false); // Close modal after viewing insights
-              }}
-              event={event}
-            />
-          </div>
-        </div>
-      )}
+   
 
       {/* Reviews Modal */}
       {isCommentsVisible && (
@@ -327,19 +267,11 @@ const EventDetails = () => {
         </div>
       )}
 
-      <div className="my-4 mb-8 md:mx-0 relative shadow-md shadow-teal-500 rounded-lg">
-        {uid === event?.promoterId && (
-          <div
-            className=" border z-50 rounded-full bg-gray-500 hover:bg-teal-500 p-2 w-6 h-6 flex justify-center items-center absolute top-5 right-10 cursor-pointer"
-            onClick={handleCRUD}
-          >
-            <FaEllipsisV className="w-4 h-4 text-white" />
-          </div>
-        )}
-
+      <div className="my-4 mb-8 md:mx-0 relative shadow-md rounded-lg">
+       
         {event.eventVideo ? (
           <div className="mt-4">
-            <video autoPlay loop muted className="w-full rounded-lg">
+            <video autoPlay loop muted className="w-full rounded-t-lg">
               <source src={event.eventVideo} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
@@ -347,31 +279,29 @@ const EventDetails = () => {
         ) : (
           <EventGalleryCarousel event={event} />
         )}
+
+        <div className="flex bg-gray-800 rounded-b-lg p-4 gap-4 text-gray-400 text-sm md:text-base">
+        <EventActions
+          event={event}
+          profile={profile}
+          uid={uid || profile.id}
+          showComments={showComments}
+          shareEvent={shareEvent}
+          handleLike={handleLike}
+        />
+      </div>
       </div>
 
-      <div className="flex flex-row md:flex-row justify-between gap-4">
+      <div className="flex flex-row md:flex-row justify-between gap-4 mt-4">
         <div>
           <h1 className="text-lg md:text-3xl font-bold text-white">
             {event.title}
           </h1>
-          <button onClick={viewHostProfile} className="text-gray-400 mt-2">
-            {event.hostName}
+          <button onClick={viewHostProfile} className="text-gray-400 mt-2 flex flex-row items-center">
+            <FaUserAlt className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}{event.hostName}
           </button>
         </div>
-
-        <div className="flex gap-4 text-gray-400 text-sm md:text-base">
-          <EventActions
-            event={event}
-            profile={profile}
-            uid={uid || profile.id}
-            showComments={showComments}
-            shareEvent={shareEvent}
-            handleLike={handleLike}
-          />
-        </div>
       </div>
-
-      <hr className="mt-4" />
 
       <h2 className="text-lg md:text-2xl font-bold">Description</h2>
       <p className="mt-4 text-lg">{event.description}</p>
@@ -381,7 +311,7 @@ const EventDetails = () => {
       <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
         <div>
           <p className="flex items-center ">
-            <FaCalendar className="w-5 h-5 text-white mr-2" />{" "}
+            <FaCalendar className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
             {new Date(event.date).toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
@@ -389,22 +319,23 @@ const EventDetails = () => {
             })}
           </p>
           <p className="flex items-center">
-            <FaLocationArrow className="w-5 h-5 text-white mr-2 mt-2" />{" "}
+            <FaLocationArrow className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
             {event.venue}
           </p>
         </div>
         <div className="">
           <p className="flex items-center">
-            <FaClock className="w-5 h-5 text-white mr-2" /> {event.time}
+            <FaClock className="w-4 h-4 text-teal-200 mr-1 pr-1" /> {event.time}
           </p>
           <p className="flex items-center">
-            <FaRandom className="w-5 h-5 text-white mr-2 mt-2" />{" "}
+            <FaRandom className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
             {event.category}
           </p>
         </div>
       </div>
 
-      <hr className="mt-4" />
+      
+      <hr className="mt-4 border-teal-800" />
 
       <div className="mt-6 mb-10">
         <h2 className="text-lg md:text-2xl font-bold">Tickets</h2>
@@ -448,7 +379,8 @@ const EventDetails = () => {
         </div>
       </div>
 
-      <hr className="mt-4" />
+      <hr className="mt-4 border-teal-800" />
+
       <div>
         <h2 className="text-lg md:text-2xl font-bold mt-4">Gallery</h2>
 

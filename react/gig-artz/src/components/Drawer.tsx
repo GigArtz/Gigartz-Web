@@ -41,6 +41,7 @@ function Drawer() {
   const [isMoreExpanded, setIsMoreExpanded] = useState(false);
 
   const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [userReview, setUserReview] = useState();
 
   // Add this handler:
   const handleAddOption = (option: string) => {
@@ -232,7 +233,7 @@ function Drawer() {
                   </div>
                 </li>
               ))}
-              <div className="pt-4">
+              <div className="pt-4 mt-2">
                 <div className="w-full h-10 bg-gray-700 rounded-2xl" />
               </div>
             </ul>
@@ -271,55 +272,66 @@ function Drawer() {
                   <span className="text-white hover:bg-gray-700">More</span>
                 </button>
                 {isMoreExpanded && (
-                  <ul className="space-y-2 mt-2">
-                    {moreNavItems.map((item, index) => (
-                      <li key={index}>
-                        <a
-                          onClick={() => handleNavClick(item)}
-                          className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-              ${
-                item.label === "Sign Out"
-                  ? "text-white hover:bg-red-600"
-                  : "text-white hover:bg-gray-700"
-              }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span>{item.label}</span>
-                        </a>
-                      </li>
-                    ))}
+                  <ul className="space-y-2">
+                    {moreNavItems.map((item, index) => {
+                      const isActive = activeLink === item.link;
+                      return (
+                        <li key={index}>
+                          <a
+                            onClick={() => handleNavClick(item)}
+                            className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
+                          ${
+                            isActive
+                              ? "bg-teal-700 text-white"
+                              : "text-white hover:bg-gray-700"
+                          }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span>{item.label}</span>
+                          </a>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
             </>
           )}
         </nav>
+
         {/* Create Button */}
-        <div className="flex flex-row font-medium px-2 py-1 mt-4 justify-center relative">
-          <button
-            onClick={() => setIsAddDropdownOpen((open) => !open)}
-            type="button"
-            className="inline-flex items-center text-white text-lg pb-4 justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 focus:outline-none"
+        {!loading && (
+          <div
+            className="flex flex-row font-medium px-2 py-1 mt-4 justify-center relative"
+            hidden={loading}
           >
-            <FaPlus className="w-5" /> Post
-          </button>
-          {isAddDropdownOpen && (
-            <div className="absolute top-12 left-0 w-full bg-dark text-center rounded-xl shadow-lg z-50 animate-fade-in">
+            <button
+              onClick={() => setIsAddDropdownOpen((open) => !open)}
+              type="button"
+              className="inline-flex items-center text-white text-lg pb-4 gap-1 justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600  focus:outline-none"
+            >
+              <FaPlus className="w-4 h-4 mt-1" /> Post
+            </button>
+
+            <div
+              className="bg-dark ml-2 text-center rounded-xl shadow-lg z-50 animate-fade-in"
+              hidden={!isAddDropdownOpen}
+            >
               <button
-                className="inline-flex items-center text-white text-lg justify-center w-36 h-10 btn-primary rounded-full mb-2"
+                className="inline-flex items-center text-white text-lg justify-center w-28 h-10 btn-primary rounded-full mb-2"
                 onClick={() => handleAddOption("event")}
               >
                 Event
               </button>
               <button
-                className="inline-flex items-center text-white text-lg justify-center w-36 h-10 btn-primary rounded-full"
+                className="inline-flex items-center text-white text-lg justify-center w-28 h-10 btn-primary rounded-full"
                 onClick={() => handleAddOption("review")}
               >
                 Review
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Overlay for mobile drawer */}

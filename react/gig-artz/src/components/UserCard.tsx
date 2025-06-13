@@ -20,7 +20,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
   const { uid } = useSelector((state) => state.auth);
 
   // Check if user is following current profile
-  const isFollowingUser = userFollowing?.some((u) => u?.id === user?.id);
+  const isFollowingUser = userFollowing?.some((u) => u?.id === user?.id );
 
   const handleClick = () => {
     navigate(`/people/${user?.uid || user?.id}`);

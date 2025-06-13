@@ -3,9 +3,10 @@ import { useSelector } from "react-redux";
 import { FaSpinner } from "react-icons/fa";
 import ScrollableEventCol from "./ScrollableEventCol";
 import ProfileInsights from "../pages/ProfileInsights";
+import ReviewCard from "./ReviewCard";
 
 function MyProfileTabs({ uid }) {
-  const { profile, userList, userEvents, userTickets, likedEvents, loading, error } =
+  const { profile, userList, userEvents, userTickets, likedEvents, loading, error, userReviews } =
     useSelector((state) => state.profile);
   const { events } = useSelector((state) => state.events);
 
@@ -85,8 +86,21 @@ function MyProfileTabs({ uid }) {
               </div>
             )}
 
+            {/* Reviews Tab */}
             {activeTab === "reviews" && (
-              <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
+              <div className="mt-4">
+                {userReviews?.length > 0 ? (
+                  <div className="space-y-4">
+                    {userReviews.map((item, idx) => (
+                      <ReviewCard key={item.data?.id ?? idx} review={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center mt-4">
+                    No reviews yet...
+                  </p>
+                )}
+              </div>
             )}
           </>
         )}

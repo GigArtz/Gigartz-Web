@@ -78,27 +78,27 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   return (
     <div className="flex w-full items-start p-2 bg-gray-900 shadow-md rounded-2xl border border-gray-800 transition-colors ">
       {/* Review Content */}
-      <div className="m-2 flex-1">
+      <div className="mx-2 flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* User Avatar */}
             <img
-              src={review.user.profilePicUrl || "/avatar.png"}
+              src={review?.user?.profilePicUrl || "/avatar.png"}
               alt="User Avatar"
               className="w-10 h-10 rounded-full border-2 border-teal-400 cursor-pointer"
               onClick={handleUserClick}
             />
             <div className="cursor-pointer" onClick={handleUserClick}>
               <h3 className="text-sm font-semibold text-white">
-                {review.user.name || "Anonymous"}
+                {review?.user?.name || "Anonymous"}
               </h3>
               <p className="text-xs text-gray-400">
-                @{review.user.userName || "username"}
+                @{review?.user?.userName || "username"}
               </p>
             </div>
           </div>
           <span className="text-xs text-gray-500">
-            {new Date(review.createdAt).toLocaleString()}
+            {new Date(review?.createdAt || review?.date).toLocaleString()}
           </span>
         </div>
 
@@ -108,7 +108,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             <span
               key={index}
               className={`text-sm ${
-                index < review.rating ? "text-yellow-400" : "text-gray-500"
+                index < review?.rating ? "text-yellow-400" : "text-gray-500"
               }`}
             >
               ★
@@ -117,19 +117,19 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         </div>
 
         {/* Review Text */}
-        <p className="text-sm text-gray-300 mt-1">{review.text}</p>
+        <p className="text-sm text-gray-300 mt-1">{review?.text || review?.reviewText}</p>
 
         {/* Images and/or Video Section */}
-        {(review.imageUrls?.length || review.videoUrl) && (
+        {(review.imageUrls?.length || review?.videoUrl) && (
           <div className="mt-3 w-full">
             {/* Show all images using EventGallery if images exist */}
             {review.imageUrls?.length > 0 && (
-              <EventGallery images={review.imageUrls} />
+              <EventGallery images={review?.imageUrls} />
             )}
             {/* Show video if present */}
-            {review.videoUrl && (
+            {review?.videoUrl && (
               <video
-                src={review.videoUrl}
+                src={review?.videoUrl}
                 controls
                 className="w-full max-h-64 object-cover rounded-md border border-gray-700 duration-200 delay-150 ease-in-out hover:-translate-y-1 hover:scale-95 mt-2"
                 style={{ aspectRatio: "16/9" }}
@@ -144,13 +144,13 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         )}
 
         {/* Like or share review */}
-        <div className="mt-3 flex flex-wrap gap-1 md:gap-2 border-t p-2 border-gray-700 pt-2 px-4 justify-between">
+        <div className="mt-3 flex-wrap g border-t p-2 border-gray-700 pt-3 px-4 flex w-full justify-between gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
           {/* Like Button */}
           <button
             onClick={handleLike}
             className="flex items-center text-gray-500 hover:text-red-400 transition-colors"
           >
-            <FaHeart className="mr-1 w-3 h-3 md:w-4 md:h-4" />
+            <FaHeart className="mr-1 w-3 h-3 md:w-4 md:h-4" /> <span className="pl-1">1</span>
           </button>
 
           {/* Save Button */}
@@ -158,7 +158,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             onClick={handleSave}
             className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
           >
-            <FaBookmark className="mr-1 w-3 h-3 md:w-4 md:h-4" />
+            <FaBookmark className="mr-1 w-3 h-3 md:w-4 md:h-4" /> <span className="pl-1">1</span>
           </button>
 
           {/* Repost Button */}
@@ -166,7 +166,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             onClick={handleRepost}
             className="flex items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
           >
-            <FaRetweet className="mr-1 w-4 h-4 md:w-5 md:h-5" />
+            <FaRetweet className="mr-1 w-4 h-4 md:w-5 md:h-5" /> <span className="pl-1">1</span>
           </button>
 
           {/* Share Button */}
@@ -182,27 +182,28 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
           {/* More Button (Three dots) */}
           <button
             onClick={toggleModal}
-            className="flex w-3 h-3 md:w-4 md:h-4 items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
+            className="flex w-5 h-5 md:w-4 md:h-4 items-center text-gray-500 hover:text-teal-400 transition-colors text-sm"
           >
-            <FaEllipsisV />
+            <FaEllipsisV className="mr-1 w-3 h-3 md:w-4 md:h-4" />
           </button>
 
           {/* Modal for Report */}
           {isModalOpen && (
             <div
-              className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50"
+              className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50"
               onClick={() => setIsModalOpen(false)}
             >
               <div
                 className="bg-dark rounded-lg p-4 w-1/3 max-w-sm"
                 onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
               >
-                <h3 className="text-lg font-semibold mb-4">More Options</h3>
+                <h3 className="text-lg font-semibold mb-4 text-white">More Options</h3>
                 <div className="flex flex-col space-y-3">
                   <button
                     onClick={handleReport}
-                    className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600"
+                    className="py-2 px-4 flex gap-4 bg-dark text-gray-500 hover:bg-gray-800"
                   >
+                    <FaExclamationTriangle className="h-4 w-4"/>
                     Report Event
                   </button>
                 </div>

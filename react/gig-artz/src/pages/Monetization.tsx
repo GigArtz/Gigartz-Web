@@ -47,8 +47,6 @@ const Monetization = () => {
         srv.name.trim() !== "" &&
         typeof srv.description === "string" &&
         srv.description.trim() !== "" &&
-        typeof srv.offeringOptions === "string" &&
-        srv.offeringOptions.trim() !== "" &&
         typeof srv.baseFee === "string" &&
         srv.baseFee.trim() !== "" &&
         typeof srv.additionalCosts === "string" &&

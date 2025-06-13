@@ -30,7 +30,7 @@ const EventGalleryCarousel = ({ event }) => {
   return (
     <div className="relative w-full mx-auto">
       {/* Carousel Container */}
-      <div className="overflow-hidden relative md:h-80 rounded-lg">
+      <div className="overflow-hidden relative md:h-80 rounded-t-lg">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}

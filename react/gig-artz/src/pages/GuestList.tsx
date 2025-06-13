@@ -181,12 +181,13 @@ function GuestList() {
   };
 
   // Delete guest from guest list
-  const deleteGuest = async (guestEmail) => {
-    console.log("Deleting guest with email:", guestEmail);
+  const deleteGuest = async (username) => {
+    console.log(selectedList);
+    console.log("Deleting guest with username:", username);
     if (!selectedList) return;
-    const guest = userList?.find((user) => user.emailAddress === guestEmail);
+    const guest = selectedList?.guests?.find((user) => user.userName === username);
     if (!guest) {
-      showToast("No matching guest found for this email!", "error");
+      showToast("No matching guest found for this username!", "error");
       return;
     }
     await dispatch(
@@ -200,9 +201,9 @@ function GuestList() {
   };
 
   const handleAddGuestToList = (listId, guestName) => {
-    const guest = userList?.find((user) => user.emailAddress === guestName);
+    const guest = userList?.find((user) => user.userName === guestName);
     if (!guest) {
-      showToast("No matching guest found with this email!", "error");
+      showToast("No matching guest found with this userName!", "error");
       return;
     }
     setGuestLists((prevLists) =>
@@ -243,28 +244,7 @@ function GuestList() {
             +
           </button>
 
-          {showFloatingMenu && (
-            <div className="absolute right-0 top-16 bg-dark text-white whitespace-nowrap rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
-              <button
-                onClick={() => {
-                  setShowListModal(true);
-                  setShowFloatingMenu(false);
-                }}
-                className="btn-primary w-full p-2"
-              >
-                Create List
-              </button>
-              <button
-                onClick={() => {
-                  setIsGuestListModalOpen(true);
-                  setShowFloatingMenu(false);
-                }}
-                className="btn-primary w-full p-2"
-              >
-                Add Guest
-              </button>
-            </div>
-          )}
+      
         </div>
       </div>
 
@@ -394,7 +374,7 @@ function GuestList() {
                         </span>
                       </span>
                       <button
-                        onClick={() => deleteGuest(guest?.emailAddress)}
+                        onClick={() => deleteGuest(guest?.userName)}
                         className="text-red-400 hover:text-red-600 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                         title="Remove Guest"
                       >
@@ -533,6 +513,21 @@ function GuestList() {
                 className="toggle-label text-gray-400 ml-2"
               >
                 Public
+              </label>
+            </div>
+            
+            {/* Free Paid */}
+            <div className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                id="paid-private-toggle"
+                className="toggle-checkbox"
+              />
+              <label
+                htmlFor="paid-private-toggle"
+                className="toggle-label text-gray-400 ml-2"
+              >
+                Paid
               </label>
             </div>
             {editingList ? (

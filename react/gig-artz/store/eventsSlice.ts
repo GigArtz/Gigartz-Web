@@ -58,9 +58,18 @@ interface Event {
   eventStartTime: string; // Consider changing to Date type
 }
 
+interface Review {
+  userId: string;
+  reviewText: string;
+  image: string;
+  rating: number;
+  reviewTitle: string;
+}
+
 // Define the state structure for events
 interface EventsState {
   events: Event[];
+  reviews: Review[]
   loading: boolean;
   error: string | null;
   success: string | null;
@@ -68,6 +77,7 @@ interface EventsState {
 
 const initialState: EventsState = {
   events: [],
+  reviews: [],
   loading: false,
   error: null,
   success: null,
@@ -78,6 +88,10 @@ const eventsSlice = createSlice({
   initialState,
   reducers: {
     fetchEventsStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchReviewsStart(state) {
       state.loading = true;
       state.error = null;
     },
@@ -132,6 +146,11 @@ const eventsSlice = createSlice({
       state.events = action.payload;
       state.error = null;
     },
+    fetchReviewsSuccess(state, action: PayloadAction<Review[]>) {
+      state.loading = false;
+      state.reviews = action.payload?.reviews;
+      state.error = null;
+    },
     createEventsSuccess(state, action: PayloadAction<string>) {
       state.loading = false;
       state.success = action.payload;
@@ -139,6 +158,10 @@ const eventsSlice = createSlice({
       // Notification now handled in thunk
     },
     fetchEventsFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchReviewsFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
     },
@@ -1075,6 +1098,51 @@ export const deleteGuestFromGuestList = (userId: string, guestListId: string, gu
       }
     } else {
       dispatch(eventsSlice.actions.createGuestListFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Fetch all reviews
+export const fetchAllReviews = (userId:string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.fetchEventsStart());
+
+  try {
+    console.log("Fetching all reviews...");
+    const response = await axios.get(`https://gigartz.onrender.com/events/reviews/${userId}`);
+    console.log("Review responses:", response.data.reviews);
+
+    dispatch(eventsSlice.actions.fetchReviewsSuccess(response.data));
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMsg =
+          typeof errorData?.message === 'string' ? errorData.message :
+            typeof errorData?.error === 'string' ? errorData.error :
+              "Failed to fetch reviews";
+        dispatch(
+          eventsSlice.actions.fetchReviewsFailure(errorMsg)
+        );
+      } else if (axiosError.request) {
+        // The request was made, but no response was received
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          eventsSlice.actions.fetchReviewsFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        // Something else happened during the setup of the request
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(eventsSlice.actions.fetchReviewssFailure(axiosError.message));
+      }
+    } else {
+      // Handle non-Axios errors
+      console.error("Unexpected error fetching reviews:", error);
+      dispatch(
+        eventsSlice.actions.fetchReviewsFailure("Unexpected error occurred")
+      );
     }
   }
 };

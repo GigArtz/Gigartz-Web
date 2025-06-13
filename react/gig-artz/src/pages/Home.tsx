@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BottomNav from "../components/BottomNav";
-import { fetchAllEvents } from "../../store/eventsSlice";
+import { fetchAllEvents, fetchAllReviews } from "../../store/eventsSlice";
 import { RootState, AppDispatch } from "../../store/store";
 import EventsTabs from "../components/EventsTabs";
 import ReviewCard from "../components/ReviewCard"; // Import ReviewCard
@@ -48,9 +48,10 @@ interface Event {
 
 const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // Use correct type for thunk
-  const { events, loading, error } = useSelector(
+  const { events, loading, error, reviews } = useSelector(
     (state: RootState) => state.events
   );
+  const uid = useSelector((state: RootState) => state.auth);
 
   // Add state for selected tab
   const [selectedTab, setSelectedTab] = useState("reviews");
@@ -65,7 +66,9 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     dispatch(fetchAllEvents());
-  }, [dispatch]);
+    dispatch(fetchAllReviews(uid?.uid));
+    console.log("Fetch..", reviews);
+  }, [dispatch, uid]);
 
   // Dummy reviews data
   const dummyReviews = [
@@ -229,13 +232,13 @@ const Home: React.FC = () => {
           />
 
           {/* Reviews with Ads injected */}
-          {dummyReviews?.length > 0 ? (
-            dummyReviews
+          {reviews?.length > 0 ? (
+            reviews
               .reduce((acc, review, index) => {
                 acc.push({ type: "review", data: review });
 
                 // Inject an ad after every 3 reviews (but not at the end)
-                if ((index + 1) % 3 === 0 && index + 1 < dummyReviews.length) {
+                if ((index + 1) % 3 === 0 && index + 1 < reviews?.length) {
                   acc.push({ type: "ad", key: `ad-${index}` });
                 }
 
