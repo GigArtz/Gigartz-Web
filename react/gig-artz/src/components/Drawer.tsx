@@ -321,7 +321,7 @@ function Drawer() {
                 className="inline-flex items-center text-white text-lg justify-center w-28 h-10 btn-primary rounded-full mb-2"
                 onClick={() => handleAddOption("event")}
               >
-                Event
+                Gig
               </button>
               <button
                 className="inline-flex items-center text-white text-lg justify-center w-28 h-10 btn-primary rounded-full"
