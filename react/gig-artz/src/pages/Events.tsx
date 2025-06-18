@@ -53,6 +53,7 @@ const EventDetails = () => {
   const { uid } = useSelector((state: RootState) => state.auth);
   const { profile } = useSelector((state: RootState) => state.profile);
 
+
   // Reviews Modal
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
 

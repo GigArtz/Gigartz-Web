@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { RootState } from "store/store";
 
 interface User {
   uid?: string;
@@ -22,19 +24,29 @@ interface CommentCardProps {
 
 const CommentCard: React.FC<CommentCardProps> = ({ review }) => {
   const navigate = useNavigate();
+  const { user, text, createdAt, rating } = review;
+
+  const userList = useSelector((state: RootState) => state.profile.userList) as User[];
+
+  // Find user reviewing
+  const findUser = (uid: string) => {
+    return userList?.find((user) => user?.id === uid);
+  };
+
+  const displayUser = findUser(review?.user?.uid);
 
   const handleUserClick = () => {
-    if (review.user.uid) {
-      navigate(`/people/${review.user.uid}`);
+    if (displayUser.uid) {
+      navigate(`/people/${displayUser.uid}`);
     }
   };
 
   return (
-    <div className="flex w-full  items-start p-4 bg-[#060512] rounded-lg shadow-md">
+    <div className="flex w-full items-start p-4 bg-[#060512] rounded-lg shadow-md">
       {/* Profile Picture */}
       <img
-        src={review.user.profilePicUrl || "/avatar.png"}
-        alt="User Avatar"
+        src={displayUser.profilePicUrl || "/avatar.png"}
+        alt={displayUser.name ?? "User Avatar"}
         className="w-10 h-10 rounded-full border-2 border-teal-400 cursor-pointer"
         onClick={handleUserClick}
       />
@@ -44,14 +56,14 @@ const CommentCard: React.FC<CommentCardProps> = ({ review }) => {
         <div className="flex items-center justify-between">
           <div className="cursor-pointer" onClick={handleUserClick}>
             <h3 className="text-sm font-semibold text-white">
-              {review.user.name || "Unknown"}
+              {displayUser.name ?? "Unknown"}
             </h3>
             <p className="text-xs text-gray-400">
-              @{review.user.userName || "username"}
+              @{displayUser.userName ?? "username"}
             </p>
           </div>
           <span className="text-xs text-gray-500">
-            {new Date(review.createdAt).toLocaleString()}
+            {new Date(createdAt).toLocaleString()}
           </span>
         </div>
 
@@ -61,7 +73,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ review }) => {
             <span
               key={index}
               className={`text-sm ${
-                index < review.rating ? "text-yellow-400" : "text-gray-500"
+                index < rating ? "text-yellow-400" : "text-gray-500"
               }`}
             >
               ★
@@ -70,7 +82,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ review }) => {
         </div>
 
         {/* Review Text */}
-        <p className="text-sm text-gray-300 mt-1">{review.text}</p>
+        <p className="text-sm text-gray-300 mt-1">{text}</p>
       </div>
     </div>
   );

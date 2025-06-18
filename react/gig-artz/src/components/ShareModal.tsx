@@ -3,7 +3,6 @@ import {
   FaCheck,
   FaFacebook,
   FaLink,
-  FaTimes,
   FaTimesCircle,
   FaTwitter,
   FaWhatsapp,
