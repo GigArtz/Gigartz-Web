@@ -9,47 +9,42 @@ import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
 import ScrollableEventCol from "./ScrollableEventCol";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { eventCategories } from "../constants/EventCategories";
-import { freelancers } from "../constants/Filters";
-import { categoriesList, genres } from "../constants/Categories";
+import { eventCategories, freelancerCategories } from "../constants/EventCategories";
 import AdCard from "./AdCard";
 import SwitchToProCard from "./SwitchToProCard";
+import PreferencesModal from "./PreferencesModal";
 
 function ExploreTabs() {
   const dispatch: AppDispatch = useDispatch();
   const { search } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // State to track active tab
+  // Tab and search state
   const [activeTab, setActiveTab] = useState("top");
-  // State for search term
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Multi-select filter state
-  const [selectedMainCategories, setSelectedMainCategories] = useState<
-    string[]
-  >([]);
-  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>(
-    []
-  );
-  const [selectedFreelancers, setSelectedFreelancers] = useState<string[]>([]);
+  // Unified filter state
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
-  // Modal state for filters
+  // Modal visibility state
   const [showFilters, setShowFilters] = useState(false);
 
-  const nagivate = useNavigate();
+  // Derived filters from interests
+  const selectedEventCategories = selectedInterests.filter((interest) =>
+    Object.values(eventCategories).flat().includes(interest)
+  );
+  const selectedFreelancers = selectedInterests.filter((interest) =>
+    Object.values(freelancerCategories).flat().includes(interest)
+  );
 
-  // Update searchTerm if search param changes (from EventsTabs)
+  // Handle search term from route
   useEffect(() => {
     if (search) setSearchTerm(search);
   }, [search]);
 
-  // Optionally, update the input field and filter when the URL changes
-  useEffect(() => {
-    if (search) setSearchTerm(search);
-  }, [search]);
-
-  // Get tab from query param
+  // Handle tab query param
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
@@ -58,30 +53,20 @@ function ExploreTabs() {
     }
   }, [location.search]);
 
-  // Helper to handle See All navigation with tab selection
-  const handleSeeAll = (section: string) => {
-    let tab = "gigs";
-    if (section === "Popular Freelancers" || section === "People") {
-      tab = "people";
-    }
-    nagivate(`/explore?tab=${tab}`);
-  };
-
+  // Load data
   useEffect(() => {
     dispatch(fetchAllProfiles());
     dispatch(fetchAllEvents());
   }, [dispatch]);
 
+  // Redux state
   const { userList, loading, error } = useSelector(
     (state: RootState) => state.profile
   );
   const { events } = useSelector((state: RootState) => state.events);
-
   const eventList = events || [];
 
-  const [selectedEventCategories, setSelectedEventCategories] = useState([]);
-
-  // Filtered lists based on search term and filters
+  // Filtered Events
   const filteredEvents = Array.isArray(eventList)
     ? eventList.filter((event) => {
         const title = event?.title?.toLowerCase() || "";
@@ -89,18 +74,16 @@ function ExploreTabs() {
         const matchesSearch =
           title.includes(searchTerm.toLowerCase()) ||
           description.includes(searchTerm.toLowerCase());
-        const matchesMainCategory =
-          selectedMainCategories.length === 0 ||
-          selectedMainCategories.some((main) => {
-            const subs = eventCategories[main] || [];
-            return subs.includes(event?.category) || main === event?.category;
-          });
-        const matchesSubCategory =
-          selectedSubCategories.length === 0 ||
-          selectedSubCategories.includes(event?.category);
-        return matchesSearch && matchesMainCategory && matchesSubCategory;
+
+        const matchesCategory =
+          selectedEventCategories.length === 0 ||
+          selectedEventCategories.includes(event?.category);
+
+        return matchesSearch && matchesCategory;
       })
     : [];
+
+  // Filtered Freelancers
   const filteredUsers = Array.isArray(userList)
     ? userList.filter((user) => {
         const name = user?.name?.toLowerCase() || "";
@@ -108,7 +91,7 @@ function ExploreTabs() {
         const matchesSearch =
           name.includes(searchTerm.toLowerCase()) ||
           username.includes(searchTerm.toLowerCase());
-        // Use genre (string or array) for freelancer type matching
+
         const userGenres = Array.isArray(user?.genre)
           ? user.genre.map((g) =>
               typeof g === "string"
@@ -120,14 +103,25 @@ function ExploreTabs() {
           : typeof user?.genre === "string"
           ? [user.genre]
           : [];
+
         const matchesFreelancer =
           selectedFreelancers.length === 0 ||
-          selectedFreelancers.some(
-            (f) => user?.roles?.freelancer && userGenres.includes(f)
+          selectedFreelancers.some((f) =>
+            user?.roles?.freelancer ? userGenres.includes(f) : false
           );
+
         return matchesSearch && matchesFreelancer;
       })
     : [];
+
+  // Navigate on "See All"
+  const handleSeeAll = (section: string) => {
+    let tab = "gigs";
+    if (section === "Popular Freelancers" || section === "People") {
+      tab = "people";
+    }
+    navigate(`/explore?tab=${tab}`);
+  };
 
   return (
     <div className="px-2">
@@ -170,164 +164,18 @@ function ExploreTabs() {
         {/* Filters Modal */}
         {showFilters && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-            <div className="modal">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-dark">
-                <h2 className="text-lg font-bold text-teal-400 tracking-wide">
-                  Filters
-                </h2>
-                <button
-                  className="text-gray-400 hover:text-white text-2xl transition-colors"
-                  onClick={() => setShowFilters(false)}
-                  aria-label="Close filters"
-                >
-                  ×
-                </button>
-              </div>
-              {/* Modal Content */}
-              <div className="px-6 py-4 flex flex-col gap-4">
-                {/* Main Categories */}
-                <label className="text-xs text-gray-400 mb-1 font-semibold">
-                  Event Categories
-                </label>
-
-                <div className="space-y-4 md:max-h-64 max-h-28 overflow-y-auto">
-                  {/* show all sub categories */}
-                  {Object.entries(eventCategories).map(
-                    ([categoryName, items]) => (
-                      <div key={categoryName}>
-                        <h4 className="text-gray-400 text-sm font-semibold mb-1">
-                          {categoryName}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                          {(items as string[]).map((item) => (
-                            <label
-                              key={item}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedEventCategories.includes(item)}
-                                onChange={() => {
-                                  setSelectedEventCategories((prev) =>
-                                    prev.includes(item)
-                                      ? prev.filter((x) => x !== item)
-                                      : [...prev, item]
-                                  );
-                                }}
-                                className="accent-teal-500"
-                              />
-                              <span className="text-gray-200 text-sm">
-                                {item}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Subcategories (only show for selected main categories) */}
-                {selectedMainCategories.length > 0 && (
-                  <div>
-                    <label className="text-xs text-gray-400 mb-1 font-semibold">
-                      Subcategories
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {selectedMainCategories
-                        .flatMap((main) => eventCategories[main])
-                        .map((sub) => (
-                          <label
-                            key={sub}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedSubCategories.includes(sub)}
-                              onChange={() => {
-                                setSelectedSubCategories((prev) =>
-                                  prev.includes(sub)
-                                    ? prev.filter((s) => s !== sub)
-                                    : [...prev, sub]
-                                );
-                              }}
-                              className="accent-teal-500"
-                            />
-                            <span className="text-gray-200 text-sm">{sub}</span>
-                          </label>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Freelancers multi-select */}
-
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 font-semibold">
-                    Professionals
-                  </label>
-
-                  {/* show all sub categories */}
-                  <div className="space-y-4 md:max-h-64 max-h-28 overflow-y-auto">
-                    {categoriesList.map((category) => (
-                      <div key={category.id}>
-                        <h4 className="text-gray-400 text-sm font-semibold mb-1">
-                          {category.name}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                          {category.items.map((item) => (
-                            <label
-                              key={item.id}
-                              className="flex items-center gap-2 cursor-pointer text-nowrap"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedFreelancers.includes(
-                                  item.name
-                                )}
-                                onChange={() => {
-                                  setSelectedFreelancers((prev) =>
-                                    prev.includes(item.name)
-                                      ? prev.filter((x) => x !== item.name)
-                                      : [...prev, item.name]
-                                  );
-                                }}
-                                className="accent-teal-500"
-                              />
-                              <span className="text-gray-200 text-sm">
-                                {item.name}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              {/* Footer */}
-              <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-700 bg-dark rounded-b-2xl">
-                <button
-                  className="px-4 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600 font-semibold transition-colors"
-                  onClick={() => {
-                    setSelectedMainCategories([]);
-                    setSelectedSubCategories([]);
-                    setSelectedFreelancers([]);
-                  }}
-                >
-                  Clear
-                </button>
-                <button
-                  className="px-4 py-2 rounded-lg bg-teal-500 text-white font-bold hover:bg-teal-600 transition-colors"
-                  onClick={() => setShowFilters(false)}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
+            <PreferencesModal
+              isOpen={showFilters}
+              onClose={() => setShowFilters(false)}
+              selectedInterests={selectedInterests}
+              setSelectedInterests={setSelectedInterests}
+              selectedLocations={selectedLocations}
+              setSelectedLocations={setSelectedLocations}
+              title={"Select Your Filters"}
+            />
           </div>
         )}
+
         {/* End Filters Modal */}
       </div>
 
@@ -411,10 +259,7 @@ function ExploreTabs() {
                     {filteredUsers?.length > 0 ? (
                       filteredUsers?.map((user) => (
                         <div className="mb-2" key={user.id}>
-                          <UserCard
-                            user={
-                              user}
-                          />
+                          <UserCard user={user} />
                         </div>
                       ))
                     ) : (

@@ -139,7 +139,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
             src={event?.gallery?.length ? event.gallery[0] : image} // Ensures array check
             alt={event?.title || "Event Image"}
           />
-          <div className="px-2 flex flex-col flex-1">
+          <div className="p-2 flex flex-col flex-1">
             <div className="flex justify-between">
               <h5
                 className={`mb-2 text-base md:text-2xl font-bold text-white text-wrap line-clamp-1 ${
@@ -163,8 +163,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
             </p>
           </div>
         </Link>
-        <div className="p-5 flex flex-col flex-1">
-          {cardSize === "lg" && (
+
+        {cardSize === "lg" && (
+          <div className="p-5 flex flex-col flex-1">
             <div className="flex border-t border-gray-800 pt-2 px-2 gap-2">
               <EventActions
                 event={event}
@@ -175,8 +176,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
                 handleLike={handleLike}
               />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

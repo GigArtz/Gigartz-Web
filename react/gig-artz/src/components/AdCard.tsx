@@ -74,11 +74,11 @@ const AdCard: React.FC<AdCardProps> = ({
             </p>
           )}
 
-          <div className="pt-2 ">
+          {size === 'sm' ? <p></p> : <div className="pt-2 ">
             <span className="inline-block bg-teal-600 hover:bg-teal-500 text-white text-xs px-4 py-2 rounded-full transition">
               {ctaLabel}
             </span>
-          </div>
+          </div>}
         </div>
       </div>
     </Wrapper>
