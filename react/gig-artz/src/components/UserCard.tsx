@@ -49,7 +49,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
               {user.name || "Unknown"}
             </h3>
             <div className="flex flex-col ">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 truncate w-full sm:min-w-12">
                 @{user.userName || "username"}
               </p>
               <p className="text-xs text-gray-300 truncate w-full sm:min-w-12">

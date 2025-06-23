@@ -184,7 +184,7 @@ function ExploreTabs() {
           {[
             { key: "top", label: "Top" },
             { key: "latest", label: "Latest" },
-            { key: "gigs", label: "Gigs" },
+            { key: "gigs", label: "Promoted" },
             { key: "people", label: "People" },
           ].map(({ key, label }) => (
             <li key={key}>

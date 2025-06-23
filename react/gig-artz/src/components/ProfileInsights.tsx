@@ -311,10 +311,10 @@ const ProfileInsights: React.FC = () => (
     <h1 className="text-3xl font-bold mb-6 ">Profile Insights</h1>
 
     {/* Freelance Service Insights */}
-    <h2 className="text-xl text-teal font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
+    <h2 className="text-teal font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Freelance Service Insights
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4 flex flex-col items-center">
         <div className="text-2xl font-bold text-teal-400">
           {serviceStats.total}
@@ -378,7 +378,7 @@ const ProfileInsights: React.FC = () => (
         <RatingBreakdown breakdown={serviceStats.ratingsBreakdown} />
       </div>
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="text-lg font-bold mb-2 text-teal-300">
           Total Earnings: ${serviceStats.totalEarnings}
@@ -404,10 +404,10 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Social & Community Engagement */}
-    <h2 className="text-xl font-semibold mb-2  pb-2 text-teal-400 border-b border-gray-800">
+    <h2 className="font-semibold mb-2  pb-2 text-teal-400 border-b border-gray-800">
       Social & Community Engagement
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="font-bold text-teal-300">Profile Visits</div>
         <BarGraph
@@ -483,7 +483,7 @@ const ProfileInsights: React.FC = () => (
         </ul>
       </div>
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="font-bold text-teal-300">Reposts & Mentions</div>
         <div className="flex space-x-8 mt-2">
@@ -513,10 +513,10 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Promotional & Marketing Insights */}
-    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
+    <h2 className="font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Promotional & Marketing Insights
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="font-bold mb-2">
           Promoted Events/Services Performance
@@ -557,10 +557,10 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Comparative & Trend Data */}
-    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
+    <h2 className="font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Comparative & Trend Data
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className=" flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="font-bold mb-2">Performance Over Time (Engagement)</div>
         <LineGraph
@@ -621,10 +621,10 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Audience Demographics */}
-    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
+    <h2 className="font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Audience Demographics
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="font-bold mb-2">Top Locations</div>
         <BarGraph
@@ -654,10 +654,10 @@ const ProfileInsights: React.FC = () => (
     </div>
 
     {/* Review & Reputation Insights */}
-    <h2 className="text-xl font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
+    <h2 className="font-semibold mb-2 pb-2 text-teal-400 border-b border-gray-800">
       Review & Reputation Insights
     </h2>
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    <div className="flex flex-col gap-4 mb-8">
       <div className="bg-gray-800 rounded shadow p-4">
         <div className="font-bold mb-2 text-teal-300">
           Reviews Given/Received

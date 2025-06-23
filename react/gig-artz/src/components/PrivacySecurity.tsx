@@ -8,9 +8,12 @@ const blockedUsersSample = [
 
 const PrivacySecurity: React.FC = () => {
   const [isPrivateProfile, setIsPrivateProfile] = useState(false);
+  const [isProfileSuspended, setIsProfileSuspended] = useState(false);
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
-  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
-  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
+    useState(false);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
+    useState(false);
 
   const blockedModalRef = useRef<HTMLDivElement>(null);
   const changePasswordModalRef = useRef<HTMLDivElement>(null);
@@ -21,6 +24,7 @@ const PrivacySecurity: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
 
   // Close modals on Escape key press
   useEffect(() => {
@@ -31,7 +35,11 @@ const PrivacySecurity: React.FC = () => {
         setIsDeleteAccountModalOpen(false);
       }
     };
-    if (isBlockedModalOpen || isChangePasswordModalOpen || isDeleteAccountModalOpen) {
+    if (
+      isBlockedModalOpen ||
+      isChangePasswordModalOpen ||
+      isDeleteAccountModalOpen
+    ) {
       document.addEventListener("keydown", handleKeyDown);
     } else {
       document.removeEventListener("keydown", handleKeyDown);
@@ -64,7 +72,11 @@ const PrivacySecurity: React.FC = () => {
         setIsDeleteAccountModalOpen(false);
       }
     };
-    if (isBlockedModalOpen || isChangePasswordModalOpen || isDeleteAccountModalOpen) {
+    if (
+      isBlockedModalOpen ||
+      isChangePasswordModalOpen ||
+      isDeleteAccountModalOpen
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -135,12 +147,28 @@ const PrivacySecurity: React.FC = () => {
             </label>
           </li>
 
+          <li className="flex items-center justify-between px-4 py-3 bg-gray-800 rounded-md">
+            <span>Suspend Profile</span>
+            <label className="relative inline-block w-12 h-7">
+              <input
+                type="checkbox"
+                checked={isProfileSuspended}
+                onChange={() => setIsPrivateProfile(!isProfileSuspended)}
+                className="peer sr-only"
+                aria-checked={isPrivateProfile}
+                aria-label="Toggle suspend profile"
+              />
+              <span className="block bg-gray-600 rounded-full w-12 h-7 transition peer-checked:bg-teal-500"></span>
+              <span className="absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform peer-checked:translate-x-5"></span>
+            </label>
+          </li>
+
           <li>
             <button
               onClick={() => setIsDeleteAccountModalOpen(true)}
               className="w-full text-left px-4 py-3 bg-red-700 rounded-md hover:bg-red-800 transition focus:outline-none focus:ring-2 focus:ring-red-400"
             >
-              Delete / Suspend Account
+              Delete Account
             </button>
           </li>
         </ul>
@@ -159,7 +187,10 @@ const PrivacySecurity: React.FC = () => {
             className="bg-gray-900 rounded-lg max-w-md w-full max-h-[80vh] p-6 overflow-y-auto shadow-lg"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 id="blocked-users-title" className="text-xl font-semibold text-white">
+              <h2
+                id="blocked-users-title"
+                className="text-xl font-semibold text-white"
+              >
                 Blocked Accounts
               </h2>
               <button
@@ -175,7 +206,11 @@ const PrivacySecurity: React.FC = () => {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -185,7 +220,10 @@ const PrivacySecurity: React.FC = () => {
             ) : (
               <ul className="divide-y divide-gray-700">
                 {blockedUsersSample.map(({ id, name, userName }) => (
-                  <li key={id} className="py-3 flex justify-between items-center">
+                  <li
+                    key={id}
+                    className="py-3 flex justify-between items-center"
+                  >
                     <div>
                       <p className="font-semibold text-white">{name}</p>
                       <p className="text-gray-400 text-sm">@{userName}</p>
@@ -217,7 +255,10 @@ const PrivacySecurity: React.FC = () => {
             className="bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-lg"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 id="change-password-title" className="text-xl font-semibold text-white">
+              <h2
+                id="change-password-title"
+                className="text-xl font-semibold text-white"
+              >
                 Change Password
               </h2>
               <button
@@ -233,7 +274,11 @@ const PrivacySecurity: React.FC = () => {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -245,22 +290,13 @@ const PrivacySecurity: React.FC = () => {
               }}
               noValidate
             >
+              
+              
               <div className="mb-4">
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-1">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
                   New Password
                 </label>
                 <input
@@ -274,7 +310,10 @@ const PrivacySecurity: React.FC = () => {
               </div>
 
               <div className="mb-4">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
                   Confirm New Password
                 </label>
                 <input
@@ -326,7 +365,10 @@ const PrivacySecurity: React.FC = () => {
             className="bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-lg"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 id="delete-account-title" className="text-xl font-semibold text-white">
+              <h2
+                id="delete-account-title"
+                className="text-xl font-semibold text-white"
+              >
                 Delete Account
               </h2>
               <button
@@ -342,14 +384,31 @@ const PrivacySecurity: React.FC = () => {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
 
-            <p className="text-gray-300 mb-6">
-              Are you sure you want to <span className="font-semibold text-red-500">delete your account</span>? This action is <span className="font-semibold text-red-500">irreversible</span>.
+            <p className="text-gray-300 mb-4">
+              Are you sure you want to{" "}
+              <span className="font-semibold text-red-500">
+                delete your account
+              </span>
+              ? This action is{" "}
+              <span className="font-semibold text-red-500">irreversible</span>.
             </p>
+
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-4 py-2 mb-6 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
 
             <div className="flex justify-end space-x-3">
               <button

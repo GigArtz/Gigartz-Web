@@ -92,7 +92,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   const handleSocialLinks = () => {
     if (!userProfile?.userProfile) return;
 
-    const profile = userProfile;
+    const profile = userProfile?.userProfile;
 
     const knownPlatforms = [
       "twitter",
@@ -114,10 +114,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     console.log("✅ Social Links:", socialLinks);
 
     // You can now open the modal and pass these:
-    setShowSocialLinksModal(true);
+   // setShowSocialLinksModal(true);
     setFormattedSocialLinks(socialLinks);
   };
 
+  useEffect(() => {
+  if (userProfile?.userProfile) {
+    handleSocialLinks();
+  }
+}, [userProfile?.userProfile]);
+  
   return (
     <div className="">
       <div className="block justify-center items-center bg-dark rounded-lg shadow-md">
@@ -178,6 +184,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                             </button>
                           </Tooltip>
                         )}
+
+                        {formattedSocialLinks.length > 0 && (
+                    <Tooltip text="Link Tree">
+                      <button
+                        onClick={() => setShowSocialLinksModal(true)}
+                        className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
+                      >
+                        <FaLink className="w-3 h-3" />
+                      </button>
+                    </Tooltip>
+                  )}
                       </div>
                     )}
                   </div>
@@ -193,14 +210,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                       {isFollowingUser ? "Following" : "Follow"}
                     </button>
                   </Tooltip>
-                  <Tooltip text="Link Tree">
-                    <button
-                      onClick={handleSocialLinks}
-                      className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
-                    >
-                      <FaLink className="w-3 h-3" />
-                    </button>
-                  </Tooltip>
+                
+                  
                 </div>
                 <h1 className="text-2xl font-bold">
                   {userProfile?.userProfile?.name || "Name"}

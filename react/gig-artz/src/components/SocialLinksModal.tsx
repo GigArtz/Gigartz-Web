@@ -1,5 +1,13 @@
 import React from "react";
-import { FaTimesCircle, FaTwitter, FaInstagram, FaGithub, FaLinkedin, FaYoutube, FaGlobe } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaTwitter,
+  FaInstagram,
+  FaGithub,
+  FaLinkedin,
+  FaYoutube,
+  FaGlobe,
+} from "react-icons/fa";
 
 interface SocialLink {
   platform: string;
@@ -21,7 +29,11 @@ const iconMap: Record<string, JSX.Element> = {
   website: <FaGlobe />,
 };
 
-const SocialLinksModal: React.FC<SocialLinksModalProps> = ({ isOpen, onClose, links }) => {
+const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
+  isOpen,
+  onClose,
+  links,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -43,18 +55,26 @@ const SocialLinksModal: React.FC<SocialLinksModalProps> = ({ isOpen, onClose, li
 
         {/* Social Links List */}
         <div className="space-y-3">
-          {links.map(({ platform, url }, index) => (
-            <a
-              key={index}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-teal-400 hover:text-teal-300 transition-colors text-sm border border-teal-500 rounded px-3 py-2"
-            >
-              {iconMap[platform.toLowerCase()] || <FaGlobe />}
-              <span className="truncate">{platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
-            </a>
-          ))}
+          {links.length > 0 ? (
+            links.map(({ platform, url }, index) => (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-teal-400 hover:text-teal-300 transition-colors text-sm border border-teal-500 rounded px-3 py-2"
+              >
+                {iconMap[platform.toLowerCase()] || <FaGlobe />}
+                <span className="truncate">
+                  {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                </span>
+              </a>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400 text-center">
+              No social media links available.
+            </p>
+          )}
         </div>
       </div>
     </div>

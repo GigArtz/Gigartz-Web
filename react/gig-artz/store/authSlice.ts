@@ -301,6 +301,90 @@ export const socialLogin = (provider: "facebook" | "google" | "twitter") => asyn
   }
 };
 
+export const deleteUserAccount = (userId: string, currentPassword: string) => async (dispatch: AppDispatch) => {
+  dispatch(authSlice.actions.loginStart()); // Use loginStart to show loading spinner
+  try {
+    const response = await axios.post(
+      `https://gigartz.onrender.com/deleteUserAccount/${userId}`,
+      { currentPassword }
+    );
+    console.log("Account deletion successful:", response.data);
+
+    dispatch(logout()); // Clear auth state
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error("Delete account error:", error.response?.data?.error || error.message);
+      dispatch(authSlice.actions.loginFailure(error.response?.data?.error || "Failed to delete account."));
+    } else if (error instanceof Error) {
+      console.error("Delete account error:", error.message);
+      dispatch(authSlice.actions.loginFailure(error.message));
+    } else {
+      dispatch(authSlice.actions.loginFailure("An unexpected error occurred while deleting account."));
+    }
+  }
+};
+
+export const suspendUserAccount = (userId: string, suspend: boolean) => async (dispatch: AppDispatch) => {
+  dispatch(authSlice.actions.loginStart());
+  try {
+    const response = await axios.post(
+      `https://gigartz.onrender.com/suspendUserAccount/${userId}`,
+      { suspend }
+    );
+    console.log(`User ${suspend ? "suspended" : "unsuspended"} successfully:`, response.data);
+
+    // Optional: Fetch fresh profile or notify
+    const { notify } = await import("../src/helpers/notify");
+    notify(dispatch, {
+      type: "account_status_change",
+      data: {
+        userId,
+        status: suspend ? "Suspended" : "Active",
+        date: new Date().toISOString(),
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error("Suspend account error:", error.response?.data?.error || error.message);
+      dispatch(authSlice.actions.loginFailure(error.response?.data?.error || "Failed to change account status."));
+    } else if (error instanceof Error) {
+      console.error("Suspend account error:", error.message);
+      dispatch(authSlice.actions.loginFailure(error.message));
+    } else {
+      dispatch(authSlice.actions.loginFailure("An unexpected error occurred while updating account status."));
+    }
+  }
+};
+
+
+export const resetPasswordWithoutEmail = (newPassword: string, token: string) => async (dispatch: AppDispatch) => {
+  try {
+    const response = await axios.post(
+      "https://gigartz.onrender.com/resetPasswordWithOutEmail",
+      { newPassword },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Password reset without email successful:", response.data);
+    // You can optionally dispatch a success toast here
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error("Reset password (no email) error:", error.response?.data?.error || error.message);
+      dispatch(authSlice.actions.resetPasswordFailure(error.response?.data?.error || "Failed to reset password."));
+    } else if (error instanceof Error) {
+      console.error("Reset password (no email) error:", error.message);
+      dispatch(authSlice.actions.resetPasswordFailure(error.message));
+    } else {
+      dispatch(authSlice.actions.resetPasswordFailure("An unexpected error occurred during password reset."));
+    }
+  }
+};
+
+
 // Selectors for use in components
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
