@@ -2,7 +2,9 @@ import React, { useRef, useState } from "react";
 import {
   FaBullhorn,
   FaFileImage,
+  FaLocationArrow,
   FaPaperclip,
+  FaSearchLocation,
   FaSpinner,
   FaStar,
 } from "react-icons/fa";
@@ -169,7 +171,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
               onClick={handleFileSelection}
               className="p-2 rounded-3xl bg-dark hover:bg-gray-600 transition"
             >
-              <FaBullhorn className="w-5 h-5" />
+              <FaSearchLocation className="w-5 h-5" />
             </button>
 
             {/* Desktop View - Stars */}

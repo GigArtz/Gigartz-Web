@@ -5,9 +5,13 @@ import { fetchAllEvents, fetchAllReviews } from "../../store/eventsSlice";
 import { RootState, AppDispatch } from "../../store/store";
 import EventsTabs from "../components/EventsTabs";
 import ReviewCard from "../components/ReviewCard"; // Import ReviewCard
-import ReviewsGallery from "../components/ReviewsGallery";
 import CommentForm from "../components/CommentForm";
 import AdCard from "../components/AdCard";
+import PreferencesModal from "../components/PreferencesModal";
+import ScrollableEventRow from "../components/ScrollableEventRow";
+import { FaSpinner } from "react-icons/fa";
+import LgScrollableEventRow from "../components/LgScrollableEventRow";
+import UserCard from "../components/UserCard";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -51,9 +55,16 @@ const Home: React.FC = () => {
     (state: RootState) => state.events
   );
   const uid = useSelector((state: RootState) => state.auth);
+  const { userList } = useSelector((state: RootState) => state.profile);
 
   // Add state for selected tab
   const [selectedTab, setSelectedTab] = useState("reviews");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const eventsPerPage = 10;
 
   const followingUserIds: string[] = []; // TODO: Replace with actual following user IDs
   const filteredEvents =
@@ -63,120 +74,35 @@ const Home: React.FC = () => {
           followingUserIds.includes(event.promoterId)
         );
 
+  const professionals = Array.isArray(userList)
+    ? userList.filter((user) => user.roles?.freelancer)
+    : [];
+
   useEffect(() => {
     dispatch(fetchAllEvents());
     dispatch(fetchAllReviews(uid?.uid));
     console.log("Fetch..", reviews);
   }, [dispatch, uid]);
 
-  // Dummy reviews data
-  const dummyReviews = [
-    {
-      id: "1",
-      user: {
-        name: "Alice Smith",
-        avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-      },
-      eventTitle: "Jazz Night",
-      rating: 4,
-      imageUrls: [
-        "https://picsum.photos/200/300?random=1",
-        "https://picsum.photos/200/300?random=5",
-      ],
-      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      review: "Amazing event! Loved the atmosphere and the music.",
-      date: "2024-06-01",
-      text: "Amazing event! Loved the atmosphere and the music.",
-      createdAt: "2024-06-01T12:00:00Z",
-    },
-    {
-      id: "2",
-      user: {
-        name: "Bob Johnson",
-        avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-      },
-      eventTitle: "Rock Fest",
-      rating: 5,
-      imageUrls: ["https://picsum.photos/200/300?random=2"],
-      review: "Best concert ever! Can't wait for the next one.",
-      date: "2024-05-28",
-      text: "Best concert ever! Can't wait for the next one.",
-      createdAt: "2024-05-28T15:30:00Z",
-    },
-    {
-      id: "3",
-      user: {
-        name: "Carol Lee",
-        avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-      },
-      eventTitle: "Art Expo",
-      rating: 3,
-      imageUrls: [
-        "https://picsum.photos/200/300?random=3",
-        "https://picsum.photos/200/300?random=4",
-      ],
-      review: "Interesting exhibits, but the venue was crowded.",
-      date: "2024-05-20",
-      text: "Interesting exhibits, but the venue was crowded.",
-      createdAt: "2024-05-20T09:45:00Z",
-    },
-    {
-      id: "4",
-      user: {
-        name: "David Kim",
-        avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-      },
-      eventTitle: "Food Truck Fiesta",
-      rating: 5,
-      imageUrls: ["https://picsum.photos/200/300?random=6"],
-      review: "Incredible food, great vibes, and perfect weather!",
-      date: "2024-06-02",
-      text: "Incredible food, great vibes, and perfect weather! Every stall had something unique. Definitely bringing more friends next time. Loved the live band too!",
-      createdAt: "2024-06-02T18:00:00Z",
-    },
-    {
-      id: "5",
-      user: {
-        name: "Ella Rivera",
-        avatar: "https://randomuser.me/api/portraits/women/5.jpg",
-      },
-      eventTitle: "Outdoor Movie Night",
-      rating: 4,
-      imageUrls: ["https://picsum.photos/200/300?random=7"],
-      review: "Cozy and fun evening under the stars.",
-      date: "2024-06-03",
-      text: "Cozy and fun evening under the stars. The sound system could’ve been better, but overall it was a lovely night with friends and snacks.",
-      createdAt: "2024-06-03T20:30:00Z",
-    },
-    {
-      id: "6",
-      user: {
-        name: "Frank Dorsey",
-        avatar: "https://randomuser.me/api/portraits/men/6.jpg",
-      },
-      eventTitle: "Tech Meetup 2024",
-      rating: 2,
-      imageUrls: [],
-      review: "Not well organized. Speakers were late.",
-      date: "2024-06-04",
-      text: "Not well organized. The speakers were late, some sessions were canceled without notice, and the venue had poor Wi-Fi. Hoping for a better experience next year.",
-      createdAt: "2024-06-04T10:15:00Z",
-    },
-    {
-      id: "7",
-      user: {
-        name: "Grace Liu",
-        avatar: "https://randomuser.me/api/portraits/women/7.jpg",
-      },
-      eventTitle: "Book Fair",
-      rating: 5,
-      imageUrls: ["https://picsum.photos/200/300?random=8"],
-      review: "Book heaven! Found so many great deals.",
-      date: "2024-06-05",
-      text: "Book heaven! Found so many great deals and rare finds. The author signing corner was a highlight. Loved the children's reading area too. Great family-friendly vibe!",
-      createdAt: "2024-06-05T11:00:00Z",
-    },
-  ];
+  // Infinite scroll for events tab
+  useEffect(() => {
+    if (selectedTab !== "events") return;
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 300 &&
+        !loadingMore
+      ) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setEventsPage((prev) => prev + 1);
+          setLoadingMore(false);
+        }, 500);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [selectedTab, loadingMore]);
 
   // Dummny galery data
   const dummyGallery = [
@@ -185,6 +111,25 @@ const Home: React.FC = () => {
     "https://picsum.photos/200/300?random=3",
     "https://picsum.photos/200/300?random=4",
   ];
+
+  // Dummy user preferences for demonstration
+  const userPreferences = {
+    interests: ["music", "art", "technology", "sports", "gaming", "fashion"],
+    locations: ["New York", "Los Angeles"],
+  };
+
+  // Sectioned event lists (show all events, no filtering for now)
+  const trendingEvents = filteredEvents.slice(0, eventsPage * eventsPerPage);
+  const gigsNearYou = filteredEvents.slice(0, eventsPage * eventsPerPage);
+  const preferenceEvents = filteredEvents.slice(0, eventsPage * eventsPerPage);
+  const interestSections = userPreferences.interests.map((interest) => ({
+    interest,
+    events: filteredEvents.slice(0, eventsPage * eventsPerPage),
+  }));
+  const locationSections = userPreferences.locations.map((loc) => ({
+    loc,
+    events: filteredEvents.slice(0, eventsPage * eventsPerPage),
+  }));
 
   return (
     <div className="main-content">
@@ -212,9 +157,114 @@ const Home: React.FC = () => {
       </div>
 
       {selectedTab === "events" && (
-        // Main Content
-        <div className="flex flex-col justify-evenly">
-          <EventsTabs events={filteredEvents} loading={loading} error={error} />
+        <div className="flex flex-col gap-6">
+          {/* Preferences Modal */}
+          {showFilters && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+              <PreferencesModal
+                isOpen={showFilters}
+                onClose={() => setShowFilters(false)}
+                selectedInterests={selectedInterests}
+                setSelectedInterests={setSelectedInterests}
+                selectedLocations={selectedLocations}
+                setSelectedLocations={setSelectedLocations}
+                title={"Select Your Preferences"}
+              />
+            </div>
+          )}
+
+          {/* Trending */}
+          <div className="w-full p-2 rounded-xl">
+            <h2 className="text-xl text-white font-semibold mb-2">Trending</h2>
+            <LgScrollableEventRow
+              events={trendingEvents}
+              loading={loading}
+              error={error}
+            />
+          </div>
+
+          <div className="w-full p-2 rounded-xl">
+            <h2 className="text-xl text-white font-semibold mb-2">
+              Gigs near you
+            </h2>
+            <ScrollableEventRow
+              events={gigsNearYou}
+              loading={loading}
+              error={error}
+            />
+          </div>
+
+          {/* Popular Professionals */}
+          <div className="w-full p-2 rounded-xl">
+            <h2 className="text-xl text-white font-semibold mb-2">
+              Popular Professionals
+            </h2>
+            <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 pb-2">
+              {professionals.length > 0 ? (
+                professionals.map((user) => {
+                  const userWithUid = { ...user, uid: user.uid || user.id };
+                  return (
+                    <div
+                      key={user.id}
+                      className="mb-2 w-full min-w-[220px] max-w-xs"
+                    >
+                      <UserCard user={userWithUid} />
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-gray-400 text-center mt-4">
+                  No users found.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Update Preferences Button */}
+          <div className="w-full p-2 rounded-2xl border border-gray-800 bg-gray-900 flex justify-between items-center">
+            <h2 className="text-xl text-white font-semibold mb-2">For you</h2>
+            <button
+              className="text-teal-500 text-sm hover:underline"
+              onClick={() => setShowFilters(true)}
+            >
+              Update Preferences
+            </button>
+          </div>
+
+          {/* Gigs near X (location) */}
+          {userPreferences.locations.map((loc) => (
+            <div className="w-full p-2 rounded-xl" key={loc}>
+              <h2 className=" text-white font-semibold mb-2">
+                Gigs near {loc}
+              </h2>
+              <ScrollableEventRow
+                events={gigsNearYou}
+                loading={loading}
+                error={error}
+              />
+            </div>
+          ))}
+
+          {/* Because you went to X gig (interest) */}
+          {userPreferences.interests.map((interest) => (
+            <div className="w-full p-2 rounded-xl" key={interest}>
+              <h2 className=" text-white font-semibold mb-2">
+                Because you liked a {interest} gig
+              </h2>
+              <ScrollableEventRow
+                events={preferenceEvents}
+                loading={loading}
+                error={error}
+              />
+            </div>
+          ))}
+
+          {/* Infinite scroll loader */}
+          {loadingMore && (
+            <div className="flex justify-center items-center py-4">
+              <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+            </div>
+          )}
         </div>
       )}
 
@@ -261,11 +311,6 @@ const Home: React.FC = () => {
               )
           ) : (
             <p className="text-gray-400 italic">No reviews yet.</p>
-          )}
-
-          {/* Optional Gallery */}
-          {dummyGallery?.length > 0 && (
-            <ReviewsGallery gallery={dummyGallery} />
           )}
         </div>
       )}

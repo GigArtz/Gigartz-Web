@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import ProfileMultiStepForm from "./ProfileMultiStepForm";
+import { useSelector } from "react-redux";
+import { RootState } from "store/store";
 
 const EditProfile: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const { profile, userFollowers, userFollowing, loading } = useSelector(
+      (state: RootState) => state.profile
+    );
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -21,7 +27,7 @@ const EditProfile: React.FC = () => {
 
       {isOpen ? (
         <>
-          <ProfileMultiStepForm isOpen={isOpen} onClose={handleClose} />
+          <ProfileMultiStepForm isOpen={isOpen} onClose={handleClose} initialValues={profile} />
           <button
             onClick={handleClose}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"

@@ -268,7 +268,7 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="text-teal-500 flex items-center"
+              className="border bg-teal-500 border-teal-500 rounded-2xl text-white w-28 text-sm p-2 flex items-center"
             >
               <FaArrowLeft className="mr-2" /> Previous
             </button>
@@ -277,7 +277,7 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
             <button
               type="button"
               onClick={() => setStep(step + 1)}
-              className="text-teal-500 flex items-center"
+              className="border px-4 bg-teal-500 border-teal-500 rounded-2xl text-white w-20 text-sm p-2 flex items-center"
             >
               Next <FaArrowRight className="ml-2" />
             </button>
@@ -285,7 +285,7 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
           {step === steps.length && (
             <button
               type="submit"
-              className="p-2 px-4 bg-teal-500 rounded-lg text-white"
+              className="px-4 btn-primary w-20 text-sm p-2  text-white"
             >
               Submit
             </button>

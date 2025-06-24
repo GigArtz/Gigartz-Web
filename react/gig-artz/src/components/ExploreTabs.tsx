@@ -9,8 +9,10 @@ import ScrollableEventRow from "./ScrollableEventRow";
 import LgScrollableEventRow from "./LgScrollableEventRow";
 import ScrollableEventCol from "./ScrollableEventCol";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { eventCategories, freelancerCategories } from "../constants/EventCategories";
-import AdCard from "./AdCard";
+import {
+  eventCategories,
+  freelancerCategories,
+} from "../constants/EventCategories";
 import SwitchToProCard from "./SwitchToProCard";
 import PreferencesModal from "./PreferencesModal";
 
@@ -31,6 +33,21 @@ function ExploreTabs() {
   // Modal visibility state
   const [showFilters, setShowFilters] = useState(false);
 
+  // Infinite scroll state for all tabs
+  const [tabPages, setTabPages] = useState({
+    top: 1,
+    latest: 1,
+    gigs: 1,
+    people: 1,
+  });
+  const [tabLoadingMore, setTabLoadingMore] = useState({
+    top: false,
+    latest: false,
+    gigs: false,
+    people: false,
+  });
+  const itemsPerPage = 10;
+
   // Derived filters from interests
   const selectedEventCategories = selectedInterests.filter((interest) =>
     Object.values(eventCategories).flat().includes(interest)
@@ -38,6 +55,12 @@ function ExploreTabs() {
   const selectedFreelancers = selectedInterests.filter((interest) =>
     Object.values(freelancerCategories).flat().includes(interest)
   );
+
+  // Dummy user preferences for demonstration
+  const userPreferences = {
+    interests: ["music", "art", "technology", "sports", "gaming", "fashion"],
+    locations: ["New York", "Los Angeles"],
+  };
 
   // Handle search term from route
   useEffect(() => {
@@ -122,6 +145,143 @@ function ExploreTabs() {
     }
     navigate(`/explore?tab=${tab}`);
   };
+
+  // Infinite scroll handler for all tabs
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 300 &&
+        !tabLoadingMore[activeTab]
+      ) {
+        setTabLoadingMore((prev) => ({ ...prev, [activeTab]: true }));
+        setTimeout(() => {
+          setTabPages((prev) => ({
+            ...prev,
+            [activeTab]: prev[activeTab] + 1,
+          }));
+          setTabLoadingMore((prev) => ({ ...prev, [activeTab]: false }));
+        }, 500);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [activeTab, tabLoadingMore]);
+
+  // Sectioned event/user lists for each tab
+  const getSectionedData = (tab) => {
+    const page = tabPages[tab] || 1;
+    if (tab === "gigs") {
+      return {
+        trendingEvents: filteredEvents.slice(0, page * itemsPerPage),
+        forYouEvents: filteredEvents
+          .filter((e) =>
+            userPreferences.interests.some((i) =>
+              e.category?.toLowerCase().includes(i.toLowerCase())
+            )
+          )
+          .slice(0, page * itemsPerPage),
+        // Gigs Near You: events where city matches any preferred location
+        gigsNearYou: filteredEvents
+          .filter((e) =>
+            userPreferences.locations.some((loc) =>
+              (e.city || "").toLowerCase().includes(loc.toLowerCase())
+            )
+          )
+          .slice(0, page * itemsPerPage),
+        preferenceEvents: filteredEvents
+          .filter((e) =>
+            selectedInterests.length === 0
+              ? false
+              : selectedInterests.some((i) =>
+                  e.category?.toLowerCase().includes(i.toLowerCase())
+                )
+          )
+          .slice(0, page * itemsPerPage),
+        interestSections: userPreferences.interests.map((interest) => ({
+          interest,
+          events: filteredEvents
+            .filter((e) =>
+              e.category?.toLowerCase().includes(interest.toLowerCase())
+            )
+            .slice(0, page * itemsPerPage),
+        })),
+        // Gigs in [Location] sections
+        locationSections: userPreferences.locations.map((loc) => ({
+          loc,
+          events: filteredEvents
+            .filter((e) =>
+              (e.city || "").toLowerCase().includes(loc.toLowerCase())
+            )
+            .slice(0, page * itemsPerPage),
+        })),
+        professionals: filteredUsers.slice(0, page * itemsPerPage),
+      };
+    } else if (tab === "top" || tab === "latest") {
+      return {
+        trendingEvents: filteredEvents.slice(0, page * itemsPerPage),
+        forYouEvents: filteredEvents
+          .filter((e) =>
+            userPreferences.interests.some((i) =>
+              e.category?.toLowerCase().includes(i.toLowerCase())
+            )
+          )
+          .slice(0, page * itemsPerPage),
+        interestSections: userPreferences.interests.map((interest) => ({
+          interest,
+          events: filteredEvents
+            .filter((e) =>
+              e.category?.toLowerCase().includes(interest.toLowerCase())
+            )
+            .slice(0, page * itemsPerPage),
+        })),
+        // Gigs in [Location] sections
+        locationSections: userPreferences.locations.map((loc) => ({
+          loc,
+          events: filteredEvents
+            .filter((e) =>
+              (e.city || "").toLowerCase().includes(loc.toLowerCase())
+            )
+            .slice(0, page * itemsPerPage),
+        })),
+        professionals: filteredUsers.slice(0, page * itemsPerPage),
+      };
+    } else if (tab === "people") {
+      return {
+        professionals: filteredUsers.slice(0, page * itemsPerPage),
+        interestSections: userPreferences.interests.map((interest) => ({
+          interest,
+          users: filteredUsers
+            .filter((user) => {
+              const userGenres = Array.isArray(user?.genre)
+                ? user.genre.map((g) =>
+                    typeof g === "string" ? g : g?.name || ""
+                  )
+                : typeof user?.genre === "string"
+                ? [user.genre]
+                : [];
+              return userGenres.some((g) =>
+                g.toLowerCase().includes(interest.toLowerCase())
+              );
+            })
+            .slice(0, page * itemsPerPage),
+        })),
+        locationSections: [],
+      };
+    }
+    return {};
+  };
+
+  const gigsData = getSectionedData("gigs");
+  const topData = getSectionedData("top");
+  const latestData = getSectionedData("latest");
+  const peopleData = getSectionedData("people");
+
+  // Helper to ensure UserCard gets a uid
+  const safeUser = (user) => ({
+    ...user,
+    uid: user.uid || user.id || "unknown",
+  });
 
   return (
     <div className="px-2">
@@ -214,117 +374,328 @@ function ExploreTabs() {
         {!loading && !error && (
           <>
             {activeTab === "top" && (
-              <>
-                <div className="mt-2 w-full p-2 rounded-xl">
-                  {/* Scrollable Row */}
-                  <LgScrollableEventRow
-                    events={filteredEvents}
-                    loading={loading}
-                    error={error}
-                  />
-                </div>
-
-                <div className="mt-2 w-full p-2 rounded-xl">
-                  <div className="flex flex-row justify-between items-center">
-                    <h2 className="text-xl text-white font-semibold mb-4">
-                      Trending
-                    </h2>
-                    <span
-                      onClick={() => handleSeeAll("trending")}
-                      className="text-teal-500 text-sm hover:underline cursor-pointer"
-                    >
-                      See All
-                    </span>
-                  </div>
+              <div className="flex flex-col gap-6">
+                {/* Trending */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Trending
+                  </h2>
                   <ScrollableEventRow
-                    events={filteredEvents}
+                    events={topData.trendingEvents}
                     loading={loading}
                     error={error}
                   />
                 </div>
-
-                <div className="mt-2 w-full p-2 rounded-xl">
-                  <div className="flex flex-row justify-between items-center">
-                    <h2 className="text-xl text-white font-semibold mb-4">
-                      People
-                    </h2>
-                    <span
-                      onClick={() => handleSeeAll("People")}
-                      className="text-teal-500 text-sm hover:underline cursor-pointer"
-                    >
-                      See All
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
-                    {filteredUsers?.length > 0 ? (
-                      filteredUsers?.map((user) => (
-                        <div className="mb-2" key={user.id}>
-                          <UserCard user={user} />
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-400 text-center mt-4">
-                        No users found.
-                      </p>
-                    )}
+                {/* For You */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    For You
+                  </h2>
+                  <ScrollableEventRow
+                    events={topData.forYouEvents}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* Update Preferences Button */}
+                <div className="w-full p-2 rounded-xl flex justify-end">
+                  <button
+                    className="text-teal-500 text-sm hover:underline"
+                    onClick={() => setShowFilters(true)}
+                  >
+                    Update Preferences
+                  </button>
+                </div>
+                {/* Popular Professionals */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Popular Professionals
+                  </h2>
+                  <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                    {topData.professionals.map((user) => (
+                      <div className="mb-2" key={user.id}>
+                        <UserCard user={safeUser(user)} />
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </>
-            )}
-
-            {activeTab === "people" && (
-              <div className="flex flex-col gap-2 md:grid md:grid-cols-2 overflow-auto">
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user, index) => (
-                    <React.Fragment key={user.id}>
-                      <div className="mb-2">
-                        <UserCard
-                          user={{
-                            uid: user.id || "",
-                            name: user.name,
-                            userName: user.userName,
-                            bio: user.bio,
-                            profilePicUrl: user.profilePicUrl,
-                          }}
-                        />
-                      </div>
-
-                      {(index + 1) % 8 === 0 && (
-                        <div className="mb-4">
-                          <SwitchToProCard />
-                        </div>
-                      )}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-center mt-4">
-                    No users found.
-                  </p>
+                {/* Dynamic interest sections for events */}
+                {(
+                  topData.interestSections as {
+                    interest: string;
+                    events: any[];
+                  }[]
+                ).map(({ interest, events }) =>
+                  events.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={interest}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                      </h2>
+                      <ScrollableEventRow
+                        events={events}
+                        loading={loading}
+                        error={error}
+                      />
+                    </div>
+                  ) : null
+                )}
+                {/* Dynamic location sections for events */}
+                {(
+                  topData.locationSections as { loc: string; events: any[] }[]
+                ).map(({ loc, events }) =>
+                  events.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={loc}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        Gigs in {loc}
+                      </h2>
+                      <ScrollableEventRow
+                        events={events}
+                        loading={loading}
+                        error={error}
+                      />
+                    </div>
+                  ) : null
+                )}
+                {tabLoadingMore.top && (
+                  <div className="flex justify-center items-center py-4">
+                    <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+                  </div>
                 )}
               </div>
             )}
 
-            {activeTab === "reviews" && (
-              <p className="text-gray-500 text-center mt-4">No reviews yet.</p>
-            )}
-
-            {activeTab === "gigs" && (
-              <div className="mt-2 w-full p-2 rounded-xl">
-                <ScrollableEventCol
-                  events={filteredEvents}
-                  loading={loading}
-                  error={error}
-                />
+            {activeTab === "latest" && (
+              <div className="flex flex-col gap-6">
+                {/* Trending */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Trending
+                  </h2>
+                  <ScrollableEventRow
+                    events={latestData.trendingEvents}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* For You */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    For You
+                  </h2>
+                  <ScrollableEventRow
+                    events={latestData.forYouEvents}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* Popular Professionals */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Popular Professionals
+                  </h2>
+                  <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                    {latestData.professionals.map((user) => (
+                      <div className="mb-2" key={user.id}>
+                        <UserCard user={safeUser(user)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Dynamic interest sections for events */}
+                {(
+                  latestData.interestSections as {
+                    interest: string;
+                    events: any[];
+                  }[]
+                ).map(({ interest, events }) =>
+                  events.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={interest}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                      </h2>
+                      <ScrollableEventRow
+                        events={events}
+                        loading={loading}
+                        error={error}
+                      />
+                    </div>
+                  ) : null
+                )}
+                {/* Dynamic location sections for events */}
+                {(
+                  latestData.locationSections as {
+                    loc: string;
+                    events: any[];
+                  }[]
+                ).map(({ loc, events }) =>
+                  events.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={loc}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        Gigs in {loc}
+                      </h2>
+                      <ScrollableEventRow
+                        events={events}
+                        loading={loading}
+                        error={error}
+                      />
+                    </div>
+                  ) : null
+                )}
+                {tabLoadingMore.latest && (
+                  <div className="flex justify-center items-center py-4">
+                    <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+                  </div>
+                )}
               </div>
             )}
 
-            {activeTab === "latest" && (
-              <div className="mt-2 w-full p-2 rounded-xl">
-                <ScrollableEventCol
-                  events={filteredEvents}
-                  loading={loading}
-                  error={error}
-                />
+            {activeTab === "people" && (
+              <div className="flex flex-col gap-6">
+                {/* Popular Professionals */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Popular Professionals
+                  </h2>
+                  <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                    {peopleData.professionals.map((user) => (
+                      <div className="mb-2" key={user.id}>
+                        <UserCard user={safeUser(user)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Dynamic interest sections for users */}
+                {(
+                  peopleData.interestSections as {
+                    interest: string;
+                    users: any[];
+                  }[]
+                ).map(({ interest, users }) =>
+                  users.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={interest}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        {interest.charAt(0).toUpperCase() + interest.slice(1)}{" "}
+                        Professionals
+                      </h2>
+                      <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                        {users.map((user) => (
+                          <div className="mb-2" key={user.id}>
+                            <UserCard user={safeUser(user)} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                )}
+                {tabLoadingMore.people && (
+                  <div className="flex justify-center items-center py-4">
+                    <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "gigs" && (
+              <div className="flex flex-col gap-6">
+                {/* Trending */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Trending
+                  </h2>
+                  <ScrollableEventRow
+                    events={gigsData.trendingEvents}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* For You */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    For You
+                  </h2>
+                  <ScrollableEventRow
+                    events={gigsData.forYouEvents}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* Popular Professionals */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Popular Professionals
+                  </h2>
+                  <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                    {gigsData.professionals.map((user) => (
+                      <div className="mb-2" key={user.id}>
+                        <UserCard user={safeUser(user)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Gigs Near You */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Gigs Near You
+                  </h2>
+                  <ScrollableEventRow
+                    events={gigsData.gigsNearYou}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* Based on your preference */}
+                <div className="w-full p-2 rounded-xl">
+                  <h2 className="text-xl text-white font-semibold mb-2">
+                    Based on your preference
+                  </h2>
+                  <ScrollableEventRow
+                    events={gigsData.preferenceEvents}
+                    loading={loading}
+                    error={error}
+                  />
+                </div>
+                {/* Dynamic interest sections for events */}
+                {(
+                  gigsData.interestSections as {
+                    interest: string;
+                    events: any[];
+                  }[]
+                ).map(({ interest, events }) =>
+                  events.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={interest}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                      </h2>
+                      <ScrollableEventRow
+                        events={events}
+                        loading={loading}
+                        error={error}
+                      />
+                    </div>
+                  ) : null
+                )}
+                {/* Dynamic location sections for events */}
+                {(
+                  gigsData.locationSections as { loc: string; events: any[] }[]
+                ).map(({ loc, events }) =>
+                  events.length > 0 ? (
+                    <div className="w-full p-2 rounded-xl" key={loc}>
+                      <h2 className="text-xl text-white font-semibold mb-2">
+                        Gigs in {loc}
+                      </h2>
+                      <ScrollableEventRow
+                        events={events}
+                        loading={loading}
+                        error={error}
+                      />
+                    </div>
+                  ) : null
+                )}
+                {tabLoadingMore.gigs && (
+                  <div className="flex justify-center items-center py-4">
+                    <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+                  </div>
+                )}
               </div>
             )}
           </>

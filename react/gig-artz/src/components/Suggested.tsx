@@ -43,7 +43,7 @@ export default function SuggestedForYou() {
                 {suggestedUsers?.map((user, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-dark py-2 "
+                    className="mb-2 "
                   >
                     <UserCard user={user} />
                   </div>

@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "store/store";
+import {
+  deleteUserAccount,
+  suspendUserAccount,
+  resetPasswordWithoutEmail,
+} from "../../store/authSlice";
 
 const blockedUsersSample = [
   { id: "1", name: "Alice Johnson", userName: "alicej" },
@@ -25,6 +32,66 @@ const PrivacySecurity: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
+
+  // Import profile
+  const { profile } = useSelector(
+    (state: RootState) => state.profile
+  );
+  const dispatch = useDispatch();
+
+  // Handle suspend profile toggle
+  const handleSuspendProfileToggle = () => {
+    if (!profile || !profile.uid) {
+      alert("User not found.");
+      return;
+    }
+    dispatch(suspendUserAccount(profile.uid, !isProfileSuspended));
+    setIsProfileSuspended((prev) => !prev);
+  };
+
+  // Handle change password
+  const handleChangePasswordSubmit = async () => {
+    setPasswordError("");
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("Please fill in all fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+    try {
+      // You may need to get a token from your auth state or context
+      const token = profile?.token || localStorage.getItem("authToken") || "";
+      await dispatch(resetPasswordWithoutEmail(newPassword, token));
+      alert("Password changed successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsChangePasswordModalOpen(false);
+    } catch (err) {
+      setPasswordError("Failed to change password.");
+    }
+  };
+
+  // Handle delete account
+  const handleDeleteAccountConfirm = async () => {
+    if (!profile || !profile.uid) {
+      alert("User not found.");
+      return;
+    }
+    if (!deletePassword) {
+      alert("Please enter your password.");
+      return;
+    }
+    try {
+      await dispatch(deleteUserAccount(profile.uid, deletePassword));
+      alert("Account deleted.");
+      setIsDeleteAccountModalOpen(false);
+    } catch (err) {
+      alert("Failed to delete account.");
+    }
+  };
 
   // Close modals on Escape key press
   useEffect(() => {
@@ -84,29 +151,6 @@ const PrivacySecurity: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isBlockedModalOpen, isChangePasswordModalOpen, isDeleteAccountModalOpen]);
 
-  const handleChangePasswordSubmit = () => {
-    setPasswordError("");
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("Please fill in all fields.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError("New password and confirmation do not match.");
-      return;
-    }
-    alert("Password changed successfully!");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setIsChangePasswordModalOpen(false);
-  };
-
-  const handleDeleteAccountConfirm = () => {
-    // Implement actual delete logic here
-    alert("Account deleted.");
-    setIsDeleteAccountModalOpen(false);
-  };
-
   return (
     <>
       <div className="max-w-md p-6 rounded-lg shadow-lg text-white">
@@ -153,9 +197,9 @@ const PrivacySecurity: React.FC = () => {
               <input
                 type="checkbox"
                 checked={isProfileSuspended}
-                onChange={() => setIsPrivateProfile(!isProfileSuspended)}
+                onChange={handleSuspendProfileToggle}
                 className="peer sr-only"
-                aria-checked={isPrivateProfile}
+                aria-checked={isProfileSuspended}
                 aria-label="Toggle suspend profile"
               />
               <span className="block bg-gray-600 rounded-full w-12 h-7 transition peer-checked:bg-teal-500"></span>
@@ -290,8 +334,6 @@ const PrivacySecurity: React.FC = () => {
               }}
               noValidate
             >
-              
-              
               <div className="mb-4">
                 <label
                   htmlFor="newPassword"

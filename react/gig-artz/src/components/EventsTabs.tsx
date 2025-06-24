@@ -93,7 +93,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
       <div className="mt-8 px-4 w-full">
         <div className="flex flex-row justify-between items-center">
           <h2 className="text-xl text-white font-semibold mb-4">
-            Popular Freelancers
+            Popular Professionals
           </h2>
           <span
             className="text-teal-500 text-sm hover:underline cursor-pointer"
@@ -110,7 +110,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
                 // Patch: UserCard expects 'uid', but userList has 'id'.
                 const userWithUid = { ...user, uid: user.id };
                 return (
-                  <div key={user.id} className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-90 snap-start flex flex-row">
+                  <div key={user.id} className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-95 snap-start flex flex-row">
                     <UserCard user={userWithUid} />
                   </div>
                 );
