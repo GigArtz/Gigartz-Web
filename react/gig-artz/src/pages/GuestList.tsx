@@ -6,6 +6,7 @@ import {
   FaEdit,
   FaUserPlus,
   FaUsers,
+  FaBullhorn,
 } from "react-icons/fa";
 import Toast from "../components/Toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -277,6 +278,24 @@ function GuestList() {
               </div>
 
               <div className="flex gap-2">
+
+                {/* Add Guest */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsGuestListModalOpen(true);
+                    setEditingList(list);
+                    setShowFloatingMenu(false);
+                  }}
+                  className="group relative text-white hover:text-green-400 hover:bg-gray-700 p-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-green-400"
+                >
+                  <FaBullhorn className="w-4 h-4" />
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition bg-black text-xs text-white px-2 py-1 rounded shadow">
+                    Broadcast Message
+                  </span>
+                </button>
+
+
                 {/* Add Guest */}
                 <button
                   onClick={(e) => {

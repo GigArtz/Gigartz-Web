@@ -6,6 +6,8 @@ import {
   FaBookmark,
   FaExclamationTriangle,
 } from "react-icons/fa";
+import ReportModal from "./ReportModal";
+import React, { useState } from "react";
 
 const CRUDModal = ({
   setIsCRUDVisible,
@@ -15,16 +17,28 @@ const CRUDModal = ({
   event,
   isCreator,
 }) => {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // Handler for selecting a report reason
+  function handleSelectReportReason(reason: string) {
+    // Implement your logic here, e.g., send the report reason to the server
+    setIsReportModalOpen(false);
+  }
+
   function onSave(event: any) {
     throw new Error("Function not implemented.");
   }
 
-  function onReport(event: any) {
-    throw new Error("Function not implemented.");
-  }
+  // Removed unused onReport function. Use setIsReportModalOpen to open the report modal.
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex justify-center items-center">
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSelectReason={handleSelectReportReason}
+      />
+
       <div className="bg-dark p-6 rounded-lg shadow-lg relative w-80 animate-fadeIn">
         {/* Modal Header */}
         <div className="flex items-center justify-between mb-4 pb-1 border-b border-gray-500 ">
@@ -56,54 +70,52 @@ const CRUDModal = ({
             {/* Report Button */}
             <button
               onClick={() => {
-                onReport(event);
-                setIsCRUDVisible(false); // Close modal after deleting
+                setIsReportModalOpen(true);
               }}
               className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
             >
               <FaExclamationTriangle className="w-5 h-5" />
               Report
             </button>
-            
-          {isCreator && (
-            <>
-              {/* Edit Button */}
-              <button
-                onClick={() => {
-                  onEdit(event);
-                  setIsCRUDVisible(false); // Close modal after editing
-                }}
-                className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
-              >
-                <FaEdit className="w-5 h-5" />
-                Edit
-              </button>
-              {/* Insights Button */}
-              <button
-                onClick={() => {
-                  onInsights(event);
-                  setIsCRUDVisible(false); // Close modal after deleting
-                }}
-                className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
-              >
-                <FaEye className="w-5 h-5" />
-                Insights
-              </button>
-              {/* Delete Button */}
-              <button
-                onClick={() => {
-                  onDelete();
-                  setIsCRUDVisible(false); // Close modal after deleting
-                }}
-                className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
-              >
-                <FaTrash className="w-5 h-5" />
-                Delete
-              </button>
-            </>
-          )}
-          </div>
 
+            {isCreator && (
+              <>
+                {/* Edit Button */}
+                <button
+                  onClick={() => {
+                    onEdit(event);
+                    setIsCRUDVisible(false); // Close modal after editing
+                  }}
+                  className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
+                >
+                  <FaEdit className="w-5 h-5" />
+                  Edit
+                </button>
+                {/* Insights Button */}
+                <button
+                  onClick={() => {
+                    onInsights(event);
+                    setIsCRUDVisible(false); // Close modal after deleting
+                  }}
+                  className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
+                >
+                  <FaEye className="w-5 h-5" />
+                  Insights
+                </button>
+                {/* Delete Button */}
+                <button
+                  onClick={() => {
+                    onDelete();
+                    setIsCRUDVisible(false); // Close modal after deleting
+                  }}
+                  className="w-full flex gap-4 py-2 px-4  hover:bg-gray-900 transition text-gray-500"
+                >
+                  <FaTrash className="w-5 h-5" />
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

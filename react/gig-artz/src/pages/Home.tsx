@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BottomNav from "../components/BottomNav";
 import { fetchAllEvents, fetchAllReviews } from "../../store/eventsSlice";
@@ -12,6 +12,8 @@ import ScrollableEventRow from "../components/ScrollableEventRow";
 import { FaSpinner } from "react-icons/fa";
 import LgScrollableEventRow from "../components/LgScrollableEventRow";
 import UserCard from "../components/UserCard";
+import NotificationToast from "../components/NotificationToast"; // Import NotificationToast
+import Toast from "../components/Toast";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -51,11 +53,14 @@ interface Event {
 
 const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // Use correct type for thunk
-  const { events, loading, error, reviews } = useSelector(
+  const { events, loading, error, reviews, success } = useSelector(
     (state: RootState) => state.events
   );
   const uid = useSelector((state: RootState) => state.auth);
   const { userList } = useSelector((state: RootState) => state.profile);
+  const notifications = useSelector(
+    (state: RootState) => state.notification.notifications
+  );
 
   // Add state for selected tab
   const [selectedTab, setSelectedTab] = useState("reviews");
@@ -64,6 +69,13 @@ const Home: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [eventsPage, setEventsPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false); // State for toast notification
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
+  const prevCount = useRef(notifications.length);
   const eventsPerPage = 10;
 
   const followingUserIds: string[] = []; // TODO: Replace with actual following user IDs
@@ -131,6 +143,32 @@ const Home: React.FC = () => {
     events: filteredEvents.slice(0, eventsPage * eventsPerPage),
   }));
 
+  useEffect(() => {
+    if (notifications.length > prevCount.current) {
+      setNotificationsOpen(true); // Open modal if a new notification is added
+      setToastOpen(true); // Show notification toast ONLY for new notifications
+    }
+    prevCount.current = notifications.length;
+  }, [notifications.length]);
+
+  useEffect(() => {
+    if (error) {
+      setToast({ message: error, type: "error" });
+      // Auto-clear error after 4s to avoid UI getting stuck
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (success) {
+      setToast({ message: success, type: "success" });
+      // Auto-clear success after 3s
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   return (
     <div className="main-content">
       {/* Tabs */}
@@ -155,7 +193,6 @@ const Home: React.FC = () => {
           ))}
         </ul>
       </div>
-
       {selectedTab === "events" && (
         <div className="flex flex-col gap-6">
           {/* Preferences Modal */}
@@ -175,7 +212,7 @@ const Home: React.FC = () => {
 
           {/* Trending */}
           <div className="w-full p-2 rounded-xl">
-            <h2 className="text-xl text-white font-semibold mb-2">Trending</h2>
+            <h2 className="text-white text-lg font-semibold mb-2">Trending</h2>
             <LgScrollableEventRow
               events={trendingEvents}
               loading={loading}
@@ -184,7 +221,7 @@ const Home: React.FC = () => {
           </div>
 
           <div className="w-full p-2 rounded-xl">
-            <h2 className="text-xl text-white font-semibold mb-2">
+            <h2 className="text-white text-lg font-semibold mb-2">
               Gigs near you
             </h2>
             <ScrollableEventRow
@@ -196,9 +233,10 @@ const Home: React.FC = () => {
 
           {/* Popular Professionals */}
           <div className="w-full p-2 rounded-xl">
-            <h2 className="text-xl text-white font-semibold mb-2">
+            <h2 className="text-white text-lg font-semibold mb-2">
               Popular Professionals
             </h2>
+
             <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 pb-2">
               {professionals.length > 0 ? (
                 professionals.map((user) => {
@@ -220,21 +258,10 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* Update Preferences Button */}
-          <div className="w-full p-2 rounded-2xl border border-gray-800 bg-gray-900 flex justify-between items-center">
-            <h2 className="text-xl text-white font-semibold mb-2">For you</h2>
-            <button
-              className="text-teal-500 text-sm hover:underline"
-              onClick={() => setShowFilters(true)}
-            >
-              Update Preferences
-            </button>
-          </div>
-
           {/* Gigs near X (location) */}
           {userPreferences.locations.map((loc) => (
             <div className="w-full p-2 rounded-xl" key={loc}>
-              <h2 className=" text-white font-semibold mb-2">
+              <h2 className="text-white text-lg font-semibold mb-2">
                 Gigs near {loc}
               </h2>
               <ScrollableEventRow
@@ -248,7 +275,7 @@ const Home: React.FC = () => {
           {/* Because you went to X gig (interest) */}
           {userPreferences.interests.map((interest) => (
             <div className="w-full p-2 rounded-xl" key={interest}>
-              <h2 className=" text-white font-semibold mb-2">
+              <h2 className="text-white text-lg font-semibold mb-2">
                 Because you liked a {interest} gig
               </h2>
               <ScrollableEventRow
@@ -259,6 +286,16 @@ const Home: React.FC = () => {
             </div>
           ))}
 
+          {/* Update Preferences Button */}
+          <div className="w-full p-2 flex justify-center items-center">
+            <button
+              className="text-teal-500 text-sm hover:underline"
+              onClick={() => setShowFilters(true)}
+            >
+              Update Preferences
+            </button>
+          </div>
+
           {/* Infinite scroll loader */}
           {loadingMore && (
             <div className="flex justify-center items-center py-4">
@@ -267,7 +304,6 @@ const Home: React.FC = () => {
           )}
         </div>
       )}
-
       {selectedTab === "reviews" && (
         <div className="flex flex-col gap-4 p-4">
           {/* Review Form */}
@@ -314,11 +350,48 @@ const Home: React.FC = () => {
           )}
         </div>
       )}
-
       {/* Bottom Navigation (Only visible on small screens) */}
       <div className="fixed px-2 bottom-0 w-full block md:hidden">
-        <BottomNav />
+        <BottomNav onOpenNotifications={() => setNotificationsOpen(true)} />
       </div>
+      {/* Unified Toast for all notifications and alerts */}
+      {(() => {
+        let message = "";
+        let type: "success" | "error" | "info" = "info";
+        let action;
+        if (
+          toastOpen &&
+          notifications.length > 0 &&
+          notifications[0].data &&
+          typeof notifications[0].data === "object" &&
+          "message" in notifications[0].data
+        ) {
+          message = notifications[0].data.message;
+          type = "info";
+          action = {
+            label: "View",
+            onClick: () => {
+              setNotificationsOpen(true);
+              setToastOpen(false);
+            },
+          };
+        } else if (toast && toast.message) {
+          message = toast.message;
+          type = toast.type;
+        }
+        if (!message) return null;
+        return (
+          <Toast
+            message={message}
+            type={type}
+            onClose={() => {
+              setToast(null);
+              setToastOpen(false);
+            }}
+            action={action}
+          />
+        );
+      })()}
     </div>
   );
 };

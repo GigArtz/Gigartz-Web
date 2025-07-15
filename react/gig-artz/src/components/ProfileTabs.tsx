@@ -20,16 +20,16 @@ function ProfileTabs({ uid }) {
     return [...(profile?.userEvents || [])];
   }, [profile]);
 
-
-
   const handleSubscribe = (guestListId: string) => {
     console.log(`Subscribed to guest list with id: ${guestListId}`);
   };
 
   const [activeTab, setActiveTab] = useState("events");
   const [selectedList, setSelectedList] = useState(null);
+  // Filter state for events and reviews
+  const [gigsFilter, setGigsFilter] = useState("all"); // all | created | liked
+  const [reviewsFilter, setReviewsFilter] = useState("all"); // all | created | liked
 
-  
   return (
     <div>
       {/* Tabs */}
@@ -68,10 +68,39 @@ function ProfileTabs({ uid }) {
         {!loading && !error && (
           <>
             {/* Events Tab */}
+
             {activeTab === "events" && (
               <div className="snap-start flex-shrink-0 w-full p-1">
+                {/* Gigs Filter */}
+                <div className="flex gap-2 mb-4 justify-center">
+                  {[
+                    { key: "all", label: "All" },
+                    { key: "created", label: "Created" },
+                    { key: "liked", label: "Liked" },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setGigsFilter(key)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                        gigsFilter === key
+                          ? "bg-teal-600 text-white"
+                          : "bg-gray-700 text-gray-300 hover:bg-teal-800"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <ScrollableEventCol
-                  events={userGigGuide}
+                  events={
+                    gigsFilter === "all"
+                      ? userGigGuide
+                      : gigsFilter === "created"
+                      ? userGigGuide.filter((event) => event?.createdBy === uid)
+                      : userGigGuide.filter((event) =>
+                          event?.likedBy?.includes?.(uid)
+                        )
+                  }
                   loading={loading}
                   error={error}
                 />
@@ -81,11 +110,40 @@ function ProfileTabs({ uid }) {
             {/* Reviews Tab */}
             {activeTab === "reviews" && (
               <div className="mt-4">
+                {/* Reviews Filter */}
+                <div className="flex gap-2 mb-4 justify-center">
+                  {[
+                    { key: "all", label: "All" },
+                    { key: "created", label: "Created" },
+                    { key: "liked", label: "Liked" },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setReviewsFilter(key)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                        reviewsFilter === key
+                          ? "bg-teal-600 text-white"
+                          : "bg-gray-700 text-gray-300 hover:bg-teal-800"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 {userProfile?.userReviews?.length > 0 ? (
                   <div className="space-y-4">
-                    {userProfile.userReviews.map((item, idx) => (
-                      <ReviewCard key={item.data?.id ?? idx} review={item} />
-                    ))}
+                    {userProfile.userReviews
+                      .filter((item) => {
+                        if (reviewsFilter === "all") return true;
+                        if (reviewsFilter === "created")
+                          return item?.data?.createdBy === uid;
+                        if (reviewsFilter === "liked")
+                          return item?.data?.likedBy?.includes?.(uid);
+                        return true;
+                      })
+                      .map((item, idx) => (
+                        <ReviewCard key={item.data?.id ?? idx} review={item} />
+                      ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-center mt-4">

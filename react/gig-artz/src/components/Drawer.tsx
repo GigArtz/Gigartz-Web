@@ -135,28 +135,23 @@ function Drawer() {
     // Example: toast.success("Review submitted!");
   }
 
+  // Responsive Drawer: improved overlay, transitions, and accessibility
   return (
     <div className="relative flex">
       {/* Modal */}
       <Modal isModalOpen={isModalOpen} closeModal={closeModal} />
 
-      {/* Review Modals */}
+      {/* Review Modal */}
       {isModalCommentOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          {/* Modal Container */}
-          <div className="bg-dark rounded-lg shadow-xl p-6 w-full max-w-xl relative animate-fade-in">
-            {/* Modal Header */}
-            <div className="flex items-end justify-end p-2 md:p-5 rounded-t">
-              {/* Close Button */}
-              <button
-                onClick={() => setIsCommentModalOpen(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
-              >
-                <FaTimesCircle className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Review Form */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-dark rounded-2xl shadow-2xl p-6 w-full max-w-xl relative animate-fade-in border border-gray-800">
+            <button
+              onClick={() => setIsCommentModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
+              aria-label="Close review modal"
+            >
+              <FaTimesCircle className="w-6 h-6" />
+            </button>
             <CommentForm
               buttonText="Submit"
               loading={loading}
@@ -170,59 +165,66 @@ function Drawer() {
       )}
 
       {/* Top bar for mobile */}
-      <div className="md:hidden fixed top-0 left-0 w-full bg-[#060512] shadow-md z-30 p-2 flex justify-between items-center">
+      <div className="md:hidden fixed top-0 left-0 w-full bg-[#060512] shadow-lg z-40 p-3 flex justify-between items-center border-b border-gray-800">
         <div className="flex items-center gap-4">
           <FaArrowLeft
-            className="text-white text-lg cursor-pointer"
+            className="text-white text-xl cursor-pointer hover:text-teal-400 transition"
             onClick={goBack}
+            aria-label="Go back"
           />
-          <p className="text-white text-lg font-semibold capitalize">
+          <span className="text-white text-lg font-semibold capitalize truncate max-w-[120px]">
             {location.pathname.split("/")[1] || "Explore"}
-          </p>
+          </span>
         </div>
         <img
           src={profile?.profilePicUrl || avatar}
-          className="w-10 h-10 rounded-full border-2 border-gray-800 cursor-pointer"
+          className="w-10 h-10 rounded-full border-2 border-gray-800 cursor-pointer object-cover hover:scale-105 transition"
           onClick={toggleDrawer}
+          alt="Open drawer"
         />
       </div>
 
       {/* Drawer */}
-      <div
-        className={`fixed top-0  md:left-[2%] xl:left-[2%] h-full w-[65%] md:w-[20%] lg:w-[15%] bg-[#060512] shadow-md transition-transform z-40 overflow-auto duration-300 ease-in-out
+      <aside
+        className={`fixed top-0 left-0 h-full w-[80vw] max-w-xs md:w-[20vw] md:max-w-xs lg:w-[15vw] bg-[#060512] shadow-2xl transition-transform z-50 overflow-y-auto duration-300 ease-in-out
         ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        } md:translate-x-0 border-r border-gray-800`}
+        aria-label="Sidebar navigation"
       >
         {/* Profile */}
         {loading ? (
-          <div className="p-4 border-b border-gray-700 text-center animate-pulse">
+          <div className="p-6 border-b border-gray-700 text-center animate-pulse">
             <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full bg-gray-700 mb-2" />
             <div className="h-5 w-24 mx-auto bg-gray-700 rounded mb-1" />
             <div className="h-4 w-32 mx-auto bg-gray-800 rounded" />
           </div>
         ) : (
-          <div className="p-4 pl-8 border-b border-gray-700 text-center">
+          <div className="p-6 border-b border-gray-700 text-center">
             <img
               src={profile?.profilePicUrl || avatar}
               alt="Profile"
-              className="w-14 h-14 md:w-20 md:h-20 min-w-14 min-h-14 max-w-20 max-h-20 rounded-full border-2 mx-auto border-teal-500 object-cover cursor-pointer"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 mx-auto border-teal-500 object-cover cursor-pointer hover:scale-105 transition"
               onClick={toggleDrawer}
             />
             <p
-              className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer"
-              onClick={() => handleUsernameClick()}
+              className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer truncate"
+              onClick={handleUsernameClick}
+              title={profile?.userName || "brooke lines"}
             >
               {profile?.userName || "brooke lines"}
             </p>
-            <p className="text-teal-400 text-sm">
+            <p
+              className="text-teal-400 text-sm truncate"
+              title={profile?.bio || "brooke lines"}
+            >
               {profile?.bio || "brooke lines"}
             </p>
           </div>
         )}
 
         {/* Navigation */}
-        <nav className="py-4 px-4 overflow-y-auto max-h-[80vh] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+        <nav className="py-4 px-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
           {loading ? (
             <ul className="space-y-2 animate-pulse">
               {[...Array(5)].map((_, i) => (
@@ -239,19 +241,21 @@ function Drawer() {
             </ul>
           ) : (
             <>
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {navItems.map((item, index) => {
                   const isActive = activeLink === item.link;
                   return (
                     <li key={index}>
                       <a
                         onClick={() => handleNavClick(item)}
-                        className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
+                        className={`flex items-center gap-3 p-2 rounded-xl text-base font-medium cursor-pointer transition
                           ${
                             isActive
-                              ? "bg-teal-700 text-white"
-                              : "text-white hover:bg-gray-700"
+                              ? "bg-teal-700 text-white shadow"
+                              : "text-white hover:bg-gray-800 hover:text-teal-300"
                           }`}
+                        tabIndex={0}
+                        aria-current={isActive ? "page" : undefined}
                       >
                         <item.icon className="w-5 h-5" />
                         <span>{item.label}</span>
@@ -262,29 +266,32 @@ function Drawer() {
               </ul>
 
               {/* More Options Button */}
-              <div className="border-gray-700 pt-4">
+              <div className="border-t border-gray-700 pt-4 mt-4">
                 <button
-                  className="w-full flex items-center px-2 py-2 rounded-2xl text-sm font-semibold text-white bg-dark hover:bg-gray-700 transition mb-2"
+                  className="w-full flex items-center px-2 py-2 rounded-xl text-base font-semibold text-white bg-dark hover:bg-gray-800 transition mb-2"
                   onClick={() => setIsMoreExpanded((open) => !open)}
                   type="button"
+                  aria-expanded={isMoreExpanded}
                 >
                   <FaEllipsisH className="w-5 h-5 me-3" />
-                  <span className="text-white hover:bg-gray-700">More</span>
+                  <span className="text-white">More</span>
                 </button>
                 {isMoreExpanded && (
-                  <ul className="space-y-2">
+                  <ul className="space-y-1">
                     {moreNavItems.map((item, index) => {
                       const isActive = activeLink === item.link;
                       return (
                         <li key={index}>
                           <a
                             onClick={() => handleNavClick(item)}
-                            className={`flex items-center gap-3 p-2 rounded-2xl text-sm font-medium cursor-pointer transition 
-                          ${
-                            isActive
-                              ? "bg-teal-700 text-white"
-                              : "text-white hover:bg-gray-700"
-                          }`}
+                            className={`flex items-center gap-3 p-2 rounded-xl text-base font-medium cursor-pointer transition
+                              ${
+                                isActive
+                                  ? "bg-teal-700 text-white shadow"
+                                  : "text-white hover:bg-gray-800 hover:text-teal-300"
+                              }`}
+                            tabIndex={0}
+                            aria-current={isActive ? "page" : undefined}
                           >
                             <item.icon className="w-5 h-5" />
                             <span>{item.label}</span>
@@ -301,44 +308,53 @@ function Drawer() {
 
         {/* Create Button */}
         {!loading && (
-          <div
-            className="flex flex-row font-medium px-2 py-1 mt-4 justify-center relative"
-            hidden={loading}
-          >
+          <div className="flex flex-row font-medium px-2 py-2 mt-4 justify-center relative">
             <button
               onClick={() => setIsAddDropdownOpen((open) => !open)}
               type="button"
-              className="inline-flex items-center text-white text-lg pb-4 gap-1 justify-center w-full h-10 btn-primary rounded-full hover:bg-teal-600  focus:outline-none"
+              className="inline-flex items-center text-white text-lg gap-1 justify-center w-full h-11 btn-primary rounded-full hover:bg-teal-600 focus:outline-none shadow-lg transition"
+              aria-haspopup="true"
+              aria-expanded={isAddDropdownOpen}
             >
               <FaPlus className="w-4 h-4 mt-1" /> Post
             </button>
 
+            {/* Dropdown */}
             <div
-              className="bg-dark ml-2 text-center rounded-xl shadow-lg z-50 animate-fade-in"
-              hidden={!isAddDropdownOpen}
+              className={`absolute left-1/2 -translate-x-1/2 top-14 bg-dark text-center rounded-xl shadow-2xl z-50 animate-fade-in border border-gray-800 transition-all duration-200 ${
+                isAddDropdownOpen
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-95 pointer-events-none"
+              }`}
+              style={{ minWidth: "7rem" }}
+              role="menu"
+              aria-label="Create options"
             >
               <button
-                className="inline-flex items-center text-white text-lg justify-center w-28 h-10 btn-primary rounded-full mb-2"
+                className="inline-flex items-center text-white text-base justify-center w-28 h-10 btn-primary rounded-full mb-2 hover:bg-teal-700 transition"
                 onClick={() => handleAddOption("event")}
+                role="menuitem"
               >
                 Gig
               </button>
               <button
-                className="inline-flex items-center text-white text-lg justify-center w-28 h-10 btn-primary rounded-full"
+                className="inline-flex items-center text-white text-base justify-center w-28 h-10 btn-primary rounded-full hover:bg-teal-700 transition"
                 onClick={() => handleAddOption("review")}
+                role="menuitem"
               >
                 Review
               </button>
             </div>
           </div>
         )}
-      </div>
+      </aside>
 
       {/* Overlay for mobile drawer */}
       {isDrawerOpen && (
         <div
-          className="fixed inset-0 bg-black opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300"
           onClick={toggleDrawer}
+          aria-label="Close sidebar overlay"
         />
       )}
     </div>

@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { FaHome, FaSearch, FaPlus, FaBell, FaEnvelope } from "react-icons/fa"; // Importing icons from react-icons
+import { FaHome, FaSearch, FaPlus, FaBell, FaEnvelope } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Modal from "./EventFormModal"; // Import the Modal component
+import Modal from "./EventFormModal";
 
-function BottomNav() {
+interface BottomNavProps {
+  onOpenNotifications: () => void;
+}
+
+function BottomNav({ onOpenNotifications }: BottomNavProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -61,7 +65,7 @@ function BottomNav() {
 
           {/* Notifications Button */}
           <button
-            onClick={() => navigate("/notifications")}
+            onClick={onOpenNotifications}
             data-tooltip-target="tooltip-notifications"
             type="button"
             className="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 dark:hover:bg-gray-600 group"

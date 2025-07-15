@@ -1,13 +1,32 @@
 import React, { useEffect } from "react";
 import { FaTimesCircle } from "react-icons/fa";
 
-const Toast = ({ message, onClose, duration = 3000, type = "info" }) => {
+interface ToastProps {
+  message: string;
+  onClose: () => void;
+  duration?: number;
+  type?: "success" | "error" | "info";
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+const Toast: React.FC<ToastProps> = ({
+  message,
+  onClose,
+  duration = 3000,
+  type = "info",
+  action,
+}) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, duration);
-    return () => clearTimeout(timer);
-  }, [onClose, duration]);
+    if (!action) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
+      return () => clearTimeout(timer);
+    }
+  }, [onClose, duration, action]);
 
   const getTypeStyles = () => {
     switch (type) {
@@ -29,6 +48,14 @@ const Toast = ({ message, onClose, duration = 3000, type = "info" }) => {
         style={{ animation: "fadeIn 0.4s" }}
       >
         <div className="flex-1 break-words">{message}</div>
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="ml-2 text-xs text-white bg-teal-500 rounded px-3 py-1 hover:bg-teal-600 transition"
+          >
+            {action.label}
+          </button>
+        )}
         <button
           onClick={onClose}
           className="rounded-full p-1 text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"

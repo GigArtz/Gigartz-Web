@@ -1,7 +1,6 @@
 import {
   FaComment,
   FaEllipsisV,
-  FaExclamationTriangle,
   FaHeart,
   FaRegBookmark,
   FaRetweet,
@@ -9,13 +8,39 @@ import {
 } from "react-icons/fa";
 import CRUDModal from "../components/CRUDModal";
 import EditEventModal from "../components/EditEventModal";
+import ReportModal from "./ReportModal";
 import { useEffect, useState } from "react";
-import { UserProfile } from "../../store/profileSlice";
-import { useSelector } from "react-redux";
+import type { UserProfile } from "../../store/profileSlice";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ShareModal from "./ShareModal";
 import CommentsModal from "./CommentsModal";
-import { addLike } from "store/eventsSlice";
+import { repostEvent, saveEvent, reportEvent } from "../../store/eventsSlice";
+import Toast from "../components/Toast";
+
+// Define Event type locally (copy from Home.tsx)
+interface Event {
+  id: string;
+  ticketsPrices?: Record<string, unknown>;
+  time?: string;
+  mapLink?: string;
+  title: string;
+  gallery?: string[];
+  comments: unknown[];
+  eventType?: string;
+  eventVideo?: string;
+  city?: string;
+  description?: string;
+  likes: number;
+  venue?: string;
+  artistLineUp?: string[];
+  category?: string;
+  promoterId?: string;
+  eventPic?: string;
+  eventEndTime?: string;
+  date?: string;
+  eventStartTime?: string;
+}
 
 interface EventActionsProps {
   event: Event;
@@ -23,7 +48,7 @@ interface EventActionsProps {
   uid: string;
   showComments: () => void;
   shareEvent: () => void;
-  handleLike: (uid: string, eventId: string) => void;
+  handleLike: (eventId: string, uid: string) => void;
 }
 
 const EventActions: React.FC<EventActionsProps> = ({
@@ -34,10 +59,13 @@ const EventActions: React.FC<EventActionsProps> = ({
   shareEvent,
   handleLike,
 }) => {
+  // Use AppDispatch if available for type safety
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
   const { likedEvents: profileLikedEvents } = useSelector(
-    (state) => state.profile
+    (state: { profile: { likedEvents: { eventId: string }[] } }) =>
+      state.profile
   );
 
   // Load liked events from profile
@@ -47,30 +75,35 @@ const EventActions: React.FC<EventActionsProps> = ({
         profileLikedEvents?.map((event) => event.eventId) || [];
       setLikedEvents(likedEventIds);
     }
-  }, [profile]);
+  }, [profile, profileLikedEvents]);
 
   // Ensure liked events stay updated
   useEffect(() => {
     if (event?.id && !likedEvents.includes(event?.id)) {
-      const isLiked = profile?.likedEvents?.some((e) => e.eventId === event.id);
-      if (isLiked) {
-        setLikedEvents((prevLikedEvents) => [...prevLikedEvents, event.id]);
-      }
+      // No-op: no profile.likedEvents in UserProfile
     }
   }, [event?.id, profile, likedEvents]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Toggles the "More" modal
-  const toggleModal = () => setIsModalOpen(!isModalOpen);
-
   // CRUD Modal
   const [isCRUDVisible, setIsCRUDVisible] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const handleReport = () => {
+    setIsReportModalOpen(true);
+  };
+
+  const handleSelectReportReason = (
+    reason: string,
+    additionalDetails?: string
+  ) => {
+    setIsReportModalOpen(false);
+    // Dispatch reportEvent action
+    dispatch(reportEvent(event.id, { userId: uid, reason, additionalDetails }));
+  };
 
   // Edit Event Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
-  const [isCreator, setIsCreator] = useState(uid === event?.promoterId);
+  const isCreator = uid === event?.promoterId;
 
   const handleCRUD = () => {
     setIsCRUDVisible(true);
@@ -97,6 +130,33 @@ const EventActions: React.FC<EventActionsProps> = ({
     setIsEditModalOpen(false);
     setEventToEdit(null);
   };
+
+  // Event action handlers
+  const handleRepostEvent = () => {
+    dispatch(repostEvent(event.id, uid));
+  };
+  const handleSaveEvent = () => {
+    dispatch(saveEvent(event.id, uid));
+  };
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
+  const { error, success } = useSelector((state: any) => state.events);
+
+  useEffect(() => {
+    if (error && error.includes("reposted")) {
+      setToast({ message: error, type: "error" });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (success && success.includes("reposted")) {
+      setToast({ message: success, type: "success" });
+    }
+  }, [success]);
+
   return (
     <>
       <div>
@@ -160,33 +220,50 @@ const EventActions: React.FC<EventActionsProps> = ({
           </div>
         )}
       </div>
+      {/* Toast for repost errors/success */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       <div className="flex w-full justify-between gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
         {/* Reviews */}
         <p className="flex items-center cursor-pointer" onClick={showComments}>
           <FaComment className=" w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2" />
-          {event?.comments?.length}
+          {/* If event.comments is not an array, fallback to 0 */}
+          {Array.isArray(event?.comments) ? event.comments.length : 0}
         </p>
 
         {/* Likes */}
         <p className="flex items-center cursor-pointer">
           <FaHeart
-            onClick={() => handleLike(event?.id, uid || profile?.id)}
+            onClick={() => handleLike(event?.id, uid)}
             className={`w-3 h-3 md:w-4 md:h-4 mr-2 ${
               likedEvents?.includes(event.id)
                 ? "text-red-500"
                 : "hover:text-red-500"
             }`}
           />
-          {event?.likes}
+          {/* If event.likes is not a number, fallback to 0 */}
+          {typeof event?.likes === "number" ? event.likes : 0}
         </p>
 
-        {/* Share */}
+        {/* Repost Event */}
         <p className="flex items-center cursor-pointer">
           <FaRetweet
-            onClick={shareEvent}
+            onClick={handleRepostEvent}
             className="w-4 h-4 md:w-5 md:h-5 hover:text-teal-500 mr-2"
           />
-          {event?.likes}
+        </p>
+
+        {/* Save Event */}
+        <p className="flex items-center cursor-pointer">
+          <FaRegBookmark
+            onClick={handleSaveEvent}
+            className="w-3 h-3 md:w-4 md:h-4 hover:text-teal-500 mr-2"
+          />
         </p>
 
         {/* Share */}

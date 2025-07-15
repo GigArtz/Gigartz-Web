@@ -377,7 +377,7 @@ function ExploreTabs() {
               <div className="flex flex-col gap-6">
                 {/* Trending */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Trending
                   </h2>
                   <ScrollableEventRow
@@ -388,7 +388,7 @@ function ExploreTabs() {
                 </div>
                 {/* For You */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     For You
                   </h2>
                   <ScrollableEventRow
@@ -397,18 +397,10 @@ function ExploreTabs() {
                     error={error}
                   />
                 </div>
-                {/* Update Preferences Button */}
-                <div className="w-full p-2 rounded-xl flex justify-end">
-                  <button
-                    className="text-teal-500 text-sm hover:underline"
-                    onClick={() => setShowFilters(true)}
-                  >
-                    Update Preferences
-                  </button>
-                </div>
+               
                 {/* Popular Professionals */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
@@ -428,7 +420,7 @@ function ExploreTabs() {
                 ).map(({ interest, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         {interest.charAt(0).toUpperCase() + interest.slice(1)}
                       </h2>
                       <ScrollableEventRow
@@ -445,7 +437,7 @@ function ExploreTabs() {
                 ).map(({ loc, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={loc}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         Gigs in {loc}
                       </h2>
                       <ScrollableEventRow
@@ -468,7 +460,7 @@ function ExploreTabs() {
               <div className="flex flex-col gap-6">
                 {/* Trending */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Trending
                   </h2>
                   <ScrollableEventRow
@@ -479,7 +471,7 @@ function ExploreTabs() {
                 </div>
                 {/* For You */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     For You
                   </h2>
                   <ScrollableEventRow
@@ -490,7 +482,7 @@ function ExploreTabs() {
                 </div>
                 {/* Popular Professionals */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
@@ -510,7 +502,7 @@ function ExploreTabs() {
                 ).map(({ interest, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         {interest.charAt(0).toUpperCase() + interest.slice(1)}
                       </h2>
                       <ScrollableEventRow
@@ -530,7 +522,7 @@ function ExploreTabs() {
                 ).map(({ loc, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={loc}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         Gigs in {loc}
                       </h2>
                       <ScrollableEventRow
@@ -553,7 +545,7 @@ function ExploreTabs() {
               <div className="flex flex-col gap-6">
                 {/* Popular Professionals */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
@@ -573,7 +565,7 @@ function ExploreTabs() {
                 ).map(({ interest, users }) =>
                   users.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         {interest.charAt(0).toUpperCase() + interest.slice(1)}{" "}
                         Professionals
                       </h2>
@@ -599,7 +591,7 @@ function ExploreTabs() {
               <div className="flex flex-col gap-6">
                 {/* Trending */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Trending
                   </h2>
                   <ScrollableEventRow
@@ -610,7 +602,7 @@ function ExploreTabs() {
                 </div>
                 {/* For You */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     For You
                   </h2>
                   <ScrollableEventRow
@@ -621,7 +613,7 @@ function ExploreTabs() {
                 </div>
                 {/* Popular Professionals */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
@@ -634,7 +626,7 @@ function ExploreTabs() {
                 </div>
                 {/* Gigs Near You */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Gigs Near You
                   </h2>
                   <ScrollableEventRow
@@ -645,7 +637,7 @@ function ExploreTabs() {
                 </div>
                 {/* Based on your preference */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-xl text-white font-semibold mb-2">
+                  <h2 className="text-white text-lg font-semibold mb-2">
                     Based on your preference
                   </h2>
                   <ScrollableEventRow
@@ -663,7 +655,7 @@ function ExploreTabs() {
                 ).map(({ interest, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         {interest.charAt(0).toUpperCase() + interest.slice(1)}
                       </h2>
                       <ScrollableEventRow
@@ -680,7 +672,7 @@ function ExploreTabs() {
                 ).map(({ loc, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={loc}>
-                      <h2 className="text-xl text-white font-semibold mb-2">
+                      <h2 className="text-white text-lg font-semibold mb-2">
                         Gigs in {loc}
                       </h2>
                       <ScrollableEventRow

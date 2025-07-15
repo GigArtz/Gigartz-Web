@@ -69,11 +69,15 @@ interface Review {
 // Define the state structure for events
 interface EventsState {
   events: Event[];
-  reviews: Review[]
+  reviews: Review[];
   loading: boolean;
   error: string | null;
   success: string | null;
+  eventsCacheTimestamp: number | null;
+  reviewsCacheTimestamp: number | null;
 }
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 const initialState: EventsState = {
   events: [],
@@ -81,6 +85,8 @@ const initialState: EventsState = {
   loading: false,
   error: null,
   success: null,
+  eventsCacheTimestamp: null,
+  reviewsCacheTimestamp: null,
 };
 
 const eventsSlice = createSlice({
@@ -145,11 +151,20 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.events = action.payload;
       state.error = null;
+      state.eventsCacheTimestamp = Date.now();
     },
     fetchReviewsSuccess(state, action: PayloadAction<Review[]>) {
       state.loading = false;
-      state.reviews = action.payload?.reviews;
+      // Accepts either array or { reviews: Review[] }
+      if (Array.isArray(action.payload)) {
+        state.reviews = action.payload;
+      } else if (action.payload && typeof action.payload === 'object' && 'reviews' in action.payload) {
+        state.reviews = (action.payload as { reviews: Review[] }).reviews;
+      } else {
+        state.reviews = [];
+      }
       state.error = null;
+      state.reviewsCacheTimestamp = Date.now();
     },
     createEventsSuccess(state, action: PayloadAction<string>) {
       state.loading = false;
@@ -262,15 +277,18 @@ const eventsSlice = createSlice({
   },
 });
 
-// Fetch all events
-export const fetchAllEvents = () => async (dispatch: AppDispatch) => {
+// Fetch all events with cache
+export const fetchAllEvents = () => async (dispatch: AppDispatch, getState: () => { events: EventsState }) => {
+  const { events, eventsCacheTimestamp } = getState().events;
+  const now = Date.now();
+  if (events.length > 0 && eventsCacheTimestamp && now - eventsCacheTimestamp < CACHE_TTL) {
+    // Use cached events
+    dispatch(eventsSlice.actions.fetchEventsSuccess(events));
+    return;
+  }
   dispatch(eventsSlice.actions.fetchEventsStart());
-
   try {
-    console.log("Fetching all events...");
     const response = await axios.get(`https://gigartz.onrender.com/events`);
-    console.log("Events responses:", response.data);
-
     dispatch(eventsSlice.actions.fetchEventsSuccess(response.data));
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -280,26 +298,20 @@ export const fetchAllEvents = () => async (dispatch: AppDispatch) => {
         const errorMsg =
           typeof errorData?.message === 'string' ? errorData.message :
             typeof errorData?.error === 'string' ? errorData.error :
-              "Failed to fetch user profile";
+              "Failed to fetch events";
         dispatch(
           eventsSlice.actions.fetchEventsFailure(errorMsg)
         );
       } else if (axiosError.request) {
-        // The request was made, but no response was received
-        console.error("Request error:", axiosError.request);
         dispatch(
           eventsSlice.actions.fetchEventsFailure(
             "No response received from server"
           )
         );
       } else {
-        // Something else happened during the setup of the request
-        console.error("Error setting up request:", axiosError.message);
         dispatch(eventsSlice.actions.fetchEventsFailure(axiosError.message));
       }
     } else {
-      // Handle non-Axios errors
-      console.error("Unexpected error fetching user profile:", error);
       dispatch(
         eventsSlice.actions.fetchEventsFailure("Unexpected error occurred")
       );
@@ -397,7 +409,7 @@ export const createGuestList =
             console.error("Response error:", axiosError.response?.data);
             dispatch(
               eventsSlice.actions.createGuestListFailure(
-                axiosError.response?.data?.error || "Failed to create guest list"
+                (typeof axiosError.response?.data === 'object' && axiosError.response?.data && 'error' in axiosError.response.data ? (axiosError.response.data as { error: string }).error : "Failed to create guest list")
               )
             );
           } else if (axiosError.request) {
@@ -625,7 +637,7 @@ type EventBooking = {
   customerUid: string;
   customerName: string;
   customerEmail: string;
-  ticketTypes: TicketType[];
+  ticketTypes: unknown[]; // TODO: Replace 'unknown' with TicketType definition if available
   location: string;
   eventName: string;
   eventDate: string;
@@ -1102,15 +1114,18 @@ export const deleteGuestFromGuestList = (userId: string, guestListId: string, gu
   }
 };
 
-// Fetch all reviews
-export const fetchAllReviews = (userId:string) => async (dispatch: AppDispatch) => {
-  dispatch(eventsSlice.actions.fetchEventsStart());
-
+// Fetch all reviews with cache
+export const fetchAllReviews = (userId: string) => async (dispatch: AppDispatch, getState: () => { events: EventsState }) => {
+  const { reviews, reviewsCacheTimestamp } = getState().events;
+  const now = Date.now();
+  if (reviews.length > 0 && reviewsCacheTimestamp && now - reviewsCacheTimestamp < CACHE_TTL) {
+    // Use cached reviews
+    dispatch(eventsSlice.actions.fetchReviewsSuccess(reviews));
+    return;
+  }
+  dispatch(eventsSlice.actions.fetchReviewsStart());
   try {
-    console.log("Fetching all reviews...");
     const response = await axios.get(`https://gigartz.onrender.com/events/reviews/${userId}`);
-    console.log("Review responses:", response.data.reviews);
-
     dispatch(eventsSlice.actions.fetchReviewsSuccess(response.data));
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -1121,31 +1136,227 @@ export const fetchAllReviews = (userId:string) => async (dispatch: AppDispatch) 
           typeof errorData?.message === 'string' ? errorData.message :
             typeof errorData?.error === 'string' ? errorData.error :
               "Failed to fetch reviews";
-        dispatch(
-          eventsSlice.actions.fetchReviewsFailure(errorMsg)
-        );
+        dispatch(eventsSlice.actions.fetchReviewsFailure(errorMsg));
       } else if (axiosError.request) {
-        // The request was made, but no response was received
-        console.error("Request error:", axiosError.request);
-        dispatch(
-          eventsSlice.actions.fetchReviewsFailure(
-            "No response received from server"
-          )
-        );
+        dispatch(eventsSlice.actions.fetchReviewsFailure("No response received from server"));
       } else {
-        // Something else happened during the setup of the request
-        console.error("Error setting up request:", axiosError.message);
-        dispatch(eventsSlice.actions.fetchReviewssFailure(axiosError.message));
+        dispatch(eventsSlice.actions.fetchReviewsFailure(axiosError.message || "Unexpected error occurred"));
       }
     } else {
-      // Handle non-Axios errors
-      console.error("Unexpected error fetching reviews:", error);
-      dispatch(
-        eventsSlice.actions.fetchReviewsFailure("Unexpected error occurred")
-      );
+      dispatch(eventsSlice.actions.fetchReviewsFailure("Unexpected error occurred"));
     }
   }
 };
+
+// Like review
+export const likeReview = (reviewId: string, userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createLikeStart());
+  try {
+    await axios.post(`https://gigartz.onrender.com/reviews/${reviewId}/like`, { userId });
+    dispatch(eventsSlice.actions.createLikeSuccess("Review liked successfully!"));
+    notify(dispatch, {
+      type: "like",
+      data: { message: "Review liked successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const errorData = error.response?.data as Record<string, unknown>;
+      const errorMsg =
+        typeof errorData?.message === 'string' ? errorData.message :
+          typeof errorData?.error === 'string' ? errorData.error :
+            "Failed to like review";
+      dispatch(eventsSlice.actions.createLikeFailure(errorMsg));
+    } else {
+      dispatch(eventsSlice.actions.createLikeFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+
+// Report event
+interface ReportPayload {
+  userId: string;
+  reason: string;
+  additionalDetails?: string;
+}
+
+export const reportEvent = (eventId: string, payload: ReportPayload) => async (dispatch: AppDispatch) => {
+  try {
+    const response = await axios.post(`https://gigartz.onrender.com/event/${eventId}/report`, payload);
+    // Optionally dispatch a notification or update state
+    notify(dispatch, {
+      type: "report",
+      data: { message: "Event reported successfully!" },
+    });
+    console.log("Event reported:", response.data);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error("Report event error:", error.response?.data || error.message);
+      notify(dispatch, {
+        type: "report",
+        data: { message: error.response?.data?.message || error.message || "Failed to report event" },
+      });
+    } else {
+      console.error("Unexpected report event error:", error);
+      notify(dispatch, {
+        type: "report",
+        data: { message: "Unexpected error occurred while reporting event" },
+      });
+    }
+  }
+};
+
+// Report review
+export const reportReview = (reviewId: string, payload: ReportPayload) => async (dispatch: AppDispatch) => {
+  try {
+    const response = await axios.post(`https://gigartz.onrender.com/reviews/${reviewId}/report`, payload);
+    notify(dispatch, {
+      type: "report",
+      data: { message: "Review reported successfully!" },
+    });
+    console.log("Review reported:", response.data);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error("Report review error:", error.response?.data || error.message);
+      notify(dispatch, {
+        type: "report",
+        data: { message: error.response?.data?.message || error.message || "Failed to report review" },
+      });
+    } else {
+      console.error("Unexpected report review error:", error);
+      notify(dispatch, {
+        type: "report",
+        data: { message: "Unexpected error occurred while reporting review" },
+      });
+    }
+  }
+};
+
+// Repost a review
+export const repostReview = (reviewId: string, userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createReviewStart());
+  try {
+    await axios.post(`https://gigartz.onrender.com/reviews/${reviewId}/repost`, { userId });
+    dispatch(eventsSlice.actions.createReviewSuccess("Review reposted successfully!"));
+    notify(dispatch, {
+      type: "review",
+      data: { message: "Review reposted successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const errorData = error.response?.data as Record<string, unknown>;
+      const errorMsg =
+        typeof errorData?.message === 'string' ? errorData.message :
+          typeof errorData?.error === 'string' ? errorData.error :
+            "Failed to repost review";
+      dispatch(eventsSlice.actions.createReviewFailure(errorMsg));
+    } else {
+      dispatch(eventsSlice.actions.createReviewFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Repost event
+export const repostEvent = (eventId: string, userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createEventsStart());
+  try {
+    await axios.post(`https://gigartz.onrender.com/event/${eventId}/repost`, { userId });
+    dispatch(eventsSlice.actions.createEventsSuccess("Event reposted successfully!"));
+    notify(dispatch, {
+      type: "event",
+      data: { message: "Event reposted successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const errorData = error.response?.data as Record<string, unknown>;
+      const errorMsg =
+        typeof errorData?.message === 'string' ? errorData.message :
+          typeof errorData?.error === 'string' ? errorData.error :
+            "Failed to repost event";
+      dispatch(eventsSlice.actions.createEventsFailure(errorMsg));
+    } else {
+      dispatch(eventsSlice.actions.createEventsFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Save event
+export const saveEvent = (eventId: string, userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createEventsStart());
+  try {
+    await axios.post(`https://gigartz.onrender.com/event/${eventId}/save`, { userId });
+    dispatch(eventsSlice.actions.createEventsSuccess("Event saved successfully!"));
+    notify(dispatch, {
+      type: "event",
+      data: { message: "Event saved successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const errorData = error.response?.data as Record<string, unknown>;
+      const errorMsg =
+        typeof errorData?.message === 'string' ? errorData.message :
+          typeof errorData?.error === 'string' ? errorData.error :
+            "Failed to save event";
+      dispatch(eventsSlice.actions.createEventsFailure(errorMsg));
+    } else {
+      dispatch(eventsSlice.actions.createEventsFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Comment on review
+interface CommentPayload {
+  userId: string;
+  comment: string;
+}
+
+export const commentOnReview = (reviewId: string, payload: CommentPayload) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createReviewStart());
+  try {
+    await axios.post(`https://gigartz.onrender.com/reviews/${reviewId}/comment`, payload);
+    dispatch(eventsSlice.actions.createReviewSuccess("Comment added successfully!"));
+    notify(dispatch, {
+      type: "review",
+      data: { message: "Comment added successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const errorData = error.response?.data as Record<string, unknown>;
+      const errorMsg =
+        typeof errorData?.message === 'string' ? errorData.message :
+          typeof errorData?.error === 'string' ? errorData.error :
+            "Failed to comment on review";
+      dispatch(eventsSlice.actions.createReviewFailure(errorMsg));
+    } else {
+      dispatch(eventsSlice.actions.createReviewFailure("Unexpected error occurred"));
+    }
+  }
+};
+
+// Save review
+export const saveReview = (reviewId: string, userId: string) => async (dispatch: AppDispatch) => {
+  dispatch(eventsSlice.actions.createReviewStart());
+  try {
+    await axios.post(`https://gigartz.onrender.com/reviews/${reviewId}/save`, { userId });
+    dispatch(eventsSlice.actions.createReviewSuccess("Review saved successfully!"));
+    notify(dispatch, {
+      type: "review",
+      data: { message: "Review saved successfully!" },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const errorData = error.response?.data as Record<string, unknown>;
+      const errorMsg =
+        typeof errorData?.message === 'string' ? errorData.message :
+          typeof errorData?.error === 'string' ? errorData.error :
+            "Failed to save review";
+      dispatch(eventsSlice.actions.createReviewFailure(errorMsg));
+    } else {
+      dispatch(eventsSlice.actions.createReviewFailure("Unexpected error occurred"));
+    }
+  }
+};
+
 
 export const {
   fetchEventsStart,
@@ -1181,6 +1392,8 @@ export const {
   fetchGuestsStart,
   fetchGuestsSuccess,
   fetchGuestsFailure,
+  fetchReviewsSuccess,
+  fetchReviewsFailure,
 } = eventsSlice.actions;
 
 export default eventsSlice.reducer;

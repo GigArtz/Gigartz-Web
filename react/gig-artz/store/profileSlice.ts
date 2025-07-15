@@ -54,6 +54,8 @@ interface ProfileState {
   userBookingsRequests: null;
   userEventProfit: null;
   userEvents: null;
+  userSavedEvents: null;
+  userSavedReviews: null;
   userFollowers: null;
   userFollowing: null;
   userGuestList: null;
@@ -78,6 +80,8 @@ const initialState: ProfileState = {
   userFollowing: null,
   userGuestList: null,
   userReviews: null,
+  userSavedEvents: null,
+  userSavedReviews: null,
   userTickets: null,
   userTipsProfit: null,
   userList: null,
@@ -123,6 +127,8 @@ const profileSlice = createSlice({
       state.userReviews = action.payload.userReviews;
       state.userTickets = action.payload.userTickets;
       state.userTipsProfit = action.payload.userTipsProfit;
+      state.userSavedEvents = action.payload.userSavedEvents;
+      state.userSavedReviews = action.payload.userSavedReviews;
       state.error = null;
     },
     createBookingStart(state) {

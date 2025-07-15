@@ -296,17 +296,16 @@ const EventDetails = () => {
       </div>
 
       <div className="flex flex-row md:flex-row justify-between gap-4 mt-4">
-        <div>
+        
           <h1 className="text-lg md:text-3xl font-bold text-white">
             {event.title}
           </h1>
           <button onClick={viewHostProfile} className="text-gray-400 mt-2 flex flex-row items-center">
             <FaUserAlt className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}{event.hostName}
           </button>
-        </div>
+        
       </div>
 
-      <h2 className="text-lg md:text-2xl font-bold">Description</h2>
       <p className="mt-4 text-lg">{event.description}</p>
 
       <br />
