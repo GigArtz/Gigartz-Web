@@ -34,15 +34,13 @@ const PrivacySecurity: React.FC = () => {
   const [deletePassword, setDeletePassword] = useState("");
 
   // Import profile
-  const { profile } = useSelector(
-    (state: RootState) => state.profile
-  );
+  const { profile } = useSelector((state: RootState) => state.profile);
   const dispatch = useDispatch();
 
   // Handle suspend profile toggle
   const handleSuspendProfileToggle = () => {
     if (!profile || !profile.uid) {
-      alert("User not found.");
+      dispatch(showToast({ message: "User not found.", type: "error" }));
       return;
     }
     dispatch(suspendUserAccount(profile.uid, !isProfileSuspended));
@@ -64,7 +62,12 @@ const PrivacySecurity: React.FC = () => {
       // You may need to get a token from your auth state or context
       const token = profile?.token || localStorage.getItem("authToken") || "";
       await dispatch(resetPasswordWithoutEmail(newPassword, token));
-      alert("Password changed successfully!");
+      dispatch(
+        showToast({
+          message: "Password changed successfully!",
+          type: "success",
+        })
+      );
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -77,19 +80,23 @@ const PrivacySecurity: React.FC = () => {
   // Handle delete account
   const handleDeleteAccountConfirm = async () => {
     if (!profile || !profile.uid) {
-      alert("User not found.");
+      dispatch(showToast({ message: "User not found.", type: "error" }));
       return;
     }
     if (!deletePassword) {
-      alert("Please enter your password.");
+      dispatch(
+        showToast({ message: "Please enter your password.", type: "error" })
+      );
       return;
     }
     try {
       await dispatch(deleteUserAccount(profile.uid, deletePassword));
-      alert("Account deleted.");
+      dispatch(showToast({ message: "Account deleted.", type: "success" }));
       setIsDeleteAccountModalOpen(false);
     } catch (err) {
-      alert("Failed to delete account.");
+      dispatch(
+        showToast({ message: "Failed to delete account.", type: "error" })
+      );
     }
   };
 
@@ -273,7 +280,14 @@ const PrivacySecurity: React.FC = () => {
                       <p className="text-gray-400 text-sm">@{userName}</p>
                     </div>
                     <button
-                      onClick={() => alert(`Unblock ${name}`)}
+                      onClick={() =>
+                        dispatch(
+                          showToast({
+                            message: `Unblock ${name}`,
+                            type: "info",
+                          })
+                        )
+                      }
                       className="text-sm text-teal-400 hover:text-teal-600 focus:outline-none"
                     >
                       Unblock

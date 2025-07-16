@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { updateEvent } from "../../store/eventsSlice"; // Adjust the path if needed
+import { showToast } from "../../store/notificationSlice";
 
 // Initialize Firebase Storage
 const storage = getStorage();
@@ -228,10 +229,14 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
         const snapshot = await uploadBytes(storageRef, file);
         const imageUrl = await getDownloadURL(snapshot.ref); // Correct usage of snapshot.ref
         uploadedImages.push(imageUrl); // Save the URL to the array
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error uploading image: ", error.message); // Log error message
-        alert(
-          "Failed to upload one or more images. Please check your permissions."
+        dispatchRedux(
+          showToast({
+            message:
+              "Failed to upload one or more images. Please check your permissions.",
+            type: "error",
+          })
         );
       }
     }
@@ -251,9 +256,14 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       const snapshot = await uploadBytes(storageRef, file);
       const videoUrl = await getDownloadURL(snapshot.ref); // Correct usage of snapshot.ref
       dispatch({ type: "update", name: "eventVideo", value: videoUrl });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading video: ", error.message); // Log error message
-      alert("Failed to upload the video. Please check your permissions.");
+      dispatchRedux(
+        showToast({
+          message: "Failed to upload the video. Please check your permissions.",
+          type: "error",
+        })
+      );
     }
     setLoading(false); // Hide loader after upload
   };
@@ -278,7 +288,12 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       )
     );
     setLoading(false);
-    alert("Event updated successfully!");
+    dispatchRedux(
+      showToast({
+        message: "Event updated successfully!",
+        type: "success",
+      })
+    );
     closeModal(); // Close modal after successful update
   };
 
@@ -586,7 +601,12 @@ const Step4 = ({ formData, dispatch, editTicketType }) => {
 
       setIsAdding(false);
     } else {
-      alert("Please fill in all required fields.");
+      dispatchRedux(
+        showToast({
+          message: "Please fill in all required fields.",
+          type: "error",
+        })
+      );
     }
   };
 

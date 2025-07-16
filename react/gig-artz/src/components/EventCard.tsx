@@ -19,10 +19,26 @@ interface Event {
 interface EventCardProps {
   event: Event;
   cardSize?: "sm" | "md" | "lg";
+  loading?: boolean;
+  error?: string | null;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
+const EventCard: React.FC<EventCardProps> = ({
+  event,
+  cardSize,
+  loading,
+  error,
+}) => {
   const { profile } = useSelector((state: RootState) => state.profile);
+  // Per-event loading/error from Redux if not passed as prop
+  const reduxLoading = useSelector(
+    (state: RootState) => state.events.loadingByEventId?.[event.id]
+  );
+  const reduxError = useSelector(
+    (state: RootState) => state.events.errorByEventId?.[event.id]
+  );
+  const isLoading = loading !== undefined ? loading : reduxLoading;
+  const errorMsg = error !== undefined ? error : reduxError;
 
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
   const [isShareVisible, setIsShareVisible] = useState(false);
@@ -40,7 +56,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
   useEffect(() => {
     if (!profile) {
-      // alert("Invalid user profile. Please log in to continue.");
+      // dispatch(showToast({ message: "Invalid user profile. Please log in to continue.", type: "error" }));
       navigate("/"); // Redirect to login page
       return;
     }
@@ -96,6 +112,22 @@ const EventCard: React.FC<EventCardProps> = ({ event, cardSize }) => {
     console.log("Show comments", event?.eventId);
     setIsShareVisible(true);
   };
+
+  // Loader/Error UI
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <span className="animate-spin text-teal-500 text-3xl">⏳</span>
+      </div>
+    );
+  }
+  if (errorMsg) {
+    return (
+      <div className="flex flex-col items-center justify-center h-40">
+        <span className="text-red-500">{errorMsg}</span>
+      </div>
+    );
+  }
 
   return (
     <div>

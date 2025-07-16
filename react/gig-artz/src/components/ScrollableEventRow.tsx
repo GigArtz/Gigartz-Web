@@ -3,20 +3,14 @@ import EventCard from "./EventCard";
 import AdCard from "./AdCard"; // Ensure this exists
 import { FaSpinner } from "react-icons/fa";
 
-function ScrollableEventRow({ events = [], loading = false, error = null }) {
+import { useSelector } from "react-redux";
+
+function ScrollableEventRow({ events = [] }) {
   const AD_FREQUENCY = 4;
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center">
-        <FaSpinner className="text-teal-500 text-4xl animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <p className="text-red-500">Error: {error}</p>;
-  }
+  const loadingByEventId = useSelector(
+    (state) => state.events.loadingByEventId
+  );
+  const errorByEventId = useSelector((state) => state.events.errorByEventId);
 
   if (events.length === 0) {
     return <p className="text-gray-400 text-center">No events found.</p>;
@@ -25,7 +19,6 @@ function ScrollableEventRow({ events = [], loading = false, error = null }) {
   const itemsWithAds = [];
   events.forEach((event, index) => {
     itemsWithAds.push({ type: "event", data: event });
-
     if ((index + 1) % AD_FREQUENCY === 0 && index + 1 < events.length) {
       itemsWithAds.push({ type: "ad", key: `ad-${index}` });
     }
@@ -39,7 +32,12 @@ function ScrollableEventRow({ events = [], loading = false, error = null }) {
           className="snap-start flex-shrink-0 w-[49%] p-1"
         >
           {item.type === "event" ? (
-            <EventCard event={item.data} cardSize="md" />
+            <EventCard
+              event={item.data}
+              cardSize="md"
+              loading={loadingByEventId?.[item.data.id]}
+              error={errorByEventId?.[item.data.id]}
+            />
           ) : (
             <AdCard
               title="Advertise With Us"

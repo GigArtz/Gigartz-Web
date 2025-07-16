@@ -9,10 +9,7 @@ import {
   loginUser,
   socialLogin,
 } from "../../store/authSlice";
-import {
-  setToken,
-  sendNotificationToBackend,
-} from "../../store/notificationSlice";
+import { setToken } from "../../store/notificationSlice";
 import { FaFacebook, FaGoogle, FaSpinner } from "react-icons/fa";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
@@ -65,14 +62,16 @@ const Login = () => {
         const token = await requestNotificationPermission(vapidKey);
         if (token) {
           dispatch(setToken(token));
-          // Optionally send to backend as well
+          // Send notification to backend, then fetch notifications
           dispatch(
             sendNotificationToBackend({
               token,
               body: "Welcome back!",
               title: "Login Successful",
             })
-          );
+          ).then(() => {
+            dispatch(fetchNotifications(token));
+          });
         }
       };
       getTokenAndSave();

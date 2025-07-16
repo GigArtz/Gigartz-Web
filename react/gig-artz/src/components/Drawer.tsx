@@ -53,8 +53,9 @@ function Drawer() {
     }
   };
 
-  // Fetch user profile on mount or user change
+  // Fetch user profile on mount or user change - use cache by default
   useEffect(() => {
+    // fetchUserProfile now uses cache by default, only fetches if cache is invalid
     if (user?.uid) dispatch(fetchUserProfile(user.uid));
   }, [user, dispatch]);
 
@@ -63,6 +64,7 @@ function Drawer() {
     if (!user) {
       const persistedUser = localStorage.getItem("authUser");
       if (persistedUser) {
+        // fetchUserProfile now uses cache by default, only fetches if cache is invalid
         dispatch(fetchUserProfile(JSON.parse(persistedUser).uid));
       }
     }

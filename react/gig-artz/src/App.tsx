@@ -21,6 +21,9 @@ import Messages from "./pages/Messages";
 import Explore from "./pages/Explore";
 import Drawer from "./components/Drawer";
 import SideBar from "./components/SideBar";
+import Toast from "./components/Toast";
+import { useDispatch } from "react-redux";
+import { clearToast } from "../store/notificationSlice";
 import Monetization from "./pages/Monetization";
 import People from "./pages/People";
 import Wallet from "./pages/Wallet";
@@ -33,8 +36,6 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { selectAuthUser } from "../store/authSlice";
-import ProtectedRoute from "./components/ProtectedRoute";
-import NotFound from "./components/NotFound";
 
 function AuthRedirect() {
   const user = useSelector(selectAuthUser);
@@ -79,6 +80,8 @@ function InnerApp({
   setNotificationsOpen: (open: boolean) => void;
 }) {
   const location = useLocation();
+  const toastState = useSelector((state: any) => state.notification.toast);
+  const dispatch = useDispatch();
   useEffect(() => {
     setNotificationsOpen(false);
   }, [location, setNotificationsOpen]);
@@ -87,241 +90,216 @@ function InnerApp({
     <>
       <TitleUpdater />
       <AuthRedirect />
+      {/* Global Toast for all notifications and alerts */}
+      {toastState && toastState.message && (
+        <Toast
+          message={toastState.message}
+          type={toastState.type}
+          onClose={() => dispatch(clearToast())}
+          action={
+            toastState.action && {
+              label: toastState.action.label,
+              onClick: () => {
+                dispatch(clearToast());
+              },
+            }
+          }
+        />
+      )}
       <Routes>
         <Route path="/" element={<Login />} />
-        {/* Protected Routes */}
         <Route
           path="/messages"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Messages />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Messages />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/follow"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Follow />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Follow />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/checkout"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Payment />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Payment />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/notifications"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Notifications />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Notifications />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/tickets"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Tickets />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Tickets />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/scanner"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Scanner />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Scanner />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/bookings"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Bookings />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Bookings />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/events"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <EventManager />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <EventManager />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/explore"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Explore />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Explore />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/explore/:search"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Explore />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Explore />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Profile />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Profile />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/people/:uid"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <People />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <People />
+              <SideBar />
+            </>
           }
         />
         <Route path="/register" element={<Register />} />
         <Route
           path="/monetization"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Monetization />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Monetization />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/wallet"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Wallet />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Wallet />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/guest-list"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <GuestList />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <GuestList />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/home"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Home />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Home />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/settings"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <Settings />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <Settings />
+              <SideBar />
+            </>
           }
         />
         <Route path="/reset-password" element={<Forgot />} />
         <Route
           path="/events/:eventId/insights"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <EventInsights />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <EventInsights />
+              <SideBar />
+            </>
           }
         />
         <Route
           path="/events/insights"
           element={
-            <ProtectedRoute>
-              <>
-                <Drawer />
-                <EventInsights />
-                <SideBar />
-              </>
-            </ProtectedRoute>
+            <>
+              <Drawer />
+              <EventInsights />
+              <SideBar />
+            </>
           }
         />
-        {/* 404 Not Found Route */}
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

@@ -6,6 +6,7 @@ interface Window {
 
 import { RootState } from "../../store/store";
 import { addEvent } from "../../store/eventsSlice";
+import { showToast } from "../../store/notificationSlice";
 import React, { useState, useReducer, useEffect, useRef } from "react";
 import {
   FaArrowLeft,
@@ -159,10 +160,14 @@ const AddEventForm: React.FC = () => {
         const snapshot = await uploadBytes(storageRef, file);
         const imageUrl = await getDownloadURL(snapshot.ref); // Correct usage of snapshot.ref
         uploadedImages.push(imageUrl); // Save the URL to the array
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error uploading image: ", error.message); // Log error message
-        alert(
-          "Failed to upload one or more images. Please check your permissions."
+        dispatchRedux(
+          showToast({
+            message:
+              "Failed to upload one or more images. Please check your permissions.",
+            type: "error",
+          })
         );
       }
     }
@@ -182,9 +187,14 @@ const AddEventForm: React.FC = () => {
       const snapshot = await uploadBytes(storageRef, file);
       const videoUrl = await getDownloadURL(snapshot.ref); // Correct usage of snapshot.ref
       dispatch({ type: "update", name: "eventVideo", value: videoUrl });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading video: ", error.message); // Log error message
-      alert("Failed to upload the video. Please check your permissions.");
+      dispatchRedux(
+        showToast({
+          message: "Failed to upload the video. Please check your permissions.",
+          type: "error",
+        })
+      );
     }
     setLoading(false); // Hide loader after upload
   };
@@ -199,13 +209,23 @@ const AddEventForm: React.FC = () => {
     const promoterId = localUser?.uid || userId; // Default to "12345" if profile.id is unavailable
 
     if (!userId) {
-      alert("User ID is missing. Please ensure you are logged in.");
+      dispatchRedux(
+        showToast({
+          message: "User ID is missing. Please ensure you are logged in.",
+          type: "error",
+        })
+      );
       return;
     }
 
     // Validate required fields
     if (!formData.title || !formData.date || !formData.venue) {
-      alert("Please fill in all required fields (Title, Date, Venue).");
+      dispatchRedux(
+        showToast({
+          message: "Please fill in all required fields (Title, Date, Venue).",
+          type: "error",
+        })
+      );
       return;
     }
 
@@ -240,7 +260,12 @@ const AddEventForm: React.FC = () => {
     );
 
     if (Object.keys(ticketsAvailable).length === 0) {
-      alert("Please ensure all ticket types have complete information.");
+      dispatchRedux(
+        showToast({
+          message: "Please ensure all ticket types have complete information.",
+          type: "error",
+        })
+      );
       setLoading(false); // Hide loader if validation fails
       return;
     }
@@ -275,11 +300,8 @@ const AddEventForm: React.FC = () => {
     // Dispatch to Redux or submit to your backend
     await dispatchRedux(addEvent(eventObject));
     setLoading(false); // Hide loader after submission
-    alert("Event submitted successfully!");
+    // Success toast is handled by the thunk
   };
-
-  
-
 
   return (
     <div className="justify-center items-center z-30">
@@ -331,7 +353,6 @@ const AddEventForm: React.FC = () => {
             >
               Next <FaArrowRight className="ml-2" />
             </button>
-            
           )}
 
           {
@@ -375,53 +396,53 @@ const Step1 = ({ formData, handleChange }) => {
       "Hip-Hop / R&B",
       "House / EDM / Amapiano",
       "Afrobeat / African Contemporary",
-      "Indie / Alternative"
+      "Indie / Alternative",
     ],
     "Performing Arts": [
       "Theatre / Drama",
       "Dance Performances",
       "Comedy Shows",
       "Poetry & Spoken Word",
-      "Cabaret / Variety Acts"
+      "Cabaret / Variety Acts",
     ],
     "Social & Lifestyle": [
       "Day Parties / Brunches",
       "Wine Tastings / Mixology Events",
       "Nightlife / Club Events",
       "Fashion Shows / Runway Events",
-      "Food Markets / Pop-Ups"
+      "Food Markets / Pop-Ups",
     ],
     "Culture & Community": [
       "Heritage Celebrations",
       "Faith-Based Events",
       "Community Fundraisers",
-      "Social Justice / Awareness Events"
+      "Social Justice / Awareness Events",
     ],
     "Business & Networking": [
       "Industry Panels",
       "Conferences / Summits",
       "Networking Mixers",
       "Brand Launches / Promotions",
-      "Start-up Pitches / Demo Days"
+      "Start-up Pitches / Demo Days",
     ],
     "Education & Workshops": [
       "Creative Masterclasses (e.g. Art, Music, Writing)",
       "Professional Development (e.g. Finance, Tech, Marketing)",
       "Tech Bootcamps / Hackathons",
-      "Youth Empowerment Sessions"
+      "Youth Empowerment Sessions",
     ],
     "Family & Kids": [
       "Family Fun Days",
       "Storytime / Puppet Shows",
       "Educational Events for Children",
-      "Teen Talent Shows"
+      "Teen Talent Shows",
     ],
     "Sports & Fitness": [
       "Tournaments (e.g. Football, Netball, Basketball)",
       "Outdoor Adventures (e.g. Hikes, Camps)",
       "Fitness Classes / Challenges",
-      "Esports / Gaming Tournaments"
-    ]
+      "Esports / Gaming Tournaments",
+    ],
   };
 
   const handleNestedChange = (e) => {
@@ -431,36 +452,36 @@ const Step1 = ({ formData, handleChange }) => {
       handleChange({
         target: {
           name: "mainCategory",
-          value
-        }
+          value,
+        },
       });
 
       // Reset subcategory and category on main change
       handleChange({
         target: {
           name: "subCategory",
-          value: ""
-        }
+          value: "",
+        },
       });
       handleChange({
         target: {
           name: "category",
-          value: ""
-        }
+          value: "",
+        },
       });
     } else if (name === "subCategory") {
       handleChange({
         target: {
           name: "subCategory",
-          value
-        }
+          value,
+        },
       });
       // Update formData.category for backend submission
       handleChange({
         target: {
           name: "category",
-          value
-        }
+          value,
+        },
       });
     }
   };
@@ -552,7 +573,6 @@ const Step1 = ({ formData, handleChange }) => {
     </div>
   );
 };
-
 
 // Step 2: Artist Lineup
 const Step2 = ({ formData, handleArtistChange, dispatch }) => (

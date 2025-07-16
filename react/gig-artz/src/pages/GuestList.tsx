@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import {
-  FaTimesCircle,
   FaTrash,
   FaEdit,
   FaUserPlus,
@@ -18,6 +17,8 @@ import {
   updateGuestList,
 } from "../../store/eventsSlice";
 import GuestListModal from "../components/GuestListModal";
+import BroadcastModal from "../components/BroadcastModal";
+import BaseModal from "../components/BaseModal";
 import { fetchAUserProfile } from "../../store/profileSlice";
 
 function GuestList() {
@@ -32,10 +33,13 @@ function GuestList() {
   const [selectedList, setSelectedList] = useState(null);
   const [newGuestName, setNewGuestName] = useState("");
   const [newListName, setNewListName] = useState("");
+  const [newListDescription, setNewListDescription] = useState("");
   const [editingList, setEditingList] = useState(null);
   const [showListModal, setShowListModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [broadcastingList, setBroadcastingList] = useState(null);
   const [showFloatingMenu, setShowFloatingMenu] = useState(false);
 
   useEffect(() => {
@@ -70,6 +74,7 @@ function GuestList() {
         setEditingList(null);
         setShowListModal(false);
       } catch (error) {
+        console.error("Error updating guest list:", error);
         showToast("Failed to update guest list.", "error");
       }
       return;
@@ -81,6 +86,7 @@ function GuestList() {
       const optimisticList = {
         id: tempId,
         guestListName: newListName,
+        description: newListDescription,
         guests: [],
       };
       setGuestLists((prev) => [...prev, optimisticList]);
@@ -134,13 +140,14 @@ function GuestList() {
 
     setNewListName("");
     setNewGuestName("");
+    setNewListDescription("");
     setEditingList(null);
     setShowListModal(false);
   };
 
   const deleteList = async () => {
     // You would call a delete slice action here once implemented
-    await dispatch();
+    // await dispatch(deleteGuestList(user.uid, selectedList.id));
     showToast("List deleted! (API logic not implemented)", "info");
     setSelectedList(null);
   };
@@ -186,7 +193,9 @@ function GuestList() {
     console.log(selectedList);
     console.log("Deleting guest with username:", username);
     if (!selectedList) return;
-    const guest = selectedList?.guests?.find((user) => user.userName === username);
+    const guest = selectedList?.guests?.find(
+      (user) => user.userName === username
+    );
     if (!guest) {
       showToast("No matching guest found for this username!", "error");
       return;
@@ -220,6 +229,33 @@ function GuestList() {
     showToast("Guest added successfully!", "success");
   };
 
+  const handleBroadcastMessage = async (
+    message: string,
+    attachments?: File[]
+  ) => {
+    if (!broadcastingList || !message.trim()) {
+      showToast("Invalid message or guest list", "error");
+      return;
+    }
+
+    try {
+      // Here you would implement the actual broadcast logic
+      // For now, we'll just show a success message
+      console.log("Broadcasting message:", message);
+      console.log("To list:", broadcastingList.guestListName);
+      console.log("Recipients:", broadcastingList.guests.length);
+      console.log("Attachments:", attachments?.length || 0);
+
+      showToast(
+        `Message broadcasted to ${broadcastingList.guests.length} recipients!`,
+        "success"
+      );
+    } catch (error) {
+      console.error("Error broadcasting message:", error);
+      showToast("Failed to broadcast message", "error");
+    }
+  };
+
   useEffect(() => {
     console.log("Selected List ", selectedList);
   }, [selectedList]);
@@ -238,14 +274,13 @@ function GuestList() {
               setShowListModal(true);
               setEditingList(null);
               setNewListName("");
+              setNewListDescription("");
               setShowFloatingMenu(false);
             }}
             className="w-10 h-10 rounded-full btn-primary flex items-center justify-center shadow-lg transform transition-all hover:scale-105"
           >
             +
           </button>
-
-      
         </div>
       </div>
 
@@ -271,20 +306,26 @@ function GuestList() {
                   <FaUsers className="w-5 h-5" />
                 </div>
 
-                {/* Guest List Name */}
-                <span className="text-white font-semibold text-base tracking-wide">
-                  {list.guestListName || "Unnamed List"}
-                </span>
+                {/* Guest List Name and Description */}
+                <div className="flex flex-col">
+                  <span className="text-white font-semibold text-base tracking-wide">
+                    {list.guestListName || "Unnamed List"}
+                  </span>
+                  {list.description && (
+                    <span className="text-gray-400 text-sm">
+                      {list.description}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2">
-
-                {/* Add Guest */}
+                {/* Broadcast Message */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsGuestListModalOpen(true);
-                    setEditingList(list);
+                    setIsBroadcastModalOpen(true);
+                    setBroadcastingList(list);
                     setShowFloatingMenu(false);
                   }}
                   className="group relative text-white hover:text-green-400 hover:bg-gray-700 p-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -294,7 +335,6 @@ function GuestList() {
                     Broadcast Message
                   </span>
                 </button>
-
 
                 {/* Add Guest */}
                 <button
@@ -317,7 +357,8 @@ function GuestList() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setEditingList(list);
-                    setNewListName(list.name);
+                    setNewListName(list.guestListName || "");
+                    setNewListDescription(list.description || "");
                     setSelectedList(list);
                     setShowListModal(true);
                   }}
@@ -348,140 +389,56 @@ function GuestList() {
         )}
       </div>
 
-      {/* Modal for editing/adding guests to a list */}
-      {selectedList && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="p-4 min-w-96  md:max-w-11/12 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
-              {/* editing list modal header */}
-              <h3 className="text-xl font-semibold text-teal-500">
-                {selectedList?.guestListName}
-              </h3>
-              <button
-                onClick={() => setSelectedList(null)}
-                className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-              >
-                <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
-              </button>
-            </div>
+      {/* Modal for viewing/editing guests in a list */}
+      <BaseModal
+        isOpen={!!selectedList}
+        onClose={() => setSelectedList(null)}
+        title={selectedList?.guestListName}
+        icon={<FaUsers className="w-5 h-5" />}
+        closeOnClickOutside={true}
+        minWidth="min-w-96"
+        maxWidth="md:max-w-3xl"
+      >
+        <div className="flex flex-col gap-2">
+          {selectedList?.guests && selectedList.guests.length > 0 ? (
+            <p className="text-gray-300 mb-2">Existing Members</p>
+          ) : (
+            <p className="text-gray-400 text-center mb-4">
+              No guests added yet.
+            </p>
+          )}
 
-            <div className="flex flex-col gap-2">
-              {selectedList.guests && selectedList.guests.length > 0 ? (
-                <p>Existing Members</p>
-              ) : (
-                <p></p>
-              )}
-              <ul className="space-y-2 mb-3 overflow-y-auto max-h-60">
-                {selectedList.guests && selectedList.guests.length > 0 ? (
-                  selectedList.guests.map((guest, index) => (
-                    <li
-                      key={`${guest.email}-${index}`}
-                      className="flex justify-between items-center p-2 rounded-lg border border-gray-700 bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 hover:bg-gray-700 text-white mb-1 transition-transform transform hover:scale-[1.01] shadow"
-                    >
-                      <span className="flex items-center gap-2">
-                        <img
-                          src={guest.profilePicUrl || "/avatar.png"}
-                          alt="Avatar"
-                          className="w-8 h-8 rounded-full border-2 border-teal-400 shadow object-cover"
-                        />
-                        <span className="font-medium text-sm">
-                          {guest.name}
-                        </span>
-                        <span className="text-gray-400 text-xs">
-                          @{guest.userName || guest.emailAddress}
-                        </span>
+          <ul className="space-y-2 mb-3 overflow-y-auto max-h-60">
+            {selectedList?.guests && selectedList.guests.length > 0
+              ? selectedList.guests.map((guest, index) => (
+                  <li
+                    key={`${guest.email}-${index}`}
+                    className="flex justify-between items-center p-2 rounded-lg border border-gray-700 bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 hover:bg-gray-700 text-white mb-1 transition-transform transform hover:scale-[1.01] shadow"
+                  >
+                    <span className="flex items-center gap-2">
+                      <img
+                        src={guest.profilePicUrl || "/avatar.png"}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full border-2 border-teal-400 shadow object-cover"
+                      />
+                      <span className="font-medium text-sm">{guest.name}</span>
+                      <span className="text-gray-400 text-xs">
+                        @{guest.userName || guest.emailAddress}
                       </span>
-                      <button
-                        onClick={() => deleteGuest(guest?.userName)}
-                        className="text-red-400 hover:text-red-600 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                        title="Remove Guest"
-                      >
-                        <FaTrash className="w-4 h-4" />
-                      </button>
-                    </li>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-center">No guests added.</p>
-                )}
-              </ul>
-            </div>
-
-            {/* 
-            <div className="flex flex-col gap-2">
-              <p>Add Members</p>
-              <input
-                type="text"
-                value={newGuestName}
-                onChange={(e) => {
-                  const input = e.target.value;
-                  setNewGuestName(input);
-                }}
-                placeholder="Enter guest name or username"
-                className="input-field"
-                autoFocus
-              />
-
-              {newGuestName.trim().length > 0 && (
-                <ul className="text-gray-300 grid overflow-y-auto max-h-32 mt-2">
-                  {userList &&
-                  userList.filter(
-                    (user) =>
-                      user.name
-                        .toLowerCase()
-                        .includes(newGuestName.toLowerCase()) ||
-                      user.emailAddress
-                        .toLowerCase()
-                        .includes(newGuestName.toLowerCase())
-                  ).length > 0 ? (
-                    userList
-                      .filter(
-                        (user) =>
-                          user.name
-                            .toLowerCase()
-                            .includes(newGuestName.toLowerCase()) ||
-                          user.emailAddress
-                            .toLowerCase()
-                            .includes(newGuestName.toLowerCase())
-                      )
-                      .map((user) => (
-                        <li
-                          key={user.emailAddress}
-                          onClick={() => setNewGuestName(user.emailAddress)}
-                          className="cursor-pointer p-2 rounded border border-gray-600 bg-gray-800 hover:bg-gray-700 text-white mb-2 transition-transform transform"
-                        >
-                          <div className="flex justify-between gap-3">
-                            <p className="flex items-center gap-2">
-                              <img
-                                src={user.profilePicUrl || "/avatar.png"}
-                                alt="Avatar"
-                                className="w-8 h-8 rounded-full border-2 border-teal-400 object-cover"
-                              />
-                              {user.name}
-                            </p>
-                            <span className="text-gray-400 text-sm min-w-32">
-                              @{user.userName || user.emailAddress}
-                            </span>
-                          </div>
-                        </li>
-                      ))
-                  ) : (
-                    <p className="text-gray-400 text-center">
-                      No matching users found.
-                    </p>
-                  )}
-                </ul>
-              )}
-
-              <button onClick={addGuest} className="btn-primary">
-                Add
-              </button>
-            </div>
-         
-          */}
-          </div>
+                    </span>
+                    <button
+                      onClick={() => deleteGuest(guest?.userName)}
+                      className="text-red-400 hover:text-red-600 bg-gray-700 hover:bg-gray-600 rounded-full p-1 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                      title="Remove Guest"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))
+              : null}
+          </ul>
         </div>
-      )}
+      </BaseModal>
 
       {/* GuestListModal for adding guests to a list */}
       <GuestListModal
@@ -493,77 +450,95 @@ function GuestList() {
         }}
       />
 
-      {/* Modal for creating a new list */}
-      {showListModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="p-4 md:max-w-11/12 min-w-96 bg-dark rounded-lg shadow-lg relative animate-fadeIn">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {editingList ? "Edit List" : "Create New List"}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowListModal(false);
-                  setEditingList(null);
-                }}
-                className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-              >
-                <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
-              </button>
-            </div>
+      {/* BroadcastModal for sending messages to guest list */}
+      <BroadcastModal
+        isOpen={isBroadcastModalOpen}
+        onClose={() => {
+          setIsBroadcastModalOpen(false);
+          setBroadcastingList(null);
+        }}
+        guestList={broadcastingList}
+        onSend={handleBroadcastMessage}
+        loading={false}
+      />
+
+      {/* Modal for creating/editing a list */}
+      <BaseModal
+        isOpen={showListModal}
+        onClose={() => {
+          setShowListModal(false);
+          setEditingList(null);
+          setNewListName("");
+          setNewListDescription("");
+        }}
+        title={editingList ? "Edit List" : "Create New List"}
+        icon={<FaEdit className="w-5 h-5" />}
+        closeOnClickOutside={true}
+        minWidth="min-w-96"
+        maxWidth="md:max-w-lg"
+      >
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            placeholder={selectedList?.guestListName || "Enter list name"}
+            className="input-field"
+            autoFocus
+          />
+
+          {/* Description field */}
+          <textarea
+            value={newListDescription}
+            onChange={(e) => setNewListDescription(e.target.value)}
+            placeholder="Enter list description (optional)"
+            className="input-field resize-none"
+            rows={3}
+          />
+
+          {/* Public or Private */}
+          <div className="flex items-center">
             <input
-              type="text"
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              placeholder={selectedList?.guestListName || "Enter list name"}
-              className="input-field mb-3"
-              autoFocus
+              type="checkbox"
+              id="public-private-toggle"
+              className="toggle-checkbox"
             />
-            {/* Public or Private */}
-            <div className="flex items-center mb-4">
-              <input
-                type="checkbox"
-                id="public-private-toggle"
-                className="toggle-checkbox"
-              />
-              <label
-                htmlFor="public-private-toggle"
-                className="toggle-label text-gray-400 ml-2"
-              >
-                Public
-              </label>
-            </div>
-            
-            {/* Free Paid */}
-            <div className="flex items-center mb-4">
-              <input
-                type="checkbox"
-                id="paid-private-toggle"
-                className="toggle-checkbox"
-              />
-              <label
-                htmlFor="paid-private-toggle"
-                className="toggle-label text-gray-400 ml-2"
-              >
-                Paid
-              </label>
-            </div>
-            {editingList ? (
-              <div></div>
-            ) : (
-              <p className="text-gray-400 mb-3">
-                Create a list first, then add guests.
-              </p>
-            )}
-            <div className="flex justify-end">
-              <button onClick={handleSaveList} className="btn-primary">
-                {editingList ? "Update" : "Create"}
-              </button>
-            </div>
+            <label
+              htmlFor="public-private-toggle"
+              className="toggle-label text-gray-400 ml-2"
+            >
+              Public
+            </label>
+          </div>
+
+          {/* Free Paid */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="paid-private-toggle"
+              className="toggle-checkbox"
+            />
+            <label
+              htmlFor="paid-private-toggle"
+              className="toggle-label text-gray-400 ml-2"
+            >
+              Paid
+            </label>
+          </div>
+
+          {!editingList && (
+            <p className="text-gray-400 text-sm">
+              Create a list first, then add guests.
+            </p>
+          )}
+
+          <div className="flex justify-end pt-4">
+            <button onClick={handleSaveList} className="btn-primary">
+              {editingList ? "Update" : "Create"}
+            </button>
           </div>
         </div>
-      )}
+      </BaseModal>
 
       <div className="fixed sm:hidden  bottom-5 right-5 md:right-[5%] lg:right-[28%] z-10 md:z-40">
         <div className="relative">
@@ -578,6 +553,9 @@ function GuestList() {
               <button
                 onClick={() => {
                   setShowListModal(true);
+                  setEditingList(null);
+                  setNewListName("");
+                  setNewListDescription("");
                   setShowFloatingMenu(false);
                 }}
                 className="btn-primary w-full p-2"

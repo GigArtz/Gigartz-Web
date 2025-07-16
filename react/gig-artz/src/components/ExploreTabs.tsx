@@ -78,6 +78,7 @@ function ExploreTabs() {
 
   // Load data
   useEffect(() => {
+    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
     dispatch(fetchAllProfiles());
     dispatch(fetchAllEvents());
   }, [dispatch]);
@@ -397,7 +398,7 @@ function ExploreTabs() {
                     error={error}
                   />
                 </div>
-               
+
                 {/* Popular Professionals */}
                 <div className="w-full p-2 rounded-xl">
                   <h2 className="text-white text-lg font-semibold mb-2">

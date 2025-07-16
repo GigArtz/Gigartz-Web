@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+import Toast from "./Toast";
 
 interface CommentFormProps {
   placeholder?: string;
@@ -39,8 +40,28 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
     }
   };
 
+ 
+  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+     // Handle form validation
+    if (!review.trim()) {
+      return; 
+    }
+    if (rating < 1 || rating > 5) {
+      
+      <Toast
+        message="Please select a rating between 1 and 5."
+        type="error"
+        duration={3000}
+        onClose={() => setShowUserDropdown(false)}
+      />;
+
+      return;
+    }
+
     if (!review.trim()) return;
     onSubmit(review, rating);
     setComment("");
@@ -195,7 +216,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !review.trim() || rating < 1 || rating > 5}
               className="btn-primary mt-2 rounded-3xl transition w-12 sm:w-20 flex items-center justify-center"
             >
               {loading ? (

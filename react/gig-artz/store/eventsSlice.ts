@@ -75,6 +75,8 @@ interface EventsState {
   success: string | null;
   eventsCacheTimestamp: number | null;
   reviewsCacheTimestamp: number | null;
+  loadingByEventId: { [eventId: string]: boolean };
+  errorByEventId: { [eventId: string]: string | null };
 }
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -87,6 +89,8 @@ const initialState: EventsState = {
   success: null,
   eventsCacheTimestamp: null,
   reviewsCacheTimestamp: null,
+  loadingByEventId: {},
+  errorByEventId: {},
 };
 
 const eventsSlice = createSlice({
@@ -184,19 +188,21 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    buyTicketStart(state) {
-      state.loading = true;
-      state.error = null;
+    buyTicketStart(state, action: PayloadAction<string>) {
+      const eventId = action.payload;
+      state.loadingByEventId[eventId] = true;
+      state.errorByEventId[eventId] = null;
     },
-    buyTicketSuccess(state, action: PayloadAction<string>) {
-      state.loading = false;
-      state.success = action.payload;
-      state.error = null;
-      // Notification now handled in thunk
+    buyTicketSuccess(state, action: PayloadAction<{ eventId: string; message: string }>) {
+      const { eventId, message } = action.payload;
+      state.loadingByEventId[eventId] = false;
+      state.errorByEventId[eventId] = null;
+      state.success = message;
     },
-    buyTicketFailure(state, action: PayloadAction<string>) {
-      state.loading = false;
-      state.error = action.payload;
+    buyTicketFailure(state, action: PayloadAction<{ eventId: string; error: string }>) {
+      const { eventId, error } = action.payload;
+      state.loadingByEventId[eventId] = false;
+      state.errorByEventId[eventId] = error;
     },
     scanTicketStart(state) {
       state.loading = true;
@@ -535,7 +541,10 @@ export const addReview =
         // Send review notification
         notify(dispatch, {
           type: "review",
-          data: { message: "Review added successfully!" },
+          data: {
+            message: "Review added successfully!",
+            type: "success"
+          },
         });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -549,6 +558,14 @@ export const addReview =
             dispatch(
               eventsSlice.actions.createReviewFailure(errorMsg)
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "review_error",
+              data: {
+                message: "Failed to add review",
+                type: "error"
+              },
+            });
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -557,12 +574,28 @@ export const addReview =
                 "No response received from server"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "review_error",
+              data: {
+                message: "Network error - please check your connection",
+                type: "error"
+              },
+            });
           } else {
             // Something else happened during the setup of the request
             console.error("Error setting up request:", axiosError.message);
             dispatch(
               eventsSlice.actions.createReviewFailure(axiosError.message)
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "review_error",
+              data: {
+                message: "Error adding review",
+                type: "error"
+              },
+            });
           }
         } else {
           // Handle non-Axios errors
@@ -570,6 +603,14 @@ export const addReview =
           dispatch(
             eventsSlice.actions.createReviewFailure("Unexpected error occurred")
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "review_error",
+            data: {
+              message: "Unexpected error occurred",
+              type: "error"
+            },
+          });
         }
       }
     };
@@ -648,48 +689,36 @@ type EventBooking = {
 export const buyTicket = (
   ticketData: EventBooking
 ) => async (dispatch: AppDispatch) => {
-  dispatch(eventsSlice.actions.buyTicketStart());
+  const eventId = ticketData.eventId;
+  dispatch(eventsSlice.actions.buyTicketStart(eventId));
   try {
     await axios.post(
       `https://gigartz.onrender.com/buyTicket`,
       ticketData
     );
-    dispatch(eventsSlice.actions.buyTicketSuccess("Ticket purchased successfully!"));
+    dispatch(eventsSlice.actions.buyTicketSuccess({ eventId, message: "Ticket purchased successfully!" }));
     // Send ticket notification
     notify(dispatch, {
       type: "ticket",
       data: { event: ticketData.eventName },
     });
   } catch (error: unknown) {
+    let errorMsg = "Unexpected error occurred";
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
         const errorData = axiosError.response.data as Record<string, unknown>;
-        const errorMsg =
+        errorMsg =
           typeof errorData?.message === 'string' ? errorData.message :
             typeof errorData?.error === 'string' ? errorData.error :
               "Failed to buy ticket";
-        dispatch(
-          eventsSlice.actions.buyTicketFailure(errorMsg)
-        );
       } else if (axiosError.request) {
-        dispatch(
-          eventsSlice.actions.buyTicketFailure(
-            "No response received from server"
-          )
-        );
+        errorMsg = "No response received from server";
       } else {
-        dispatch(
-          eventsSlice.actions.buyTicketFailure(
-            axiosError.message || "Unexpected error occurred"
-          )
-        );
+        errorMsg = axiosError.message || "Unexpected error occurred";
       }
-    } else {
-      dispatch(
-        eventsSlice.actions.buyTicketFailure("Unexpected error occurred")
-      );
     }
+    dispatch(eventsSlice.actions.buyTicketFailure({ eventId, error: errorMsg }));
   }
 };
 
@@ -1137,13 +1166,45 @@ export const fetchAllReviews = (userId: string) => async (dispatch: AppDispatch,
             typeof errorData?.error === 'string' ? errorData.error :
               "Failed to fetch reviews";
         dispatch(eventsSlice.actions.fetchReviewsFailure(errorMsg));
+        // Send error notification
+        notify(dispatch, {
+          type: "review_fetch_error",
+          data: {
+            message: "Failed to fetch reviews",
+            type: "error"
+          },
+        });
       } else if (axiosError.request) {
         dispatch(eventsSlice.actions.fetchReviewsFailure("No response received from server"));
+        // Send error notification
+        notify(dispatch, {
+          type: "review_fetch_error",
+          data: {
+            message: "Network error - please check your connection",
+            type: "error"
+          },
+        });
       } else {
         dispatch(eventsSlice.actions.fetchReviewsFailure(axiosError.message || "Unexpected error occurred"));
+        // Send error notification
+        notify(dispatch, {
+          type: "review_fetch_error",
+          data: {
+            message: "Error fetching reviews",
+            type: "error"
+          },
+        });
       }
     } else {
       dispatch(eventsSlice.actions.fetchReviewsFailure("Unexpected error occurred"));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_fetch_error",
+        data: {
+          message: "Unexpected error occurred",
+          type: "error"
+        },
+      });
     }
   }
 };
@@ -1156,7 +1217,10 @@ export const likeReview = (reviewId: string, userId: string) => async (dispatch:
     dispatch(eventsSlice.actions.createLikeSuccess("Review liked successfully!"));
     notify(dispatch, {
       type: "like",
-      data: { message: "Review liked successfully!" },
+      data: {
+        message: "Review liked successfully!",
+        type: "success"
+      },
     });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -1166,8 +1230,24 @@ export const likeReview = (reviewId: string, userId: string) => async (dispatch:
           typeof errorData?.error === 'string' ? errorData.error :
             "Failed to like review";
       dispatch(eventsSlice.actions.createLikeFailure(errorMsg));
+      // Send error notification
+      notify(dispatch, {
+        type: "like_error",
+        data: {
+          message: "Failed to like review",
+          type: "error"
+        },
+      });
     } else {
       dispatch(eventsSlice.actions.createLikeFailure("Unexpected error occurred"));
+      // Send error notification
+      notify(dispatch, {
+        type: "like_error",
+        data: {
+          message: "Unexpected error occurred",
+          type: "error"
+        },
+      });
     }
   }
 };
@@ -1186,21 +1266,30 @@ export const reportEvent = (eventId: string, payload: ReportPayload) => async (d
     // Optionally dispatch a notification or update state
     notify(dispatch, {
       type: "report",
-      data: { message: "Event reported successfully!" },
+      data: {
+        message: "Event reported successfully!",
+        type: "success"
+      },
     });
     console.log("Event reported:", response.data);
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("Report event error:", error.response?.data || error.message);
       notify(dispatch, {
-        type: "report",
-        data: { message: error.response?.data?.message || error.message || "Failed to report event" },
+        type: "report_error",
+        data: {
+          message: "Failed to report event",
+          type: "error"
+        },
       });
     } else {
       console.error("Unexpected report event error:", error);
       notify(dispatch, {
-        type: "report",
-        data: { message: "Unexpected error occurred while reporting event" },
+        type: "report_error",
+        data: {
+          message: "Unexpected error occurred while reporting event",
+          type: "error"
+        },
       });
     }
   }
@@ -1212,21 +1301,30 @@ export const reportReview = (reviewId: string, payload: ReportPayload) => async 
     const response = await axios.post(`https://gigartz.onrender.com/reviews/${reviewId}/report`, payload);
     notify(dispatch, {
       type: "report",
-      data: { message: "Review reported successfully!" },
+      data: {
+        message: "Review reported successfully!",
+        type: "success"
+      },
     });
     console.log("Review reported:", response.data);
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("Report review error:", error.response?.data || error.message);
       notify(dispatch, {
-        type: "report",
-        data: { message: error.response?.data?.message || error.message || "Failed to report review" },
+        type: "report_error",
+        data: {
+          message: "Failed to report review",
+          type: "error"
+        },
       });
     } else {
       console.error("Unexpected report review error:", error);
       notify(dispatch, {
-        type: "report",
-        data: { message: "Unexpected error occurred while reporting review" },
+        type: "report_error",
+        data: {
+          message: "Unexpected error occurred while reporting review",
+          type: "error"
+        },
       });
     }
   }
@@ -1240,7 +1338,10 @@ export const repostReview = (reviewId: string, userId: string) => async (dispatc
     dispatch(eventsSlice.actions.createReviewSuccess("Review reposted successfully!"));
     notify(dispatch, {
       type: "review",
-      data: { message: "Review reposted successfully!" },
+      data: {
+        message: "Review reposted successfully!",
+        type: "success"
+      },
     });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -1250,8 +1351,24 @@ export const repostReview = (reviewId: string, userId: string) => async (dispatc
           typeof errorData?.error === 'string' ? errorData.error :
             "Failed to repost review";
       dispatch(eventsSlice.actions.createReviewFailure(errorMsg));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_error",
+        data: {
+          message: "Failed to repost review",
+          type: "error"
+        },
+      });
     } else {
       dispatch(eventsSlice.actions.createReviewFailure("Unexpected error occurred"));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_error",
+        data: {
+          message: "Unexpected error occurred",
+          type: "error"
+        },
+      });
     }
   }
 };
@@ -1317,7 +1434,10 @@ export const commentOnReview = (reviewId: string, payload: CommentPayload) => as
     dispatch(eventsSlice.actions.createReviewSuccess("Comment added successfully!"));
     notify(dispatch, {
       type: "review",
-      data: { message: "Comment added successfully!" },
+      data: {
+        message: "Comment added successfully!",
+        type: "success"
+      },
     });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -1327,8 +1447,24 @@ export const commentOnReview = (reviewId: string, payload: CommentPayload) => as
           typeof errorData?.error === 'string' ? errorData.error :
             "Failed to comment on review";
       dispatch(eventsSlice.actions.createReviewFailure(errorMsg));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_error",
+        data: {
+          message: "Failed to comment on review",
+          type: "error"
+        },
+      });
     } else {
       dispatch(eventsSlice.actions.createReviewFailure("Unexpected error occurred"));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_error",
+        data: {
+          message: "Unexpected error occurred",
+          type: "error"
+        },
+      });
     }
   }
 };
@@ -1341,7 +1477,10 @@ export const saveReview = (reviewId: string, userId: string) => async (dispatch:
     dispatch(eventsSlice.actions.createReviewSuccess("Review saved successfully!"));
     notify(dispatch, {
       type: "review",
-      data: { message: "Review saved successfully!" },
+      data: {
+        message: "Review saved successfully!",
+        type: "success"
+      },
     });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -1351,8 +1490,24 @@ export const saveReview = (reviewId: string, userId: string) => async (dispatch:
           typeof errorData?.error === 'string' ? errorData.error :
             "Failed to save review";
       dispatch(eventsSlice.actions.createReviewFailure(errorMsg));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_error",
+        data: {
+          message: "Failed to save review",
+          type: "error"
+        },
+      });
     } else {
       dispatch(eventsSlice.actions.createReviewFailure("Unexpected error occurred"));
+      // Send error notification
+      notify(dispatch, {
+        type: "review_error",
+        data: {
+          message: "Unexpected error occurred",
+          type: "error"
+        },
+      });
     }
   }
 };

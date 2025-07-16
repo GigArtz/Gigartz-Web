@@ -1,14 +1,15 @@
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import Header from "../components/Header";
 import React, { useState } from "react";
-import { RootState } from "../../store/store";
+import { RootState, AppDispatch } from "../../store/store";
+import { updateBookingStatus } from "../../store/profileSlice";
 
 function Bookings() {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const { profile, userBookings } = useSelector(
-    (state: RootState) => state.profile
-  );
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { userBookings } = useSelector((state: RootState) => state.profile);
 
   // Confirmed bookings: from userBookings (Redux state)
   const confirmedBookings = (userBookings || []).map((booking) => ({
@@ -62,12 +63,26 @@ function Bookings() {
   };
 
   const handleAccept = () => {
-    console.log(`Accepted booking: ${selectedBooking.title}`);
+    if (selectedBooking) {
+      dispatch(
+        updateBookingStatus({
+          bookingId: selectedBooking.id,
+          newStatus: "confirmed",
+        })
+      );
+    }
     closeModal();
   };
 
   const handleDecline = () => {
-    console.log(`Declined booking: ${selectedBooking.title}`);
+    if (selectedBooking) {
+      dispatch(
+        updateBookingStatus({
+          bookingId: selectedBooking.id,
+          newStatus: "declined",
+        })
+      );
+    }
     closeModal();
   };
 

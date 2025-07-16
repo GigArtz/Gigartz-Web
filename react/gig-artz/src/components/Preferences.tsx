@@ -11,24 +11,36 @@ const Preferences: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">User Preferences</h1>
 
       {/* Interests */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Your Interests:</label>
-        <div className="bg-gray-800 px-4 py-3 rounded-md text-sm text-gray-300 min-h-[40px]">
-          {selectedInterests.length > 0
-            ? selectedInterests.join(", ")
-            : "None selected"}
+      {selectedInterests.length > 0 && (
+        <div className="mb-4">
+          <label className="block font-medium mb-1">Your Interests:</label>
+          <div className="bg-gray-800 px-4 py-3 rounded-md text-sm text-gray-300 min-h-[40px]">
+            {selectedInterests.join(", ")}
+          </div>
         </div>
-      </div>
-
+      )}
       {/* Locations */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Your Preferred Locations:</label>
-        <div className="bg-gray-800 px-4 py-3 rounded-md text-sm text-gray-300 min-h-[40px]">
-          {selectedLocations.length > 0
-            ? selectedLocations.join(", ")
-            : "None selected"}
+      {selectedLocations.length > 0 && (
+        <div className="mb-4">
+          <label className="block font-medium mb-1">
+            Your Preferred Locations:
+          </label>
+          <div className="bg-gray-800 px-4 py-3 rounded-md text-sm text-gray-300 min-h-[40px]">
+            {selectedLocations.join(", ")}
+          </div>
         </div>
-      </div>
+      )}
+
+      {selectedInterests.length === 0 || selectedLocations.length === 0 ? (
+        <p className="text-gray-400 mb-4">
+          Please select your interests and preferred locations to personalize
+          your experience.
+        </p>
+      ) : (
+        <p className="text-gray-400 mb-4">
+          Your preferences are set! You can edit them anytime.
+        </p>
+      )}
 
       <button
         onClick={() => setModalOpen(true)}

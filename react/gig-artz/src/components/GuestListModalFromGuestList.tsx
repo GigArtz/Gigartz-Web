@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store/store";
 import { addGuestsToGuestList } from "../../store/eventsSlice";
-import Toast from "./Toast";
+import { showToast, clearToast } from "../../store/notificationSlice";
 import { FaTimesCircle } from "react-icons/fa";
 
 interface GuestListModalFromGuestListProps {
@@ -31,9 +31,7 @@ const GuestListModalFromGuestList: React.FC<
       : null;
   });
   const [guestEmail, setGuestEmail] = useState(preFilledEmail || "");
-  const [toast, setToast] = useState<{ message: string; type: string } | null>(
-    null
-  );
+  // Remove local toast state, use global Toast
 
   useEffect(() => {
     if (isOpen) {
@@ -48,10 +46,10 @@ const GuestListModalFromGuestList: React.FC<
 
   useEffect(() => {
     if (success) {
-      setToast({ message: success, type: "success" });
+      dispatch(showToast({ message: success, type: "success" }));
       dispatch({ type: "events/resetError" });
     } else if (error) {
-      setToast({ message: error, type: "error" });
+      dispatch(showToast({ message: error, type: "error" }));
       dispatch({ type: "events/resetError" });
     }
   }, [success, error, dispatch]);
@@ -65,10 +63,12 @@ const GuestListModalFromGuestList: React.FC<
     if (selectedListId && guestEmail.trim() && user) {
       const guest = userList?.find((u) => u.emailAddress === guestEmail.trim());
       if (!guest) {
-        setToast({
-          message: "No matching guest found with this email!",
-          type: "error",
-        });
+        dispatch(
+          showToast({
+            message: "No matching guest found with this email!",
+            type: "error",
+          })
+        );
         return;
       }
       // Convert selectedListId to string for thunk
@@ -134,13 +134,7 @@ const GuestListModalFromGuestList: React.FC<
             {loading ? "Adding..." : "Add"}
           </button>
         </div>
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
+        {/* Toast is now global, not local */}
       </div>
     </div>
   );

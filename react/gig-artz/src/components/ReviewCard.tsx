@@ -46,6 +46,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
     dispatch(fetchAllProfiles());
   }, [dispatch]);
 
@@ -171,7 +172,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
           {!review.imageUrls?.length && !review.videoUrl && (
             <p className="text-gray-500 mt-2">No media attached.</p>
           )}
-
 
           {/* Review Actions - Like, Comment, Share, etc. */}
           <div className="flex flex-row items-center gap-2 mt-2">

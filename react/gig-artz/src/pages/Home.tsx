@@ -12,8 +12,8 @@ import ScrollableEventRow from "../components/ScrollableEventRow";
 import { FaSpinner } from "react-icons/fa";
 import LgScrollableEventRow from "../components/LgScrollableEventRow";
 import UserCard from "../components/UserCard";
-import NotificationToast from "../components/NotificationToast"; // Import NotificationToast
 import Toast from "../components/Toast";
+import { showToast, clearToast } from "../../store/notificationSlice";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -58,8 +58,9 @@ const Home: React.FC = () => {
   );
   const uid = useSelector((state: RootState) => state.auth);
   const { userList } = useSelector((state: RootState) => state.profile);
-  const notifications = useSelector(
-    (state: RootState) => state.notification.notifications
+
+  const toastState = useSelector(
+    (state: RootState) => state.notification.toast
   );
 
   // Add state for selected tab
@@ -70,12 +71,7 @@ const Home: React.FC = () => {
   const [eventsPage, setEventsPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [toastOpen, setToastOpen] = useState(false); // State for toast notification
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
-  const prevCount = useRef(notifications.length);
+  // Remove local toast state, use Redux
   const eventsPerPage = 10;
 
   const followingUserIds: string[] = []; // TODO: Replace with actual following user IDs
@@ -144,30 +140,16 @@ const Home: React.FC = () => {
   }));
 
   useEffect(() => {
-    if (notifications.length > prevCount.current) {
-      setNotificationsOpen(true); // Open modal if a new notification is added
-      setToastOpen(true); // Show notification toast ONLY for new notifications
-    }
-    prevCount.current = notifications.length;
-  }, [notifications.length]);
-
-  useEffect(() => {
     if (error) {
-      setToast({ message: error, type: "error" });
-      // Auto-clear error after 4s to avoid UI getting stuck
-      const timer = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(timer);
+      dispatch(showToast({ message: error, type: "error" }));
     }
-  }, [error]);
+  }, [error, dispatch]);
 
   useEffect(() => {
     if (success) {
-      setToast({ message: success, type: "success" });
-      // Auto-clear success after 3s
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
+      dispatch(showToast({ message: success, type: "success" }));
     }
-  }, [success]);
+  }, [success, dispatch]);
 
   return (
     <div className="main-content">
@@ -354,44 +336,8 @@ const Home: React.FC = () => {
       <div className="fixed px-2 bottom-0 w-full block md:hidden">
         <BottomNav onOpenNotifications={() => setNotificationsOpen(true)} />
       </div>
-      {/* Unified Toast for all notifications and alerts */}
-      {(() => {
-        let message = "";
-        let type: "success" | "error" | "info" = "info";
-        let action;
-        if (
-          toastOpen &&
-          notifications.length > 0 &&
-          notifications[0].data &&
-          typeof notifications[0].data === "object" &&
-          "message" in notifications[0].data
-        ) {
-          message = notifications[0].data.message;
-          type = "info";
-          action = {
-            label: "View",
-            onClick: () => {
-              setNotificationsOpen(true);
-              setToastOpen(false);
-            },
-          };
-        } else if (toast && toast.message) {
-          message = toast.message;
-          type = toast.type;
-        }
-        if (!message) return null;
-        return (
-          <Toast
-            message={message}
-            type={type}
-            onClose={() => {
-              setToast(null);
-              setToastOpen(false);
-            }}
-            action={action}
-          />
-        );
-      })()}
+
+      {/* Toast moved to App.tsx for global visibility */}
     </div>
   );
 };

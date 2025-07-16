@@ -19,10 +19,10 @@ function Notifications() {
 
         {/* Notifications List */}
         <div className="max-h-[75vh] overflow-y-auto space-y-3">
-          {notifications.length === 0 ? (
+          {(notifications?.length ?? 0) === 0 ? (
             <div className="text-white text-center">No notifications yet.</div>
           ) : (
-            notifications.map((n) => (
+            notifications?.map((n) => (
               <Notification key={n.id} type={n.type} data={n.data} />
             ))
           )}

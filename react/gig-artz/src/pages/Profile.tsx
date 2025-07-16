@@ -27,6 +27,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (uid) {
+      // fetchUserProfile now uses cache by default, only fetches if cache is invalid
       dispatch(fetchUserProfile(uid));
     }
   }, [uid, dispatch]);
@@ -168,14 +169,15 @@ export default function Profile() {
                   </div>
                   <div className="flex">
                     <div className="flex gap-2 my-2">
-                      {(Array.isArray(profile?.genre) ? profile.genre : [])
-                        .map((genre, index) => (
+                      {(Array.isArray(profile?.genre) ? profile.genre : []).map(
+                        (genre, index) => (
                           <div key={index}>
                             <p className="text-xs px-2 py-1 border border-teal-400 rounded-xl font-medium text-teal-400">
                               {genre?.name || genre}
                             </p>
                           </div>
-                        ))}
+                        )
+                      )}
                     </div>
                   </div>
                 </div>

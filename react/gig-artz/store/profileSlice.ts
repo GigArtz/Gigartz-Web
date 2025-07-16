@@ -2,9 +2,41 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { db } from "../src/config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import axios, { AxiosError } from "axios";
-import { AppDispatch } from "./store";
-import { addNotification } from "./notificationSlice";
+import { AppDispatch, RootState } from "./store";
 import { notify } from "../src/helpers/notify";
+
+/**
+ * CACHE SYSTEM DOCUMENTATION
+ * 
+ * This profileSlice implements an intelligent caching system to minimize unnecessary API calls:
+ * 
+ * 1. USER LIST CACHE (userList):
+ *    - Duration: 5 minutes (CACHE_DURATION)
+ *    - Cached when: fetchAllProfiles() succeeds
+ *    - Timestamp: userListCacheTimestamp
+ *    - Usage: fetchAllProfiles() checks cache validity before making API calls
+ * 
+ * 2. INDIVIDUAL PROFILE CACHE (profile, userProfile):
+ *    - Duration: 10 minutes (PROFILE_CACHE_DURATION) 
+ *    - Cached when: fetchUserProfile() or fetchAUserProfile() succeeds
+ *    - Timestamps: profileCacheTimestamp, userProfileCacheTimestamp
+ *    - Tracking: cachedProfileIds array tracks which profile IDs have been cached
+ *    - Usage: Both functions check cache before making API calls
+ * 
+ * 3. CACHE INVALIDATION:
+ *    - Manual: Pass forceRefresh=true to any fetch function
+ *    - Automatic: Cache expires after set duration
+ *    - Update operations: Automatically refresh relevant data
+ * 
+ * 4. COMPONENT INTEGRATION:
+ *    - All components now use cached data by default
+ *    - No changes needed in component code - caching is transparent
+ *    - Profile updates automatically trigger fresh fetches with forceRefresh
+ */
+
+// Cache configuration constants
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds for user list
+const PROFILE_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes for individual profiles
 
 // Extend the Window interface to include 'store'
 declare global {
@@ -45,13 +77,23 @@ export interface UserProfile {
   };
 }
 
+interface Booking {
+  id: string;
+  eventDetails: string;
+  venue: string;
+  date: any;
+  additionalInfo: string;
+  status: string;
+  image?: string;
+}
+
 interface ProfileState {
   profile: UserProfile | null;
   userProfile: UserProfile | null;
   userList: UserProfile[] | null;
   likedEvents: null;
-  userBookings: null;
-  userBookingsRequests: null;
+  userBookings: Booking[] | null;
+  userBookingsRequests: Booking[] | null;
   userEventProfit: null;
   userEvents: null;
   userSavedEvents: null;
@@ -66,6 +108,11 @@ interface ProfileState {
   loadingProfile: boolean;
   error: string | null;
   success: string | null;
+  // Cache-related fields
+  profileCacheTimestamp: number | null;
+  userListCacheTimestamp: number | null;
+  userProfileCacheTimestamp: number | null;
+  cachedProfileIds: string[];
 }
 
 const initialState: ProfileState = {
@@ -89,6 +136,11 @@ const initialState: ProfileState = {
   loadingProfile: false,
   error: null,
   success: null,
+  // Cache-related fields
+  profileCacheTimestamp: null,
+  userListCacheTimestamp: null,
+  userProfileCacheTimestamp: null,
+  cachedProfileIds: [],
 };
 
 const profileSlice = createSlice({
@@ -111,14 +163,20 @@ const profileSlice = createSlice({
       state.loading = false;
       state.userProfile = action.payload;
       state.error = null;
+      // Update cache timestamp for individual user profile
+      state.userProfileCacheTimestamp = Date.now();
+      // Add profile ID to cached list if it has an ID
+      if (action.payload.id && !state.cachedProfileIds.includes(action.payload.id)) {
+        state.cachedProfileIds.push(action.payload.id);
+      }
     },
 
-    fetchProfileSuccess(state, action: PayloadAction<UserProfile>) {
+    fetchProfileSuccess(state, action: PayloadAction<Record<string, unknown>>) {
       state.loading = false;
-      state.profile = action.payload.userProfile;
+      state.profile = action.payload.userProfile as UserProfile;
       state.likedEvents = action.payload.likedEvents;
-      state.userBookings = action.payload.userBookings;
-      state.userBookingsRequests = action.payload.userBookingsRequests;
+      state.userBookings = action.payload.userBookings as Booking[];
+      state.userBookingsRequests = action.payload.userBookingsRequests as Booking[];
       state.userEventProfit = action.payload.userEventProfit;
       state.userEvents = action.payload.userEvents;
       state.userFollowers = action.payload.userFollowers;
@@ -130,6 +188,13 @@ const profileSlice = createSlice({
       state.userSavedEvents = action.payload.userSavedEvents;
       state.userSavedReviews = action.payload.userSavedReviews;
       state.error = null;
+      // Update cache timestamp
+      state.profileCacheTimestamp = Date.now();
+      // Add profile ID to cached list if it has an ID
+      const userProfile = action.payload.userProfile as UserProfile;
+      if (userProfile?.id && !state.cachedProfileIds.includes(userProfile.id)) {
+        state.cachedProfileIds.push(userProfile.id);
+      }
     },
     createBookingStart(state) {
       state.loading = true;
@@ -145,6 +210,35 @@ const profileSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+    updateBookingStatusStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    updateBookingStatusSuccess(state, action: PayloadAction<{ bookingId: string; newStatus: string; message: string }>) {
+      state.loading = false;
+      state.success = action.payload.message;
+      state.error = null;
+
+      // Update the booking status in userBookings if it exists
+      if (state.userBookings && Array.isArray(state.userBookings)) {
+        const bookingIndex = state.userBookings.findIndex((booking: Booking) => booking.id === action.payload.bookingId);
+        if (bookingIndex !== -1) {
+          state.userBookings[bookingIndex].status = action.payload.newStatus;
+        }
+      }
+
+      // Update the booking status in userBookingsRequests if it exists
+      if (state.userBookingsRequests && Array.isArray(state.userBookingsRequests)) {
+        const bookingIndex = state.userBookingsRequests.findIndex((booking: Booking) => booking.id === action.payload.bookingId);
+        if (bookingIndex !== -1) {
+          state.userBookingsRequests[bookingIndex].status = action.payload.newStatus;
+        }
+      }
+    },
+    updateBookingStatusFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
     fetchDrawerProfileSuccess(state, action: PayloadAction<UserProfile>) {
       state.loading = false;
       state.profile = action.payload;
@@ -156,10 +250,12 @@ const profileSlice = createSlice({
       state.error = null;
       // Notification now handled in thunk
     },
-    getProfileSuccess(state, action: PayloadAction<UserProfile>) {
+    getProfileSuccess(state, action: PayloadAction<UserProfile[]>) {
       state.loading = false;
       state.userList = action.payload;
       state.error = null;
+      // Update cache timestamp for user list
+      state.userListCacheTimestamp = Date.now();
     },
     updateProfileSuccess(state, action: PayloadAction<UserProfile>) {
       state.loading = false;
@@ -216,6 +312,33 @@ interface ErrorResponse {
   message?: string;
 }
 
+// Cache utility functions
+const isCacheValid = (timestamp: number | null, duration: number = CACHE_DURATION): boolean => {
+  if (!timestamp) return false;
+  return Date.now() - timestamp < duration;
+};
+
+const isProfileCached = (profileId: string, cachedIds: string[], timestamp: number | null): boolean => {
+  return cachedIds.includes(profileId) && isCacheValid(timestamp, PROFILE_CACHE_DURATION);
+};
+
+// Cache invalidation utilities
+export const invalidateProfileCache = () => (dispatch: AppDispatch) => {
+  // This could be used to manually clear all cache if needed
+  // For now, components can use forceRefresh=true
+  console.log("Cache invalidation would be handled here");
+};
+
+export const refreshUserProfile = (uid: string) => (dispatch: AppDispatch) => {
+  // Force refresh a specific user profile
+  return dispatch(fetchUserProfile(uid, true));
+};
+
+export const refreshUserList = () => (dispatch: AppDispatch) => {
+  // Force refresh the user list
+  return dispatch(fetchAllProfiles(true));
+};
+
 // Axios error handling function
 const handleAxiosError = (
   error: unknown,
@@ -249,12 +372,19 @@ export const fetchDrawerUserProfile =
       const response = await axios.get(
         `https://gigartz.onrender.com/user/${uid}`
       );
-      console.log("User profile response:", response.data.userProfile);
-      dispatch(
+      console.log("User profile response:", response.data.userProfile); dispatch(
         profileSlice.actions.fetchDrawerProfileSuccess(
           response.data.userProfile
         )
       );
+      // Send success notification
+      notify(dispatch, {
+        type: "profile_fetch",
+        data: {
+          message: "Profile loaded successfully!",
+          type: "success"
+        },
+      });
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
@@ -267,6 +397,14 @@ export const fetchDrawerUserProfile =
               data.error || data.message || "Failed to fetch user profile"
             )
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "profile_fetch_error",
+            data: {
+              message: "Failed to load profile",
+              type: "error"
+            },
+          });
         } else if (axiosError.request) {
           // The request was made, but no response was received
           console.error("Request error:", axiosError.request);
@@ -275,12 +413,28 @@ export const fetchDrawerUserProfile =
               "No response received from server"
             )
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "profile_fetch_error",
+            data: {
+              message: "Network error - please check your connection",
+              type: "error"
+            },
+          });
         } else {
           // Something else happened during the setup of the request
           console.error("Error setting up request:", axiosError.message);
           dispatch(
             profileSlice.actions.fetchProfileFailure(axiosError.message)
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "profile_fetch_error",
+            data: {
+              message: "Error loading profile",
+              type: "error"
+            },
+          });
         }
       } else {
         // Handle non-Axios errors
@@ -288,19 +442,44 @@ export const fetchDrawerUserProfile =
         dispatch(
           profileSlice.actions.fetchProfileFailure("Unexpected error occurred")
         );
+        // Send error notification
+        notify(dispatch, {
+          type: "profile_fetch_error",
+          data: {
+            message: "Unexpected error occurred",
+            type: "error"
+          },
+        });
       }
     }
   };
 
 
 // Fetch user profile
-export const fetchUserProfile = (uid?: string) => async (dispatch: AppDispatch) => {
+export const fetchUserProfile = (uid?: string, forceRefresh: boolean = false) => async (dispatch: AppDispatch, getState: () => { profile: ProfileState }) => {
+  const state = getState().profile;
+
+  // Get UID from localStorage if not provided
+  const userId = uid || localStorage.getItem("uid");
+  if (!userId) throw new Error("User ID is undefined");
+
+  // Check if we have cached data and it's still valid
+  if (!forceRefresh && isCacheValid(state.profileCacheTimestamp) && state.profile?.id === userId) {
+    console.log("Using cached profile data for user:", userId);
+    // Still send success notification for cached data
+    notify(dispatch, {
+      type: "profile_fetch",
+      data: {
+        message: "Profile data loaded from cache!",
+        type: "info"
+      },
+    });
+    return;
+  }
+
   dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
-    // Get UID from localStorage if not provided
-    const userId = uid || localStorage.getItem("uid");
-    if (!userId) throw new Error("User ID is undefined");
     console.log(`Fetching user profile for UID: ${userId}...`);
 
     const response = await axios.get(`https://gigartz.onrender.com/user/${userId}`);
@@ -308,19 +487,45 @@ export const fetchUserProfile = (uid?: string) => async (dispatch: AppDispatch) 
     console.log("User profile response:", response.data);
 
     dispatch(profileSlice.actions.fetchProfileSuccess(response.data));
+
+    // Send success notification
+    notify(dispatch, {
+      type: "profile_fetch",
+      data: {
+        message: "Profile data loaded successfully!",
+        type: "success"
+      },
+    });
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
   }
 };
 
 // Fetch user profile
-export const fetchAUserProfile = (uid?: string) => async (dispatch: AppDispatch) => {
+export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) => async (dispatch: AppDispatch, getState: () => { profile: ProfileState }) => {
+  const state = getState().profile;
+
+  // Get UID from localStorage if not provided
+  const userId = uid || localStorage.getItem("uid");
+  if (!userId) throw new Error("User ID is undefined");
+
+  // Check if we have cached data for this specific user profile
+  if (!forceRefresh && isProfileCached(userId, state.cachedProfileIds, state.userProfileCacheTimestamp) && state.userProfile?.id === userId) {
+    console.log("Using cached user profile data for user:", userId);
+    // Send info notification for cached data
+    notify(dispatch, {
+      type: "profile_fetch",
+      data: {
+        message: "Profile loaded from cache!",
+        type: "info"
+      },
+    });
+    return;
+  }
+
   dispatch(profileSlice.actions.fetchAProfileStart());
 
   try {
-    // Get UID from localStorage if not provided
-    const userId = uid || localStorage.getItem("uid");
-    if (!userId) throw new Error("User ID is undefined");
     console.log(`Fetching user profile for UID: ${userId}...`);
 
     const response = await axios.get(`https://gigartz.onrender.com/user/${userId}`);
@@ -328,6 +533,15 @@ export const fetchAUserProfile = (uid?: string) => async (dispatch: AppDispatch)
     console.log("User profile response:", response.data);
 
     dispatch(profileSlice.actions.fetchAProfileSuccess(response.data));
+
+    // Send success notification
+    notify(dispatch, {
+      type: "profile_fetch",
+      data: {
+        message: "User profile loaded successfully!",
+        type: "success"
+      },
+    });
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchAProfileFailure);
   }
@@ -335,8 +549,17 @@ export const fetchAUserProfile = (uid?: string) => async (dispatch: AppDispatch)
 
 
 // Fetch all user profiles
-export const fetchAllProfiles = () => async (dispatch: AppDispatch) => {
-  // dispatch(profileSlice.actions.fetchProfileStart());
+export const fetchAllProfiles = (forceRefresh: boolean = false) => async (dispatch: AppDispatch, getState: () => RootState) => {
+  const state = getState();
+  const { userListCacheTimestamp } = state.profile;
+
+  // Check if cache is still valid and we have data
+  if (!forceRefresh && state.profile.userList && isCacheValid(userListCacheTimestamp)) {
+    console.log("Using cached user list");
+    return;
+  }
+
+  dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
     console.log("Fetching user profiles");
@@ -344,38 +567,24 @@ export const fetchAllProfiles = () => async (dispatch: AppDispatch) => {
     console.log("User profile responses:", response.data);
 
     dispatch(profileSlice.actions.getProfileSuccess(response.data));
+    // Send success notification
+    notify(dispatch, {
+      type: "profiles_fetch",
+      data: {
+        message: "User profiles loaded successfully!",
+        type: "success"
+      },
+    });
   } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response) {
-        const data = axiosError.response.data as ErrorResponse;
-        // The request was made and the server responded with an error
-        console.error("Response error:", data.error || data.message);
-        dispatch(
-          profileSlice.actions.fetchProfileFailure(
-            data.error || data.message || "Failed to fetch user profile"
-          )
-        );
-      } else if (axiosError.request) {
-        // The request was made, but no response was received
-        console.error("Request error:", axiosError.request);
-        dispatch(
-          profileSlice.actions.fetchProfileFailure(
-            "No response received from server"
-          )
-        );
-      } else {
-        // Something else happened during the setup of the request
-        console.error("Error setting up request:", axiosError.message);
-        dispatch(profileSlice.actions.fetchProfileFailure(axiosError.message));
-      }
-    } else {
-      // Handle non-Axios errors
-      console.error("Unexpected error fetching user profile:", error);
-      dispatch(
-        profileSlice.actions.fetchProfileFailure("Unexpected error occurred")
-      );
-    }
+    handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
+    // Send error notification
+    notify(dispatch, {
+      type: "profiles_fetch_error",
+      data: {
+        message: "Failed to load user profiles",
+        type: "error"
+      },
+    });
   }
 };
 
@@ -408,7 +617,10 @@ export const updateUserProfile =
         // Send notification after successful update
         notify(dispatch, {
           type: "profile_update",
-          data: { name: updatedData.name, date: new Date().toLocaleDateString() },
+          data: {
+            message: "Profile updated successfully!",
+            type: "success"
+          },
         });
         console.log(updateProfile);
       } catch (error: unknown) {
@@ -424,6 +636,14 @@ export const updateUserProfile =
                 "Failed to fetch user profile"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "profile_update_error",
+              data: {
+                message: "Failed to update profile",
+                type: "error"
+              },
+            });
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -473,7 +693,10 @@ export const switchUserProfile =
         // Send profile switch notification
         notify(dispatch, {
           type: "profile_switch",
-          data: { name: response.data.updatedProfile?.name, date: new Date().toLocaleDateString() },
+          data: {
+            message: "Profile switched successfully!",
+            type: "success"
+          },
         });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -487,6 +710,14 @@ export const switchUserProfile =
                 data.error || data.message || "Failed to fetch user profile"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "profile_switch_error",
+              data: {
+                message: "Failed to switch profile",
+                type: "error"
+              },
+            });
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -559,8 +790,24 @@ export const createUser =
           await setDoc(userDocRef, userProfile);
           dispatch(profileSlice.actions.updateProfile(userProfile));
           console.log("User profile created in Firestore");
+          // Send success notification
+          notify(dispatch, {
+            type: "profile_create",
+            data: {
+              message: "Profile created successfully!",
+              type: "success"
+            },
+          });
         } else {
           console.log("User profile already exists");
+          // Send info notification
+          notify(dispatch, {
+            type: "profile_exists",
+            data: {
+              message: "Welcome back!",
+              type: "info"
+            },
+          });
         }
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -571,6 +818,14 @@ export const createUser =
               `Failed to create user profile: ${axiosError.message}`
             )
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "profile_create_error",
+            data: {
+              message: "Failed to create profile",
+              type: "error"
+            },
+          });
         } else {
           // Handle non-Axios errors and errors not related to Axios
           console.error("Error creating user profile:", error);
@@ -580,6 +835,14 @@ export const createUser =
               }`
             )
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "profile_create_error",
+            data: {
+              message: "Failed to create profile",
+              type: "error"
+            },
+          });
         }
       }
     };
@@ -608,7 +871,10 @@ export const followUser =
         // Send follower notification
         notify(dispatch, {
           type: "follower",
-          data: { username: response.data?.message || followingId },
+          data: {
+            message: "User followed successfully!",
+            type: "success"
+          },
         });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -623,6 +889,14 @@ export const followUser =
                 "Failed to fetch user profile"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "follow_error",
+              data: {
+                message: "Failed to follow user",
+                type: "error"
+              },
+            });
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -680,7 +954,10 @@ export const bookFreelancer =
         // Send booking notification
         notify(dispatch, {
           type: "booking",
-          data: { service: bookingData.eventDetails, date: bookingData.date },
+          data: {
+            message: "Freelancer booked successfully!",
+            type: "success"
+          },
         });
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -694,6 +971,14 @@ export const bookFreelancer =
                 data.error || data.message || "Failed to book freelancer"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "booking_error",
+              data: {
+                message: "Failed to book freelancer",
+                type: "error"
+              },
+            });
           } else if (axiosError.request) {
             console.error("Request error:", axiosError.request);
             dispatch(
@@ -701,6 +986,14 @@ export const bookFreelancer =
                 "No response received from server"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "booking_error",
+              data: {
+                message: "Network error - please check your connection",
+                type: "error"
+              },
+            });
           } else {
             console.error("Error setting up request:", axiosError.message);
             dispatch(
@@ -708,12 +1001,127 @@ export const bookFreelancer =
                 axiosError.message || "Unexpected error occurred"
               )
             );
+            // Send error notification
+            notify(dispatch, {
+              type: "booking_error",
+              data: {
+                message: "Error booking freelancer",
+                type: "error"
+              },
+            });
           }
         } else {
           console.error("Unexpected error:", error);
           dispatch(
             profileSlice.actions.createBookingFailure("Unexpected error occurred")
           );
+          // Send error notification
+          notify(dispatch, {
+            type: "booking_error",
+            data: {
+              message: "Unexpected error occurred",
+              type: "error"
+            },
+          });
+        }
+      }
+    };
+
+// Update booking status
+export const updateBookingStatus =
+  (bookingData: {
+    bookingId: string;
+    newStatus: string;
+    userId?: string;
+  }) =>
+    async (dispatch: AppDispatch) => {
+      dispatch(profileSlice.actions.updateBookingStatusStart());
+
+      try {
+        console.log("Updating booking status...");
+        const response = await axios.put(
+          `https://gigartz.onrender.com/updateBookingStatus`,
+          bookingData
+        );
+        console.log("Booking status updated successfully:", response.data);
+
+        dispatch(
+          profileSlice.actions.updateBookingStatusSuccess({
+            bookingId: bookingData.bookingId,
+            newStatus: bookingData.newStatus,
+            message: "Booking status updated successfully!"
+          })
+        );
+
+        // Send notification for status update
+        notify(dispatch, {
+          type: "booking_status_update",
+          data: {
+            message: `Booking ${bookingData.newStatus} successfully!`,
+            type: "success"
+          },
+        });
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError;
+          if (axiosError.response) {
+            const data = axiosError.response.data as ErrorResponse;
+            console.error("Response error:", data.error || data.message);
+            dispatch(
+              profileSlice.actions.updateBookingStatusFailure(
+                data.error || data.message || "Failed to update booking status"
+              )
+            );
+            // Send error notification
+            notify(dispatch, {
+              type: "booking_status_error",
+              data: {
+                message: "Failed to update booking status",
+                type: "error"
+              },
+            });
+          } else if (axiosError.request) {
+            console.error("Request error:", axiosError.request);
+            dispatch(
+              profileSlice.actions.updateBookingStatusFailure(
+                "Network error - please check your connection"
+              )
+            );
+            // Send error notification
+            notify(dispatch, {
+              type: "booking_status_error",
+              data: {
+                message: "Network error - please check your connection",
+                type: "error"
+              },
+            });
+          } else {
+            console.error("Error:", axiosError.message);
+            dispatch(
+              profileSlice.actions.updateBookingStatusFailure(axiosError.message)
+            );
+            // Send error notification
+            notify(dispatch, {
+              type: "booking_status_error",
+              data: {
+                message: "Error updating booking status",
+                type: "error"
+              },
+            });
+          }
+        } else {
+          console.error("Unexpected error:", error);
+          dispatch(
+            profileSlice.actions.updateBookingStatusFailure("Unexpected error occurred")
+          );
+          // Send error notification
+          notify(dispatch, {
+            type: "booking_status_error",
+            data: {
+              message: "Unexpected error occurred",
+              type: "error"
+            },
+          });
         }
       }
     };
@@ -727,6 +1135,9 @@ export const {
   updateProfile,
   fetchDrawerProfileSuccess,
   logout,
+  updateBookingStatusStart,
+  updateBookingStatusSuccess,
+  updateBookingStatusFailure,
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

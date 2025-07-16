@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import ShareModal from "./ShareModal";
 import CommentsModal from "./CommentsModal";
 import { repostEvent, saveEvent, reportEvent } from "../../store/eventsSlice";
-import Toast from "../components/Toast";
+import { showToast } from "../../store/notificationSlice";
 
 // Define Event type locally (copy from Home.tsx)
 interface Event {
@@ -139,23 +139,19 @@ const EventActions: React.FC<EventActionsProps> = ({
     dispatch(saveEvent(event.id, uid));
   };
 
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
   const { error, success } = useSelector((state: any) => state.events);
 
   useEffect(() => {
     if (error && error.includes("reposted")) {
-      setToast({ message: error, type: "error" });
+      dispatch(showToast({ message: error, type: "error" }));
     }
-  }, [error]);
+  }, [error, dispatch]);
 
   useEffect(() => {
     if (success && success.includes("reposted")) {
-      setToast({ message: success, type: "success" });
+      dispatch(showToast({ message: success, type: "success" }));
     }
-  }, [success]);
+  }, [success, dispatch]);
 
   return (
     <>
@@ -220,14 +216,8 @@ const EventActions: React.FC<EventActionsProps> = ({
           </div>
         )}
       </div>
-      {/* Toast for repost errors/success */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      
+      {/* Toast is now global, not local */}
       <div className="flex w-full justify-between gap-1 md:gap-4 text-gray-400 text-sm md:text-base">
         {/* Reviews */}
         <p className="flex items-center cursor-pointer" onClick={showComments}>

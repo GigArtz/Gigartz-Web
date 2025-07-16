@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaBackspace, FaRemoveFormat, FaTimesCircle } from "react-icons/fa";
-import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { showToast } from "../../store/notificationSlice";
 
 interface ServicePackage {
   name: string;
@@ -66,6 +67,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
     ]);
   };
 
+  const dispatch = useDispatch();
   const removeService = (index: number) => {
     if (services.length > 1) {
       setServices(services.filter((_, i) => i !== index));
@@ -73,7 +75,12 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
         setActiveServiceIdx(Math.max(0, activeServiceIdx - 1));
       }
     } else {
-      toast.error("You must have at least one service.");
+      dispatch(
+        showToast({
+          message: "You must have at least one service.",
+          type: "error",
+        })
+      );
     }
   };
 
@@ -108,13 +115,22 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
           )
       );
     if (validServices.length === 0) {
-      toast.error(
-        "Please add at least one complete service with all required fields and at least one package."
+      dispatch(
+        showToast({
+          message:
+            "Please add at least one complete service with all required fields and at least one package.",
+          type: "error",
+        })
       );
       return;
     }
     setServices(validServices);
-    toast.success("Services Saved!");
+    dispatch(
+      showToast({
+        message: "Services Saved!",
+        type: "success",
+      })
+    );
     onClose();
   };
 
@@ -223,7 +239,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
                       placeholder="Description"
                       onChange={(e) => handleServiceChange(index, e)}
                     />
-                  
+
                     <label className="text-gray-300 mt-4">Base Fee</label>
                     <input
                       type="text"
@@ -307,7 +323,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
                           )
                         }
                       />
-                     
+
                       <input
                         type="text"
                         placeholder="Additional Costs"
@@ -379,8 +395,6 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
             <button className="btn-primary" onClick={handleSubmit}>
               Save
             </button>
-
-            
           )}
         </div>
       </div>

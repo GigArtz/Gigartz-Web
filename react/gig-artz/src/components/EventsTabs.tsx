@@ -24,6 +24,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
+    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
     dispatch(fetchAllProfiles());
   }, [dispatch]);
 
@@ -110,7 +111,10 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
                 // Patch: UserCard expects 'uid', but userList has 'id'.
                 const userWithUid = { ...user, uid: user.id };
                 return (
-                  <div key={user.id} className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-95 snap-start flex flex-row">
+                  <div
+                    key={user.id}
+                    className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-95 snap-start flex flex-row"
+                  >
                     <UserCard user={userWithUid} />
                   </div>
                 );

@@ -6,6 +6,7 @@ import { addReview, resetError } from "../../store/eventsSlice";
 import Toast from "./Toast";
 import { FaTimesCircle } from "react-icons/fa";
 import { RootState, AppDispatch } from "../../store/store";
+import { Root } from "postcss";
 
 interface User {
   uid?: string;
@@ -52,6 +53,11 @@ const CommentsModal: React.FC<CommentsProps> = ({
   const userList = useSelector(
     (state: RootState) => state.profile.userList
   ) as { userName: string }[];
+
+  // Fetch profile
+  const userTickets = useSelector(
+    (state: RootState) => state.profile.userTickets
+  );
 
   // Filter userList to only include users with a userName and name
   const filteredUser = userList
@@ -121,6 +127,24 @@ const CommentsModal: React.FC<CommentsProps> = ({
     }
   }, [isCommentsVisible, event.comments]);
 
+  const [userCanComment, setUserCanComment] = useState(false);
+
+  useEffect(() => {
+    let canComment = false;
+
+    for (const eventId in userTickets) {
+      if (Object.prototype.hasOwnProperty.call(userTickets, eventId)) {
+        const ticket = userTickets[eventId];
+        if (ticket?.eventId === event.id) {
+          canComment = true;
+          break;
+        }
+      }
+    }
+
+    setUserCanComment(canComment);
+  }, [user, event.id, userTickets]);
+
   if (!isCommentsVisible) return null;
 
   return (
@@ -150,7 +174,14 @@ const CommentsModal: React.FC<CommentsProps> = ({
           )}
 
           {/* Review Form */}
-          <CommentForm onSubmit={handleCommentSubmit} loading={loading} />
+          {userCanComment ? (
+            // Show message for non-ticket holders
+            <div className="text-red-400 text-sm text-center">
+              You must have a ticket to comment on this event.
+            </div>
+          ) : (
+            <CommentForm onSubmit={handleCommentSubmit} loading={loading} />
+          )}
         </div>
       </div>
       {showToast && error && (

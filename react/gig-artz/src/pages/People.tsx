@@ -57,8 +57,9 @@ const People: React.FC = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // State for booking modal
   const [isTippingModalOpen, setIsTippingModalOpen] = useState(false); // State for tipping modal
 
-  // Fetch users
+  // Fetch users - use cache by default
   useEffect(() => {
+    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
     dispatch(fetchAllProfiles());
   }, [dispatch, uid]);
 
@@ -115,7 +116,7 @@ const People: React.FC = () => {
 
   const handleSocialLinks = () => {
     console.log(userProfile);
-  }
+  };
 
   if (loading) {
     return (
@@ -124,8 +125,6 @@ const People: React.FC = () => {
       </div>
     );
   }
-
-
 
   return (
     <div className="main-content">

@@ -28,8 +28,9 @@ const Monetization = () => {
   const { profile, error } = useSelector((state: any) => state.profile);
   const { uid } = useSelector((state: any) => state.auth);
 
-  // Fetch user profile when component mounts
+  // Fetch user profile when component mounts - use cache by default
   useEffect(() => {
+    // fetchUserProfile now uses cache by default, only fetches if cache is invalid
     dispatch(fetchUserProfile(uid));
   }, [uid, dispatch]);
 
@@ -90,7 +91,7 @@ const Monetization = () => {
 
       toast.success("Switched successfully!");
       setIsFreelancer((prev) => !prev); // Update UI instantly
-      await dispatch(fetchUserProfile(uid)); // Refresh profile
+      await dispatch(fetchUserProfile(uid, true)); // Force refresh profile after update
 
       // Clear inputs
       setSelectedCategories([]);
@@ -109,7 +110,6 @@ const Monetization = () => {
 
   return (
     <div className="main-content flex flex-col items-center justify-center">
-      
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Services Modal */}
