@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useState, useMemo } from "react";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import BottomNav from "../components/BottomNav";
 import { fetchAllEvents, fetchAllReviews } from "../../store/eventsSlice";
 import { RootState, AppDispatch } from "../../store/store";
-import EventsTabs from "../components/EventsTabs";
-import ReviewCard from "../components/ReviewCard"; // Import ReviewCard
+import ReviewCard from "../components/ReviewCard";
 import CommentForm from "../components/CommentForm";
 import AdCard from "../components/AdCard";
 import PreferencesModal from "../components/PreferencesModal";
@@ -12,8 +11,7 @@ import ScrollableEventRow from "../components/ScrollableEventRow";
 import { FaSpinner } from "react-icons/fa";
 import LgScrollableEventRow from "../components/LgScrollableEventRow";
 import UserCard from "../components/UserCard";
-import Toast from "../components/Toast";
-import { showToast, clearToast } from "../../store/notificationSlice";
+import { showToast } from "../../store/notificationSlice";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -52,16 +50,29 @@ interface Event {
 }
 
 const Home: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>(); // Use correct type for thunk
-  const { events, loading, error, reviews, success } = useSelector(
-    (state: RootState) => state.events
-  );
-  const uid = useSelector((state: RootState) => state.auth);
-  const { userList } = useSelector((state: RootState) => state.profile);
+  const dispatch = useDispatch<AppDispatch>();
 
+  // Memoized selectors to prevent unnecessary re-renders with shallow equality
+  const eventsState = useSelector(
+    (state: RootState) => state.events,
+    shallowEqual
+  );
+  const authState = useSelector((state: RootState) => state.auth, shallowEqual);
+  const profileState = useSelector(
+    (state: RootState) => state.profile,
+    shallowEqual
+  );
   const toastState = useSelector(
     (state: RootState) => state.notification.toast
   );
+
+  // Extract specific values with memoization
+  const { events, loading, error, reviews, success } = useMemo(
+    () => eventsState,
+    [eventsState]
+  );
+  const uid = useMemo(() => authState, [authState]);
+  const { userList } = useMemo(() => profileState, [profileState]);
 
   // Add state for selected tab
   const [selectedTab, setSelectedTab] = useState("reviews");
@@ -74,23 +85,41 @@ const Home: React.FC = () => {
   // Remove local toast state, use Redux
   const eventsPerPage = 10;
 
-  const followingUserIds: string[] = []; // TODO: Replace with actual following user IDs
-  const filteredEvents =
-    selectedTab === "events"
+  // Memoize following user IDs to prevent re-computation
+  const followingUserIds = useMemo(() => [], []); // TODO: Replace with actual following user IDs logic
+
+  // Memoize filtered events to prevent unnecessary re-computation
+  const filteredEvents = useMemo(() => {
+    return selectedTab === "events"
       ? events
       : events.filter((event: Event) =>
           followingUserIds.includes(event.promoterId)
         );
+  }, [events, selectedTab, followingUserIds]);
 
-  const professionals = Array.isArray(userList)
-    ? userList.filter((user) => user.roles?.freelancer)
-    : [];
+  // Memoize professionals list to prevent unnecessary re-computation
+  const professionals = useMemo(() => {
+    return Array.isArray(userList)
+      ? userList
+          .filter((user) => user.roles?.freelancer)
+          .map((user) => ({
+            ...user,
+            uid: user.uid || user.id, // Normalize uid property once
+          }))
+      : [];
+  }, [userList]);
+
+  const currentUid = uid?.uid;
 
   useEffect(() => {
-    dispatch(fetchAllEvents());
-    dispatch(fetchAllReviews(uid?.uid));
-    console.log("Fetch..", reviews);
-  }, [dispatch, uid]);
+    // Only fetch if we have a user ID and haven't fetched recently
+    if (currentUid && events.length === 0) {
+      dispatch(fetchAllEvents());
+    }
+    if (currentUid && reviews.length === 0) {
+      dispatch(fetchAllReviews(currentUid));
+    }
+  }, [dispatch, currentUid, events.length, reviews.length]);
 
   // Infinite scroll for events tab
   useEffect(() => {
@@ -221,17 +250,14 @@ const Home: React.FC = () => {
 
             <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 pb-2">
               {professionals.length > 0 ? (
-                professionals.map((user) => {
-                  const userWithUid = { ...user, uid: user.uid || user.id };
-                  return (
-                    <div
-                      key={user.id}
-                      className="mb-2 w-full min-w-[220px] max-w-xs"
-                    >
-                      <UserCard user={userWithUid} />
-                    </div>
-                  );
-                })
+                professionals.map((user) => (
+                  <div
+                    key={user.uid || user.id}
+                    className="mb-2 w-full min-w-[220px] max-w-xs"
+                  >
+                    <UserCard user={user} />
+                  </div>
+                ))
               ) : (
                 <p className="text-gray-400 text-center mt-4">
                   No users found.

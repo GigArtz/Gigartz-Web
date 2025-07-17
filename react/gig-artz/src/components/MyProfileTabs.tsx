@@ -1,58 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, memo, useMemo } from "react";
+import { useSelector, shallowEqual } from "react-redux";
 import { FaSpinner } from "react-icons/fa";
 import ScrollableEventCol from "./ScrollableEventCol";
 import ReviewCard from "./ReviewCard";
+import { useRenderLogger } from "../hooks/usePerformanceMonitor";
 
-function MyProfileTabs({ uid }) {
+const MyProfileTabs = memo(({ uid }) => {
+  // Monitor re-renders in development
+  useRenderLogger("MyProfileTabs", { uid });
+
+  // Optimized selectors with shallow equality
+  const profileState = useSelector((state) => state.profile, shallowEqual);
+  const events = useSelector((state) => state.events.events, shallowEqual);
+
   const {
     profile,
-    userList,
-    userEvents,
     userTickets,
+    userEvents,
     userSavedEvents,
     userSavedReviews,
     likedEvents,
     loading,
     error,
     userReviews,
-  } = useSelector((state) => state.profile);
-  const { events } = useSelector((state) => state.events);
+  } = profileState;
 
-  const [userGigGuide, setUserGigGuide] = useState([]);
-  // const [userSaves, setUserSaves] = useState(userList?.savedPosts || []); // No longer used
   const [activeTab, setActiveTab] = useState("events");
   // Filter state for events, reviews, and saved
   const [gigsFilter, setGigsFilter] = useState("all"); // all | created | liked
   const [reviewsFilter, setReviewsFilter] = useState("all"); // all | created | liked
   const [savedFilter, setSavedFilter] = useState("gigs"); // gigs | reviews
 
-  useEffect(() => {
-    if (profile) {
-      console.log("Profile found:", profile);
+  // Memoize user gig guide calculation to prevent unnecessary re-computations
+  const userGigGuide = useMemo(() => {
+    if (!profile || !events) return [];
 
-      console.log("Saved Events:", userSavedEvents);
+    // Merge userTickets and userEvents, then find matching events
+    const ticketAndEventNames = [...(userTickets || []), ...(userEvents || [])]
+      .map((item) => item?.eventName || item?.title)
+      .filter(Boolean);
 
-      // Merge userTickets and userEvents, then find matching events
-      const ticketAndEventNames = [
-        ...(userTickets || []),
-        ...(userEvents || []),
-      ]
-        .map((item) => item?.eventName || item?.title)
-        .filter(Boolean);
+    const uniqueEventNames = Array.from(new Set(ticketAndEventNames));
 
-      const uniqueEventNames = Array.from(new Set(ticketAndEventNames));
-
-      const matchedEvents = (events || []).filter((event) =>
-        uniqueEventNames.includes(event?.title)
-      );
-
-      setUserGigGuide(matchedEvents);
-    } else {
-      console.log("No profile found, clearing gig guide.");
-      setUserGigGuide([]);
-    }
-  }, [profile, userTickets, userEvents, events]);
+    return (events || []).filter((event) =>
+      uniqueEventNames.includes(event?.title)
+    );
+  }, [profile, events, userTickets, userEvents]);
 
   return (
     <div>
@@ -239,6 +232,8 @@ function MyProfileTabs({ uid }) {
       </div>
     </div>
   );
-}
+});
+
+MyProfileTabs.displayName = "MyProfileTabs";
 
 export default MyProfileTabs;

@@ -3,7 +3,7 @@ import React, { useState, useReducer, useEffect } from "react";
 import {
   FaArrowLeft,
   FaArrowRight,
-  FaCheckCircle,
+  FaCircle,
   FaTrash,
   FaSpinner,
   FaPlus,
@@ -49,39 +49,6 @@ const initialState = {
   // Media Uploads
   eventVideo: "",
   gallery: [],
-  galleryFiles: [],
-  eventVideoFile: null,
-};
-
-// Validation function
-const validateStep = (step, formData) => {
-  const errors = {};
-
-  switch (step) {
-    case 1:
-      if (!formData.title?.trim()) errors.title = "Event name is required";
-      if (!formData.venue?.trim()) errors.venue = "Venue is required";
-      if (!formData.description?.trim())
-        errors.description = "Description is required";
-      if (!formData.category?.trim()) errors.category = "Category is required";
-      break;
-    case 2:
-      if (!formData.artistLineUp?.some((artist) => artist?.trim())) {
-        errors.artistLineUp = "At least one artist is required";
-      }
-      break;
-    case 3:
-      if (!formData.date) errors.date = "Event date is required";
-      if (!formData.eventStartTime)
-        errors.eventStartTime = "Start time is required";
-      if (!formData.eventEndTime) errors.eventEndTime = "End time is required";
-      break;
-    case 4:
-      // Tickets are optional, no validation needed
-      break;
-  }
-
-  return errors;
 };
 
 // Reducer function
@@ -156,11 +123,33 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
   const dispatchRedux = useDispatch();
   const [step, setStep] = useState(1);
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const [validationErrors, setValidationErrors] = useState({});
-  const [completedSteps, setCompletedSteps] = useState(new Set());
   const { profile } = useSelector((state: RootState) => state.profile);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Ticket management state
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTicketType, setNewTicketType] = useState("");
+  const [newTicket, setNewTicket] = useState({
+    price: "",
+    quantity: "",
+    ticketInfo: "",
+    ticketReleaseDate: "",
+    ticketReleaseTime: "",
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [ticketToEdit, setTicketToEdit] = useState("");
+  const [editedTicket, setEditedTicket] = useState({
+    price: "",
+    quantity: "",
+    ticketInfo: "",
+    ticketReleaseDate: "",
+    ticketReleaseTime: "",
+  });
+
+  // Media upload states
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [videoFile, setVideoFile] = useState(null);
 
   const localUser = (() => {
     const storedAuthUser = localStorage.getItem("authUser");
@@ -191,23 +180,6 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       });
     }
   }, [profile?.id, currentUser?.uid, localUser?.uid, formData.promoterId]);
-
-  // Validate current step whenever formData changes
-  useEffect(() => {
-    const errors = validateStep(step, formData);
-    setValidationErrors(errors);
-
-    // Mark step as completed if no errors
-    if (Object.keys(errors).length === 0) {
-      setCompletedSteps((prev) => new Set([...prev, step]));
-    } else {
-      setCompletedSteps((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(step);
-        return newSet;
-      });
-    }
-  }, [formData, step]);
 
   useEffect(() => {
     if (event) {
@@ -266,236 +238,174 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
   }, [event]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    const finalValue = type === "checkbox" ? checked : files ? files : value;
+    const { name, value, type, checked } = e.target;
+    const finalValue = type === "checkbox" ? checked : value;
     dispatch({ type: "update", name, value: finalValue });
   };
 
   const handleGalleryChange = (e) => {
     const files = Array.from(e.target.files);
-
-    // Validate file types and sizes
-    const validFiles = [];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-    for (const file of files) {
-      if (!allowedTypes.includes(file.type)) {
-        dispatchRedux(
-          showToast({
-            message: `${file.name} is not a valid image format. Please use JPG, PNG, or WebP.`,
-            type: "error",
-          })
-        );
-        continue;
-      }
-
-      if (file.size > maxSize) {
-        dispatchRedux(
-          showToast({
-            message: `${file.name} is too large. Please use images under 5MB.`,
-            type: "error",
-          })
-        );
-        continue;
-      }
-
-      validFiles.push(file);
-    }
-
-    if (validFiles.length === 0) return;
-
-    // Store files for later upload during submission
-    const existingFiles = formData.galleryFiles || [];
-    dispatch({
-      type: "update",
-      name: "galleryFiles",
-      value: [...existingFiles, ...validFiles],
-    });
-
-    if (validFiles.length > 0) {
-      dispatchRedux(
-        showToast({
-          message: `Selected ${validFiles.length} image(s) for upload`,
-          type: "success",
-        })
-      );
-    }
+    setGalleryFiles((prev) => [...prev, ...files]);
   };
 
   const handleVideoChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    setVideoFile(file);
+  };
 
-    // Validate video file
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    const allowedTypes = ["video/mp4", "video/webm", "video/ogg"];
+  const uploadMediaFiles = async () => {
+    const uploadedImages = [...formData.gallery];
+    let uploadedVideo = formData.eventVideo;
 
-    if (!allowedTypes.includes(file.type)) {
-      dispatchRedux(
-        showToast({
-          message: "Please upload a valid video format (MP4, WebM, or OGG).",
-          type: "error",
-        })
-      );
-      return;
+    // Upload new gallery images
+    for (const file of galleryFiles) {
+      const storageRef = ref(storage, `eventImages/${Date.now()}_${file.name}`);
+      try {
+        const snapshot = await uploadBytes(storageRef, file);
+        const imageUrl = await getDownloadURL(snapshot.ref);
+        uploadedImages.push(imageUrl);
+      } catch (error) {
+        console.error("Error uploading image: ", error.message);
+        dispatchRedux(
+          showToast({
+            message: "Failed to upload one or more images.",
+            type: "error",
+          })
+        );
+      }
     }
 
-    if (file.size > maxSize) {
-      dispatchRedux(
-        showToast({
-          message: "Video file is too large. Please use videos under 100MB.",
-          type: "error",
-        })
+    // Upload new video
+    if (videoFile) {
+      const storageRef = ref(
+        storage,
+        `eventVideos/${Date.now()}_${videoFile.name}`
       );
-      return;
+      try {
+        const snapshot = await uploadBytes(storageRef, videoFile);
+        uploadedVideo = await getDownloadURL(snapshot.ref);
+      } catch (error) {
+        console.error("Error uploading video: ", error.message);
+        dispatchRedux(
+          showToast({
+            message: "Failed to upload the video.",
+            type: "error",
+          })
+        );
+      }
     }
 
-    // Store file for later upload during submission
-    dispatch({ type: "update", name: "eventVideoFile", value: file });
-
-    dispatchRedux(
-      showToast({
-        message: "Video selected for upload",
-        type: "success",
-      })
-    );
+    return { uploadedImages, uploadedVideo };
   };
 
   const handleArtistChange = (index, value) => {
     dispatch({ type: "updateArray", index, value });
   };
 
-  const handleNextStep = () => {
-    const errors = validateStep(step, formData);
+  const addArtist = () => {
+    dispatch({ type: "addArtist" });
+  };
 
-    if (Object.keys(errors).length > 0) {
+  const removeArtist = (index) => {
+    if (formData.artistLineUp.length > 1) {
+      dispatch({ type: "removeArtist", index });
+    }
+  };
+
+  // Ticket management functions
+  const handleNewTicketChange = (field, value) => {
+    setNewTicket((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleEditTicketChange = (field, value) => {
+    setEditedTicket((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const addTicketType = () => {
+    if (
+      newTicketType.trim() &&
+      newTicket.price &&
+      newTicket.quantity &&
+      newTicket.ticketInfo.trim() &&
+      newTicket.ticketReleaseDate &&
+      newTicket.ticketReleaseTime
+    ) {
+      dispatch({
+        type: "addTicket",
+        ticketType: newTicketType.trim(),
+        ticket: { ...newTicket },
+      });
+
+      // Reset form
+      setNewTicketType("");
+      setNewTicket({
+        price: "",
+        quantity: "",
+        ticketInfo: "",
+        ticketReleaseDate: "",
+        ticketReleaseTime: "",
+      });
+      setIsAdding(false);
+    } else {
       dispatchRedux(
         showToast({
-          message: "Please fix the validation errors before proceeding.",
+          message: "Please fill in all required fields.",
           type: "error",
         })
       );
-      return;
     }
-
-    setStep((prev) => prev + 1);
   };
 
-  // Upload files to Firebase Storage
-  const uploadFiles = async () => {
-    const uploadedUrls = {
-      eventVideo: formData.eventVideo || "",
-      gallery: [...(formData.gallery || [])],
-    };
+  const editTicketType = (ticketType, updatedTicket) => {
+    Object.keys(updatedTicket).forEach((key) => {
+      dispatch({
+        type: "updateNested",
+        ticketType,
+        name: key,
+        value: updatedTicket[key],
+      });
+    });
+  };
 
-    setLoading(true);
-
-    try {
-      // Upload video if exists
-      if (formData.eventVideoFile) {
-        const videoRef = ref(
-          storage,
-          `eventVideos/${Date.now()}_${formData.eventVideoFile.name}`
-        );
-        const videoSnapshot = await uploadBytes(
-          videoRef,
-          formData.eventVideoFile
-        );
-        uploadedUrls.eventVideo = await getDownloadURL(videoSnapshot.ref);
-      }
-
-      // Upload gallery images if exist
-      if (formData.galleryFiles && formData.galleryFiles.length > 0) {
-        const galleryPromises = formData.galleryFiles.map(
-          async (file, index) => {
-            const imageRef = ref(
-              storage,
-              `eventImages/${Date.now()}_${index}_${file.name}`
-            );
-            const imageSnapshot = await uploadBytes(imageRef, file);
-            return await getDownloadURL(imageSnapshot.ref);
-          }
-        );
-
-        const newImages = await Promise.all(galleryPromises);
-        uploadedUrls.gallery = [...uploadedUrls.gallery, ...newImages];
-      }
-
-      return uploadedUrls;
-    } catch (error) {
-      console.error("Error uploading files:", error);
-      throw new Error("Failed to upload media files");
+  const saveEditedTicket = () => {
+    if (ticketToEdit) {
+      editTicketType(ticketToEdit, editedTicket);
+      setIsEditing(false);
+      setTicketToEdit("");
+      setEditedTicket({
+        price: "",
+        quantity: "",
+        ticketInfo: "",
+        ticketReleaseDate: "",
+        ticketReleaseTime: "",
+      });
     }
+  };
+
+  const removeTicketType = (ticketType) => {
+    dispatch({ type: "removeTicket", ticketType });
   };
 
   const handleSubmit = async () => {
-    // Final validation
-    const allErrors = {};
-    for (let i = 1; i <= 4; i++) {
-      const stepErrors = validateStep(i, formData);
-      Object.assign(allErrors, stepErrors);
-    }
-
-    if (Object.keys(allErrors).length > 0) {
-      dispatchRedux(
-        showToast({
-          message: "Please complete all required fields before submitting.",
-          type: "error",
-        })
-      );
-      return;
-    }
-
     if (!event) return;
 
     setLoading(true);
 
     try {
       // Upload media files first
-      const uploadedUrls = await uploadFiles();
-
-      // Validate ticketsAvailable
-      const ticketsAvailable = Object.keys(formData.ticketsAvailable).reduce(
-        (acc, ticketType) => {
-          const ticket = formData.ticketsAvailable[ticketType];
-          if (
-            ticket.price &&
-            ticket.quantity &&
-            ticket.ticketInfo &&
-            ticket.ticketReleaseDate &&
-            ticket.ticketReleaseTime
-          ) {
-            acc[ticketType] = {
-              price: ticket.price,
-              quantity: ticket.quantity,
-              ticketInfo: ticket.ticketInfo,
-              ticketReleaseDate: ticket.ticketReleaseDate,
-              ticketReleaseTime: ticket.ticketReleaseTime,
-            };
-          }
-          return acc;
-        },
-        {}
-      );
+      const { uploadedImages, uploadedVideo } = await uploadMediaFiles();
 
       const updatedEvent = {
         ...event,
-        title: formData.title,
-        description: formData.description,
-        date: formData.date,
-        venue: formData.venue,
-        eventVideo: uploadedUrls.eventVideo,
-        eventType: formData.eventType,
-        category: formData.category,
-        time: formData.eventStartTime,
-        ticketsAvailable,
-        eventStartTime: formData.eventStartTime,
-        eventEndTime: formData.eventEndTime,
-        gallery: uploadedUrls.gallery,
-        artistLineUp: formData.artistLineUp.filter((artist) => artist.trim()),
-        complimentaryTicket: formData.complimentaryTicket,
-        tip: formData.tip,
+        ...formData,
+        gallery: uploadedImages,
+        eventVideo: uploadedVideo,
       };
 
       await dispatchRedux(
@@ -510,7 +420,6 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
       );
       closeModal();
     } catch (error) {
-      console.error("Error updating event:", error);
       dispatchRedux(
         showToast({
           message: "Failed to update event. Please try again.",
@@ -522,173 +431,177 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
     }
   };
 
+  const nextStep = () => {
+    if (step < 6) {
+      setStep((prev) => prev + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep((prev) => prev - 1);
+    }
+  };
+
+  const goToStep = (stepNumber) => {
+    setStep(stepNumber);
+  };
+
   return (
-    <div className="justify-center items-center z-30">
+    <div className="max-w-3xl mx-auto p-6 bg-gray-900 rounded-lg shadow-xl">
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center">
-            <FaSpinner className="text-teal-500 text-4xl animate-spin mb-4" />
-            <p className="text-white text-lg">
-              {step === 6
-                ? "Uploading files and updating event..."
-                : "Processing..."}
-            </p>
+          <div className="bg-gray-800 p-6 rounded-lg flex items-center space-x-4">
+            <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+            <span className="text-white">Updating event...</span>
           </div>
         </div>
       )}
 
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-semibold text-white mb-2">
-          {
-            [
-              "Event Details",
-              "Artist Lineup",
-              "Event Schedule",
-              "Event Tickets",
-              "Event Media",
-              "Review Your Event",
-            ][step - 1]
-          }
-        </h2>
-        <p className="text-gray-400">
-          {
-            [
-              "Update your event information",
-              "Who's performing at your event?",
-              "When is your event happening?",
-              "Update your ticket types and pricing",
-              "Update photos and videos to showcase your event",
-              "Review your event details",
-            ][step - 1]
-          }
-        </p>
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Edit Event</h1>
+        <p className="text-gray-400">Update your event details</p>
       </div>
 
-      <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
-        {/* Progress Header */}
-        <div className="rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between">
-            {Array.from({ length: 6 }, (_, i) => i + 1).map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                    stepNumber === step
-                      ? "bg-teal-500 text-white"
-                      : completedSteps.has(stepNumber)
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-600 text-gray-300"
-                  }`}
-                >
-                  {completedSteps.has(stepNumber) && stepNumber !== step ? (
-                    <FaCheckCircle className="text-sm" />
-                  ) : (
-                    stepNumber
-                  )}
-                </div>
-                {stepNumber < 6 && (
-                  <div
-                    className={`h-1 w-14 ${
-                      completedSteps.has(stepNumber)
-                        ? "bg-green-500"
-                        : "bg-gray-600"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-400">
-            <span>Details</span>
-            <span>Artists</span>
-            <span>Schedule</span>
-            <span>Tickets</span>
-            <span>Media</span>
-            <span>Review</span>
-          </div>
+      {/* Progress Bar */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          {[1, 2, 3, 4, 5, 6].map((num) => (
+            <div key={num} className="flex flex-col items-center">
+              <button
+                onClick={() => goToStep(num)}
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
+                  step >= num
+                    ? "bg-teal-500 text-white shadow-lg"
+                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                }`}
+              >
+                {num}
+              </button>
+              <span className="text-xs text-gray-400 mt-1">
+                {num === 1 && "Details"}
+                {num === 2 && "Artists"}
+                {num === 3 && "Schedule"}
+                {num === 4 && "Tickets"}
+                {num === 5 && "Media"}
+                {num === 6 && "Review"}
+              </span>
+            </div>
+          ))}
         </div>
-
-        <div className="rounded-lg">
-          {step === 1 && (
-            <Step1
-              formData={formData}
-              handleChange={handleChange}
-              errors={validationErrors}
-            />
-          )}
-          {step === 2 && (
-            <Step2
-              formData={formData}
-              handleArtistChange={handleArtistChange}
-              dispatch={dispatch}
-              errors={validationErrors}
-            />
-          )}
-          {step === 3 && (
-            <Step3
-              formData={formData}
-              handleDateChange={handleChange}
-              errors={validationErrors}
-            />
-          )}
-          {step === 4 && (
-            <Step4
-              formData={formData}
-              dispatch={dispatch}
-              errors={validationErrors}
-            />
-          )}
-          {step === 5 && (
-            <Step5
-              formData={formData}
-              handleGalleryChange={handleGalleryChange}
-              handleVideoChange={handleVideoChange}
-              dispatch={dispatch}
-            />
-          )}
-          {step === 6 && <Step6 formData={formData} />}
+        <div className="w-full bg-gray-700 rounded-full h-2">
+          <div
+            className="bg-teal-500 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${(step / 6) * 100}%` }}
+          ></div>
         </div>
+      </div>
 
-        <div className="flex justify-between ">
-          {step > 1 && (
-            <button
-              onClick={() => setStep((prev) => prev - 1)}
-              className="border bg-teal-500 border-teal-500 rounded-2xl text-white w-28 text-sm p-2 flex items-center hover:bg-teal-600 transition-colors"
-            >
-              <FaArrowLeft className="mr-2" /> Previous
-            </button>
-          )}
+      {/* Form Steps */}
+      <div className="min-h-[400px] mb-8">
+        {step === 1 && (
+          <Step1 formData={formData} handleChange={handleChange} />
+        )}
+        {step === 2 && (
+          <Step2
+            formData={formData}
+            handleArtistChange={handleArtistChange}
+            addArtist={addArtist}
+            removeArtist={removeArtist}
+          />
+        )}
+        {step === 3 && (
+          <Step3 formData={formData} handleDateChange={handleChange} />
+        )}
+        {step === 4 && (
+          <Step4
+            formData={formData}
+            isAdding={isAdding}
+            setIsAdding={setIsAdding}
+            newTicketType={newTicketType}
+            setNewTicketType={setNewTicketType}
+            newTicket={newTicket}
+            handleNewTicketChange={handleNewTicketChange}
+            addTicketType={addTicketType}
+            removeTicketType={removeTicketType}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            ticketToEdit={ticketToEdit}
+            setTicketToEdit={setTicketToEdit}
+            editedTicket={editedTicket}
+            setEditedTicket={setEditedTicket}
+            handleEditTicketChange={handleEditTicketChange}
+            saveEditedTicket={saveEditedTicket}
+          />
+        )}
+        {step === 5 && (
+          <Step5
+            formData={formData}
+            galleryFiles={galleryFiles}
+            videoFile={videoFile}
+            handleGalleryChange={handleGalleryChange}
+            handleVideoChange={handleVideoChange}
+          />
+        )}
+        {step === 6 && <Step6 formData={formData} />}
+      </div>
 
-          {step < 6 && (
-            <button
-              onClick={handleNextStep}
-              disabled={Object.keys(validationErrors).length > 0}
-              className={`border px-4 rounded-2xl text-white w-20 text-sm p-2 flex items-center transition-colors ${
-                Object.keys(validationErrors).length > 0
-                  ? "bg-gray-500 border-gray-500 cursor-not-allowed"
-                  : "bg-teal-500 border-teal-500 hover:bg-teal-600"
-              }`}
-            >
-              Next <FaArrowRight className="ml-2" />
-            </button>
-          )}
+      {/* Navigation */}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={prevStep}
+          disabled={step === 1}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+            step === 1
+              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+              : "bg-gray-700 text-white hover:bg-gray-600"
+          }`}
+        >
+          <FaArrowLeft className="mr-2" />
+          Previous
+        </button>
 
-          {step === 6 && (
-            <button
-              onClick={handleSubmit}
-              className="px-4 btn-primary w-20 text-sm p-2 text-white hover:bg-teal-600 transition-colors"
-            >
-              Update
-            </button>
-          )}
-        </div>
+        {step < 6 ? (
+          <button
+            onClick={nextStep}
+            className="flex items-center px-6 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
+          >
+            Next
+            <FaArrowRight className="ml-2" />
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex items-center px-8 py-3 bg-gradient-to-r from-teal-500 to-blue-500 text-white rounded-lg font-medium hover:from-teal-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <FaSpinner className="mr-2 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <FaSave className="mr-2" />
+                Update Event
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
 // Step 1: Basic Event Details
-const Step1 = ({ formData, handleChange, errors }) => (
+const Step1 = ({ formData, handleChange }) => (
   <div className="space-y-6">
+    <div className="text-center mb-6">
+      <h2 className="text-2xl font-semibold text-white mb-2">Event Details</h2>
+      <p className="text-gray-400">Tell us about your event</p>
+    </div>
+
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="md:col-span-2">
         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -699,15 +612,10 @@ const Step1 = ({ formData, handleChange, errors }) => (
           name="title"
           value={formData.title}
           onChange={handleChange}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-            errors.title ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
           placeholder="Enter your event name"
           required
         />
-        {errors.title && (
-          <p className="text-red-400 text-sm mt-1">{errors.title}</p>
-        )}
       </div>
 
       <div className="md:col-span-2">
@@ -719,15 +627,10 @@ const Step1 = ({ formData, handleChange, errors }) => (
           name="venue"
           value={formData.venue}
           onChange={handleChange}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-            errors.venue ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
           placeholder="Where will your event take place?"
           required
         />
-        {errors.venue && (
-          <p className="text-red-400 text-sm mt-1">{errors.venue}</p>
-        )}
       </div>
 
       <div>
@@ -739,15 +642,10 @@ const Step1 = ({ formData, handleChange, errors }) => (
           name="category"
           value={formData.category}
           onChange={handleChange}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-            errors.category ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
           placeholder="e.g., Music, Comedy, Sports"
           required
         />
-        {errors.category && (
-          <p className="text-red-400 text-sm mt-1">{errors.category}</p>
-        )}
       </div>
 
       <div>
@@ -774,15 +672,10 @@ const Step1 = ({ formData, handleChange, errors }) => (
           value={formData.description}
           onChange={handleChange}
           rows={4}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 resize-none ${
-            errors.description ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 resize-none"
           placeholder="Describe your event in detail..."
           required
         />
-        {errors.description && (
-          <p className="text-red-400 text-sm mt-1">{errors.description}</p>
-        )}
       </div>
 
       <div className="md:col-span-2">
@@ -814,8 +707,13 @@ const Step1 = ({ formData, handleChange, errors }) => (
 );
 
 // Step 2: Artist Lineup
-const Step2 = ({ formData, handleArtistChange, dispatch, errors }) => (
+const Step2 = ({ formData, handleArtistChange, addArtist, removeArtist }) => (
   <div className="space-y-6">
+    <div className="text-center mb-6">
+      <h2 className="text-2xl font-semibold text-white mb-2">Artist Lineup</h2>
+      <p className="text-gray-400">Who's performing at your event?</p>
+    </div>
+
     <div className="space-y-4">
       {formData.artistLineUp.map((artist, index) => (
         <div key={index} className="flex items-center space-x-4">
@@ -824,15 +722,13 @@ const Step2 = ({ formData, handleArtistChange, dispatch, errors }) => (
               type="text"
               value={artist}
               onChange={(e) => handleArtistChange(index, e.target.value)}
-              className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-                errors.artistLineUp ? "border-red-500" : "border-gray-600"
-              }`}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
               placeholder={`Artist ${index + 1} name`}
             />
           </div>
           {formData.artistLineUp.length > 1 && (
             <button
-              onClick={() => dispatch({ type: "removeArtist", index })}
+              onClick={() => removeArtist(index)}
               className="p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300"
             >
               <FaMinus />
@@ -840,14 +736,11 @@ const Step2 = ({ formData, handleArtistChange, dispatch, errors }) => (
           )}
         </div>
       ))}
-      {errors.artistLineUp && (
-        <p className="text-red-400 text-sm mt-1">{errors.artistLineUp}</p>
-      )}
     </div>
 
     <div className="text-center">
       <button
-        onClick={() => dispatch({ type: "addArtist" })}
+        onClick={addArtist}
         className="inline-flex items-center px-6 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
       >
         <FaPlus className="mr-2" />
@@ -858,9 +751,14 @@ const Step2 = ({ formData, handleArtistChange, dispatch, errors }) => (
 );
 
 // Step 3: Event Schedule
-const Step3 = ({ formData, handleDateChange, errors }) => (
+const Step3 = ({ formData, handleDateChange }) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 gap-6">
+    <div className="text-center mb-6">
+      <h2 className="text-2xl font-semibold text-white mb-2">Event Schedule</h2>
+      <p className="text-gray-400">When is your event happening?</p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
           Date *
@@ -870,14 +768,9 @@ const Step3 = ({ formData, handleDateChange, errors }) => (
           name="date"
           value={formData.date}
           onChange={handleDateChange}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-            errors.date ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
           required
         />
-        {errors.date && (
-          <p className="text-red-400 text-sm mt-1">{errors.date}</p>
-        )}
       </div>
 
       <div>
@@ -889,14 +782,9 @@ const Step3 = ({ formData, handleDateChange, errors }) => (
           name="eventStartTime"
           value={formData.eventStartTime}
           onChange={handleDateChange}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-            errors.eventStartTime ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
           required
         />
-        {errors.eventStartTime && (
-          <p className="text-red-400 text-sm mt-1">{errors.eventStartTime}</p>
-        )}
       </div>
 
       <div>
@@ -908,77 +796,47 @@ const Step3 = ({ formData, handleDateChange, errors }) => (
           name="eventEndTime"
           value={formData.eventEndTime}
           onChange={handleDateChange}
-          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
-            errors.eventEndTime ? "border-red-500" : "border-gray-600"
-          }`}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
           required
         />
-        {errors.eventEndTime && (
-          <p className="text-red-400 text-sm mt-1">{errors.eventEndTime}</p>
-        )}
       </div>
     </div>
   </div>
 );
 
-// Step 4: Tickets
-const Step4 = ({ formData, dispatch, errors }) => {
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTicketType, setNewTicketType] = useState("");
-  const [newTicket, setNewTicket] = useState({
-    price: "",
-    quantity: "",
-    ticketInfo: "",
-    ticketReleaseDate: "",
-    ticketReleaseTime: "",
-  });
-
-  const handleNewTicketChange = (field, value) => {
-    setNewTicket((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const addTicketType = () => {
-    if (
-      newTicketType.trim() &&
-      newTicket.price &&
-      newTicket.quantity &&
-      newTicket.ticketInfo.trim() &&
-      newTicket.ticketReleaseDate &&
-      newTicket.ticketReleaseTime
-    ) {
-      dispatch({
-        type: "addTicket",
-        ticketType: newTicketType.trim(),
-        ticket: { ...newTicket },
-      });
-
-      // Reset form
-      setNewTicketType("");
-      setNewTicket({
-        price: "",
-        quantity: "",
-        ticketInfo: "",
-        ticketReleaseDate: "",
-        ticketReleaseTime: "",
-      });
-      setIsAdding(false);
-    }
-  };
-
-  const removeTicketType = (ticketType) => {
-    dispatch({ type: "removeTicket", ticketType });
-  };
-
+// Step 4: Tickets (keeping the existing implementation)
+const Step4 = ({
+  formData,
+  isAdding,
+  setIsAdding,
+  newTicketType,
+  setNewTicketType,
+  newTicket,
+  handleNewTicketChange,
+  addTicketType,
+  removeTicketType,
+  isEditing,
+  setIsEditing,
+  ticketToEdit,
+  setTicketToEdit,
+  editedTicket,
+  setEditedTicket,
+  handleEditTicketChange,
+  saveEditedTicket,
+}) => {
   return (
     <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-semibold text-white mb-2">
+          Event Tickets
+        </h2>
+        <p className="text-gray-400">Configure your ticket types and pricing</p>
+      </div>
+
       {/* Existing Tickets */}
       {Object.keys(formData.ticketsAvailable).length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-white">Current Tickets</h3>
-
           {Object.entries(formData.ticketsAvailable).map(
             ([ticketType, ticket]) => (
               <div
@@ -990,24 +848,27 @@ const Step4 = ({ formData, dispatch, errors }) => {
                     <h4 className="text-white font-medium text-lg">
                       {ticketType}
                     </h4>
-                    <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
-                      <div>
-                        <p>
-                          R{ticket.price} • {ticket.quantity} Available
-                        </p>
-                        <p className="mt-2">Release Date</p>
-                        <p>
-                          {ticket.ticketReleaseDate} •{" "}
-                          {ticket.ticketReleaseTime}
-                        </p>
-                      </div>
-                      <div></div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 text-sm text-gray-300">
+                      <p>Price: ${ticket.price}</p>
+                      <p>Quantity: {ticket.quantity}</p>
+                      <p>Release: {ticket.ticketReleaseDate}</p>
+                      <p>Time: {ticket.ticketReleaseTime}</p>
                     </div>
                     <p className="text-gray-400 text-sm mt-2">
                       {ticket.ticketInfo}
                     </p>
                   </div>
                   <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setTicketToEdit(ticketType);
+                        setEditedTicket(ticket);
+                      }}
+                      className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300"
+                    >
+                      <FaEdit />
+                    </button>
                     <button
                       onClick={() => removeTicketType(ticketType)}
                       className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300"
@@ -1158,6 +1019,119 @@ const Step4 = ({ formData, dispatch, errors }) => {
           </button>
         </div>
       )}
+
+      {/* Edit Ticket Modal */}
+      {isEditing && (
+        <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 space-y-4">
+          <h3 className="text-lg font-medium text-white">
+            Edit Ticket: {ticketToEdit}
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Price *
+              </label>
+              <input
+                type="number"
+                value={editedTicket.price}
+                onChange={(e) =>
+                  handleEditTicketChange("price", e.target.value)
+                }
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                min="0"
+                step="0.01"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Quantity *
+              </label>
+              <input
+                type="number"
+                value={editedTicket.quantity}
+                onChange={(e) =>
+                  handleEditTicketChange("quantity", e.target.value)
+                }
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Ticket Information *
+            </label>
+            <textarea
+              value={editedTicket.ticketInfo}
+              onChange={(e) =>
+                handleEditTicketChange("ticketInfo", e.target.value)
+              }
+              rows={3}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Release Date *
+              </label>
+              <input
+                type="date"
+                value={editedTicket.ticketReleaseDate}
+                onChange={(e) =>
+                  handleEditTicketChange("ticketReleaseDate", e.target.value)
+                }
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Release Time *
+              </label>
+              <input
+                type="time"
+                value={editedTicket.ticketReleaseTime}
+                onChange={(e) =>
+                  handleEditTicketChange("ticketReleaseTime", e.target.value)
+                }
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setTicketToEdit("");
+                setEditedTicket({
+                  price: "",
+                  quantity: "",
+                  ticketInfo: "",
+                  ticketReleaseDate: "",
+                  ticketReleaseTime: "",
+                });
+              }}
+              className="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-all duration-300"
+            >
+              <FaTimes className="mr-2 inline" />
+              Cancel
+            </button>
+            <button
+              onClick={saveEditedTicket}
+              className="px-6 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
+            >
+              <FaSave className="mr-2 inline" />
+              Save Changes
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1165,20 +1139,25 @@ const Step4 = ({ formData, dispatch, errors }) => {
 // Step 5: Media Uploads
 const Step5 = ({
   formData,
+  galleryFiles,
+  videoFile,
   handleGalleryChange,
   handleVideoChange,
-  dispatch,
 }) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 gap-6">
+    <div className="text-center mb-6">
+      <h2 className="text-2xl font-semibold text-white mb-2">Event Media</h2>
+      <p className="text-gray-400">
+        Add photos and videos to showcase your event
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Event Gallery
           </label>
-          <p className="text-gray-400 text-sm mb-2">
-            Select images for your event gallery (Max 5MB each, JPG/PNG/WebP)
-          </p>
           <div className="relative">
             <input
               type="file"
@@ -1188,14 +1167,10 @@ const Step5 = ({
               className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-500 file:text-white file:cursor-pointer hover:file:bg-teal-600 transition-all duration-300"
             />
           </div>
-          {(formData.gallery?.length || 0) +
-            (formData.galleryFiles?.length || 0) >
-            0 && (
+          {(formData.gallery?.length > 0 || galleryFiles.length > 0) && (
             <div className="mt-3 text-sm text-teal-400">
-              ✓{" "}
-              {(formData.gallery?.length || 0) +
-                (formData.galleryFiles?.length || 0)}{" "}
-              image(s) selected
+              ✓ {(formData.gallery?.length || 0) + galleryFiles.length} image(s)
+              selected
             </div>
           )}
         </div>
@@ -1204,9 +1179,6 @@ const Step5 = ({
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Event Video
           </label>
-          <p className="text-gray-400 text-sm mb-2">
-            Select a promotional video for your event (Max 100MB, MP4/WebM/OGG)
-          </p>
           <div className="relative">
             <input
               type="file"
@@ -1215,12 +1187,22 @@ const Step5 = ({
               className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-500 file:text-white file:cursor-pointer hover:file:bg-teal-600 transition-all duration-300"
             />
           </div>
-          {(formData.eventVideo || formData.eventVideoFile) && (
+          {(formData.eventVideo || videoFile) && (
             <div className="mt-3 text-sm text-teal-400">✓ Video selected</div>
           )}
         </div>
       </div>
 
+      <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
+        <h3 className="text-white font-medium mb-3">Media Guidelines</h3>
+        <ul className="text-sm text-gray-300 space-y-2">
+          <li>• Images should be high quality (at least 1080p)</li>
+          <li>• Supported formats: JPG, PNG, GIF</li>
+          <li>• Videos should be under 50MB</li>
+          <li>• Supported video formats: MP4, MOV, AVI</li>
+          <li>• Use images that represent your event well</li>
+        </ul>
+      </div>
     </div>
   </div>
 );
@@ -1228,6 +1210,15 @@ const Step5 = ({
 // Step 6: Confirmation
 const Step6 = ({ formData }) => (
   <div className="space-y-6">
+    <div className="text-center mb-6">
+      <h2 className="text-2xl font-semibold text-white mb-2">
+        Review Your Event
+      </h2>
+      <p className="text-gray-400">
+        Double-check all the details before updating
+      </p>
+    </div>
+
     <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-3">

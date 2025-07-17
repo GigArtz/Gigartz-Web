@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import EventCard from "./EventCard";
+import { useEffect, useMemo } from "react";
 import UserCard from "./UserCard";
 import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,6 +28,18 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
   }, [dispatch]);
 
   const { userList } = useSelector((state: RootState) => state.profile);
+
+  // Memoize users with uid to prevent UserCard re-renders
+  const usersWithUid = useMemo(() => {
+    return (
+      userList
+        ?.filter((user) => user.roles?.freelancer)
+        .map((user) => ({
+          ...user,
+          uid: user.id,
+        })) || []
+    );
+  }, [userList]);
 
   const nagivate = useNavigate();
 
@@ -104,21 +115,15 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
           </span>
         </div>
         <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 ">
-          {userList && userList.length > 0 ? (
-            userList
-              .filter((user) => user.roles?.freelancer) // ✅ Filter first
-              .map((user) => {
-                // Patch: UserCard expects 'uid', but userList has 'id'.
-                const userWithUid = { ...user, uid: user.id };
-                return (
-                  <div
-                    key={user.id}
-                    className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-95 snap-start flex flex-row"
-                  >
-                    <UserCard user={userWithUid} />
-                  </div>
-                );
-              })
+          {usersWithUid.length > 0 ? (
+            usersWithUid.map((user) => (
+              <div
+                key={user.id}
+                className="mb-2 w-full transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-95 snap-start flex flex-row"
+              >
+                <UserCard user={user} />
+              </div>
+            ))
           ) : (
             <p className="text-gray-400 text-center mt-4">No users found.</p>
           )}

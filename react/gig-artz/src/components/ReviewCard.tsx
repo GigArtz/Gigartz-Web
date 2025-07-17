@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import {
   FaBookmark,
   FaComment,
@@ -188,4 +188,4 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   );
 };
 
-export default ReviewCard;
+export default memo(ReviewCard);

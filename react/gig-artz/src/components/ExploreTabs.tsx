@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProfiles } from "../../store/profileSlice";
 import UserCard from "./UserCard";
@@ -278,11 +278,47 @@ function ExploreTabs() {
   const latestData = getSectionedData("latest");
   const peopleData = getSectionedData("people");
 
-  // Helper to ensure UserCard gets a uid
-  const safeUser = (user) => ({
-    ...user,
-    uid: user.uid || user.id || "unknown",
-  });
+  // Memoize helper to ensure UserCard gets a uid - prevents object recreation
+  const safeUser = useCallback(
+    (user) => ({
+      ...user,
+      uid: user.uid || user.id || "unknown",
+    }),
+    []
+  );
+
+  // Memoize user lists to prevent UserCard re-renders
+  const safeProfessionals = useMemo(
+    () => topData.professionals.map(safeUser),
+    [topData.professionals, safeUser]
+  );
+
+  const safeGigsPeople = useMemo(
+    () => gigsData.professionals.map(safeUser),
+    [gigsData.professionals, safeUser]
+  );
+
+  const safeLatestPeople = useMemo(
+    () => latestData.professionals.map(safeUser),
+    [latestData.professionals, safeUser]
+  );
+
+  const safePeopleList = useMemo(
+    () => peopleData.professionals.map(safeUser),
+    [peopleData.professionals, safeUser]
+  );
+
+  // Memoize interest sections to prevent UserCard re-renders
+  const memoizedPeopleInterestSections = useMemo(
+    () =>
+      (peopleData.interestSections as { interest: string; users: any[] }[]).map(
+        (section) => ({
+          ...section,
+          users: section.users.map(safeUser),
+        })
+      ),
+    [peopleData.interestSections, safeUser]
+  );
 
   return (
     <div className="px-2">
@@ -405,9 +441,9 @@ function ExploreTabs() {
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
-                    {topData.professionals.map((user) => (
+                    {safeProfessionals.map((user) => (
                       <div className="mb-2" key={user.id}>
-                        <UserCard user={safeUser(user)} />
+                        <UserCard user={user} />
                       </div>
                     ))}
                   </div>
@@ -487,9 +523,9 @@ function ExploreTabs() {
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
-                    {latestData.professionals.map((user) => (
+                    {safeLatestPeople.map((user) => (
                       <div className="mb-2" key={user.id}>
-                        <UserCard user={safeUser(user)} />
+                        <UserCard user={user} />
                       </div>
                     ))}
                   </div>
@@ -550,20 +586,15 @@ function ExploreTabs() {
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
-                    {peopleData.professionals.map((user) => (
+                    {safePeopleList.map((user) => (
                       <div className="mb-2" key={user.id}>
-                        <UserCard user={safeUser(user)} />
+                        <UserCard user={user} />
                       </div>
                     ))}
                   </div>
                 </div>
                 {/* Dynamic interest sections for users */}
-                {(
-                  peopleData.interestSections as {
-                    interest: string;
-                    users: any[];
-                  }[]
-                ).map(({ interest, users }) =>
+                {memoizedPeopleInterestSections.map(({ interest, users }) =>
                   users.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
                       <h2 className="text-white text-lg font-semibold mb-2">
@@ -573,7 +604,7 @@ function ExploreTabs() {
                       <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
                         {users.map((user) => (
                           <div className="mb-2" key={user.id}>
-                            <UserCard user={safeUser(user)} />
+                            <UserCard user={user} />
                           </div>
                         ))}
                       </div>
@@ -618,9 +649,9 @@ function ExploreTabs() {
                     Popular Professionals
                   </h2>
                   <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
-                    {gigsData.professionals.map((user) => (
+                    {safeGigsPeople.map((user) => (
                       <div className="mb-2" key={user.id}>
-                        <UserCard user={safeUser(user)} />
+                        <UserCard user={user} />
                       </div>
                     ))}
                   </div>

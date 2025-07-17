@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Autocomplete from "react-google-autocomplete";
+import BaseModal from "./BaseModal";
 import {
   eventCategories,
   freelancerCategories,
@@ -27,6 +28,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
   const [openDropdowns, setOpenDropdowns] = useState<{
     [key: string]: boolean;
   }>({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   const toggleDropdown = (category: string) => {
     setOpenDropdowns((prev) => ({
@@ -57,236 +59,257 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
   const clearAll = () => {
     setSelectedInterests([]);
     setSelectedLocations([]);
+    setSearchTerm("");
   };
 
-  if (!isOpen) return null;
+  const expandAll = () => {
+    const allCategories = { ...eventCategories, ...freelancerCategories };
+    setOpenDropdowns(
+      Object.keys(allCategories).reduce((acc, category) => ({
+        ...acc,
+        [category]: true,
+      }), {})
+    );
+  };
+
+  const collapseAll = () => {
+    setOpenDropdowns({});
+  };
+
+  // Filter categories based on search term
+  const filterCategories = (categories: any) => {
+    if (!searchTerm) return categories;
+    
+    return Object.entries(categories).reduce((acc, [category, options]) => {
+      const matchingOptions = (options as string[]).filter(option =>
+        option.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      if (matchingOptions.length > 0 || category.toLowerCase().includes(searchTerm.toLowerCase())) {
+        acc[category] = matchingOptions.length > 0 ? matchingOptions : options;
+      }
+      return acc;
+    }, {} as any);
+  };
+
+  const filteredEventCategories = filterCategories(eventCategories);
+  const filteredFreelancerCategories = filterCategories(freelancerCategories);
+
+  const renderCategorySection = (categories: any, sectionName: string, idPrefix: string) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
+      {Object.entries(categories).map(([category, options]) => (
+        <article
+          key={category}
+          className=" rounded-xl p-1 transition-all duration-200 hover:bg-gray-750 "
+          role="listitem"
+        >
+          <button
+            type="button"
+            onClick={() => toggleDropdown(category)}
+            aria-expanded={!!openDropdowns[category]}
+            aria-controls={`${category}-${idPrefix}-list`}
+            className="w-full flex justify-between items-center text-white hover:text-teal-300 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400 rounded-lg p-2"
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-medium text-base">{category}</span>
+              <span className="text-xs bg-teal-600 text-white px-2 py-1 rounded-full">
+                {(options as string[]).filter(opt => selectedInterests.includes(opt)).length}
+              </span>
+            </div>
+            <svg
+              className={`w-5 h-5 text-teal-400 transition-transform duration-200 ${
+                openDropdowns[category] ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {openDropdowns[category] && (
+            <div
+              id={`${category}-${idPrefix}-list`}
+              className="mt-4 space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-gray-700"
+            >
+              {(options as string[]).map((interest) => (
+                <label
+                  key={interest}
+                  className={`flex items-center gap-3 p-2 mr-2 rounded-lg cursor-pointer transition-all duration-150 ${
+                    selectedInterests.includes(interest)
+                      ? "bg-teal-500 text-white shadow-md"
+                      : " text-gray-200 hover:bg-gray-600"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedInterests.includes(interest)}
+                    onChange={() => toggleInterest(interest)}
+                    className="w-4 h-4 input-field rounded focus:ring-teal-500 focus:ring-2"
+                  />
+                  <span className="text-sm font-medium">{interest}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </article>
+      ))}
+    </div>
+  );
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 sm:p-6"
-      aria-modal="true"
-      role="dialog"
-      aria-labelledby="preferences-modal-title"
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      maxWidth="max-w-[60%]"
+      minWidth="min-w-[800px]"
+      className="max-h-[90vh] overflow-hidden"
     >
-      <div className="bg-gray-900 text-white w-full max-w-[50%] rounded-xl shadow-2xl relative max-h-[90vh] overflow-hidden flex flex-col">
-        <header className="p-6 border-b border-gray-700">
-          <h2
-            id="preferences-modal-title"
-            className="text-xl font-bold text-center select-none"
-          >
-            {title}
-          </h2>
-        </header>
+      <div className="flex flex-col h-full max-h-[75vh]">
+        {/* Search and Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 p-2 rounded-lg">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search categories and interests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={expandAll}
+              className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              Expand All
+            </button>
+            <button
+              onClick={collapseAll}
+              className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              Collapse All
+            </button>
+          </div>
+        </div>
 
-        <main className="flex-1 overflow-y-auto px-6 py-4 space-y-10">
+        {/* Selected Items Summary */}
+        {(selectedInterests.length > 0 || selectedLocations.length > 0) && (
+          <div className="mb-6 p-3 bg-teal-900/20 border border-teal-500/30 rounded-lg">
+            <h4 className="text-teal-400 font-medium mb-2">
+              Selected ({selectedInterests.length + selectedLocations.length} items)
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {selectedLocations.map((loc) => (
+                <span
+                  key={loc}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full"
+                >
+                {loc}
+                  <button
+                    onClick={() => removeLocation(loc)}
+                    className="ml-1 hover:text-red-300"
+                    aria-label={`Remove ${loc}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              {selectedInterests.map((interest) => (
+                <span
+                  key={interest}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-teal-600 text-white text-sm rounded-full"
+                >
+                  {interest}
+                  <button
+                    onClick={() => toggleInterest(interest)}
+                    className="ml-1 hover:text-red-300"
+                    aria-label={`Remove ${interest}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <main className="flex-1 overflow-y-auto space-y-8 pr-2 scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-gray-700">
           {/* Location Selection */}
           <section>
-            <h3 className="text-teal-400 font-semibold mb-5">Location</h3>
-
-            <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-teal-400 font-semibold mb-4 text-lg">Locations</h3>
+            <div className="rounded-lg p-2">
               <Autocomplete
                 apiKey={import.meta.env.VITE_MAPS_API_KEY}
                 onPlaceSelected={addLocation}
-                placeholder="Search for a city or venue"
-                className="w-full px-4 py-3 text-gray-900 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400"
+                placeholder="Search for a city, venue, or location..."
+                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"
               />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              {selectedLocations.map((loc) => (
-                <div
-                  key={loc}
-                  className="bg-gray-700 text-white px-4 py-2 rounded-full flex items-center gap-2"
-                >
-                  <span>{loc}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeLocation(loc)}
-                    className="text-red-400 hover:text-red-600 focus:outline-none"
-                    aria-label={`Remove ${loc}`}
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
             </div>
           </section>
 
           {/* Event Categories */}
-          <section>
-            <h3 className="text-teal-400 font-semibold mb-5">
-              Event Categories
-            </h3>
-            <div
-              className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-2"
-              role="list"
-            >
-              {Object.entries(eventCategories).map(([category, options]) => (
-                <article
-                  key={category}
-                  className="rounded-xl p-2 flex flex-col"
-                  role="listitem"
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleDropdown(category)}
-                    aria-expanded={!!openDropdowns[category]}
-                    aria-controls={`${category}-list`}
-                    className="w-full flex justify-between items-center bg-gray-700 hover:bg-gray-600 text-white px-5 py-3 rounded-full transition-shadow focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  >
-                    <span className="font-medium text-base">{category}</span>
-                    <svg
-                      className={`w-6 h-6 text-teal-400 transition-transform duration-300 ${
-                        openDropdowns[category] ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-
-                  {openDropdowns[category] && (
-                    <div
-                      id={`${category}-list`}
-                      className="mt-4 flex flex-wrap gap-3 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-gray-700"
-                    >
-                      {options.map((interest) => (
-                        <button
-                          key={interest}
-                          type="button"
-                          onClick={() => toggleInterest(interest)}
-                          className={`flex items-center gap-2 px-4 py-2 text-sm rounded-full border transition focus:outline-none focus:ring-2 focus:ring-teal-400 ${
-                            selectedInterests.includes(interest)
-                              ? "bg-teal-500 text-white border-teal-400"
-                              : "bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-600"
-                          }`}
-                          aria-pressed={selectedInterests.includes(interest)}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedInterests.includes(interest)}
-                            onChange={() => toggleInterest(interest)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="form-checkbox text-white h-4 w-4"
-                            aria-label={`Select ${interest}`}
-                          />
-                          {interest}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
+          {Object.keys(filteredEventCategories).length > 0 && (
+            <section>
+              <h3 className="text-teal-400 font-semibold mb-4 text-lg">Event Categories</h3>
+              {renderCategorySection(filteredEventCategories, "Event", "event")}
+            </section>
+          )}
 
           {/* Freelancer Categories */}
-          <section>
-            <h3 className="text-teal-400 font-semibold mb-5">
-              Freelancer Categories
-            </h3>
-            <div
-              className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-2"
-              role="list"
-            >
-              {Object.entries(freelancerCategories).map(
-                ([category, options]) => (
-                  <article
-                    key={category}
-                    className="rounded-xl p-2 flex flex-col"
-                    role="listitem"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleDropdown(category)}
-                      aria-expanded={!!openDropdowns[category]}
-                      aria-controls={`${category}-freelancer-list`}
-                      className="w-full flex justify-between items-center bg-gray-700 hover:bg-gray-600 text-white px-5 py-3 rounded-full transition-shadow focus:outline-none focus:ring-2 focus:ring-teal-400"
-                    >
-                      <span className="font-medium text-base">{category}</span>
-                      <svg
-                        className={`w-6 h-6 text-teal-400 transition-transform duration-300 ${
-                          openDropdowns[category] ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
+          {Object.keys(filteredFreelancerCategories).length > 0 && (
+            <section>
+              <h3 className="text-teal-400 font-semibold mb-4 text-lg">Professional Categories</h3>
+              {renderCategorySection(filteredFreelancerCategories, "Freelancer", "freelancer")}
+            </section>
+          )}
 
-                    {openDropdowns[category] && (
-                      <div
-                        id={`${category}-freelancer-list`}
-                        className="mt-4 flex flex-wrap gap-3 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-gray-700"
-                      >
-                        {options.map((interest) => (
-                          <button
-                            key={interest}
-                            type="button"
-                            onClick={() => toggleInterest(interest)}
-                            className={`flex items-center gap-2 px-4 py-2 text-sm rounded-full border transition focus:outline-none focus:ring-2 focus:ring-teal-400 ${
-                              selectedInterests.includes(interest)
-                                ? "bg-teal-500 text-white border-teal-400"
-                                : "bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-600"
-                            }`}
-                            aria-pressed={selectedInterests.includes(interest)}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedInterests.includes(interest)}
-                              onChange={() => toggleInterest(interest)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="form-checkbox text-white h-4 w-4"
-                              aria-label={`Select ${interest}`}
-                            />
-                            {interest}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </article>
-                )
-              )}
+          {/* No Results */}
+          {searchTerm && Object.keys(filteredEventCategories).length === 0 && Object.keys(filteredFreelancerCategories).length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-lg mb-2">🔍</div>
+              <p className="text-gray-400">No categories found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm("")}
+                className="mt-2 text-teal-400 hover:text-teal-300 underline"
+              >
+                Clear search
+              </button>
             </div>
-          </section>
+          )}
         </main>
 
-        {/* Done Button */}
-        <footer className="p-6 border-t border-gray-700 flex justify-end gap-2">
-          <button
-            onClick={() => {
-              setSelectedInterests([]);
-              setSelectedLocations([]);
-            }}
-            className="px-8 py-3 border border-gray-500  hover:bg-gray-600 rounded-full text-white font-semibold text-lg transition focus:outline-none focus:ring-4 focus:ring-teal-400"
-          >
-            Clear
-          </button>
-          <button
-            onClick={onClose}
-            className="px-8 py-3 bg-teal-500 hover:bg-teal-600 rounded-full text-white font-semibold text-lg transition focus:outline-none focus:ring-4 focus:ring-teal-400"
-          >
-            Done
-          </button>
+        {/* Footer with buttons */}
+        <footer className="flex-shrink-0 flex justify-between items-center gap-4 pt-6 border-t border-gray-700 bg-dark">
+          <div className="text-sm text-gray-400">
+            {selectedInterests.length + selectedLocations.length} items selected
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={clearAll}
+              className="px-6 py-3 border border-gray-500 hover:bg-gray-600 rounded-lg text-white font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-400"
+            >
+              Clear All
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-teal-500 hover:bg-teal-600 rounded-lg text-white font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              Apply Filters
+            </button>
+          </div>
         </footer>
       </div>
-    </div>
+    </BaseModal>
   );
 };
 

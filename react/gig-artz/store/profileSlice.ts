@@ -113,6 +113,8 @@ interface ProfileState {
   userListCacheTimestamp: number | null;
   userProfileCacheTimestamp: number | null;
   cachedProfileIds: string[];
+  // Track fetching to prevent duplicates
+  fetchingUserIds: string[];
 }
 
 const initialState: ProfileState = {
@@ -141,6 +143,8 @@ const initialState: ProfileState = {
   userListCacheTimestamp: null,
   userProfileCacheTimestamp: null,
   cachedProfileIds: [],
+  // Track fetching to prevent duplicates
+  fetchingUserIds: [],
 };
 
 const profileSlice = createSlice({
@@ -159,41 +163,92 @@ const profileSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    fetchAProfileSuccess(state, action: PayloadAction<UserProfile>) {
+    // New actions for tracking fetching user IDs
+    startFetchingUser(state, action: PayloadAction<string>) {
+      const userId = action.payload;
+      if (!state.fetchingUserIds.includes(userId)) {
+        state.fetchingUserIds.push(userId);
+      }
+    },
+    stopFetchingUser(state, action: PayloadAction<string>) {
+      const userId = action.payload;
+      const before = state.fetchingUserIds.length;
+      state.fetchingUserIds = state.fetchingUserIds.filter(id => id !== userId);
+      const after = state.fetchingUserIds.length;
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Stopped tracking fetch for user ${userId}. Before: ${before}, After: ${after}`);
+      }
+    },
+    fetchAProfileSuccess(state, action: PayloadAction<Record<string, unknown>>) {
       state.loading = false;
-      state.userProfile = action.payload;
+      state.userProfile = action.payload.userProfile as UserProfile;
+      // Store all the related data for the other user
+      state.userEvents = action.payload.userEvents as unknown as null;
+      state.userFollowers = action.payload.userFollowers as unknown as null;
+      state.userFollowing = action.payload.userFollowing as unknown as null;
+      state.userGuestList = action.payload.userGuestList as unknown as null;
+      state.userReviews = action.payload.userReviews as unknown as null;
+      state.userTickets = action.payload.userTickets as unknown as null;
+      state.userSavedEvents = action.payload.userSavedEvents as unknown as null;
+      state.userSavedReviews = action.payload.userSavedReviews as unknown as null;
+      state.userBookings = action.payload.userBookings as Booking[];
+      state.userBookingsRequests = action.payload.userBookingsRequests as Booking[];
       state.error = null;
       // Update cache timestamp for individual user profile
       state.userProfileCacheTimestamp = Date.now();
-      // Add profile ID to cached list if it has an ID
-      if (action.payload.id && !state.cachedProfileIds.includes(action.payload.id)) {
-        state.cachedProfileIds.push(action.payload.id);
+
+      // Add the userId to cached list
+      const userId = action.payload.userId as string; // Pass userId from thunk
+
+      // Use userId from thunk parameter instead of profile.id
+      if (userId && !state.cachedProfileIds.includes(userId)) {
+        state.cachedProfileIds.push(userId);
       }
     },
 
     fetchProfileSuccess(state, action: PayloadAction<Record<string, unknown>>) {
       state.loading = false;
       state.profile = action.payload.userProfile as UserProfile;
-      state.likedEvents = action.payload.likedEvents;
+      state.likedEvents = action.payload.likedEvents as unknown as null;
       state.userBookings = action.payload.userBookings as Booking[];
       state.userBookingsRequests = action.payload.userBookingsRequests as Booking[];
-      state.userEventProfit = action.payload.userEventProfit;
-      state.userEvents = action.payload.userEvents;
-      state.userFollowers = action.payload.userFollowers;
-      state.userFollowing = action.payload.userFollowing;
-      state.userGuestList = action.payload.userGuestList;
-      state.userReviews = action.payload.userReviews;
-      state.userTickets = action.payload.userTickets;
-      state.userTipsProfit = action.payload.userTipsProfit;
-      state.userSavedEvents = action.payload.userSavedEvents;
-      state.userSavedReviews = action.payload.userSavedReviews;
+      state.userEventProfit = action.payload.userEventProfit as unknown as null;
+      state.userEvents = action.payload.userEvents as unknown as null;
+      state.userFollowers = action.payload.userFollowers as unknown as null;
+      state.userFollowing = action.payload.userFollowing as unknown as null;
+      state.userGuestList = action.payload.userGuestList as unknown as null;
+      state.userReviews = action.payload.userReviews as unknown as null;
+      state.userTickets = action.payload.userTickets as unknown as null;
+      state.userTipsProfit = action.payload.userTipsProfit as unknown as null;
+      state.userSavedEvents = action.payload.userSavedEvents as unknown as null;
+      state.userSavedReviews = action.payload.userSavedReviews as unknown as null;
       state.error = null;
       // Update cache timestamp
       state.profileCacheTimestamp = Date.now();
-      // Add profile ID to cached list if it has an ID
+
+      // Add the userId passed to the thunk to cached list
       const userProfile = action.payload.userProfile as UserProfile;
-      if (userProfile?.id && !state.cachedProfileIds.includes(userProfile.id)) {
-        state.cachedProfileIds.push(userProfile.id);
+      const userId = action.payload.userId as string; // Pass userId from thunk
+
+      // Debug logging for profile structure
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Profile structure:', {
+          profileId: userProfile?.id,
+          userId: userId,
+          profileKeys: userProfile ? Object.keys(userProfile) : 'undefined',
+          fullProfile: userProfile
+        });
+      }
+
+      // Use userId from thunk parameter instead of profile.id
+      if (userId && !state.cachedProfileIds.includes(userId)) {
+        state.cachedProfileIds.push(userId);
+      }
+
+      // Debug logging for cache update
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Profile cached for user ${userId}. Cache timestamp: ${state.profileCacheTimestamp}`);
       }
     },
     createBookingStart(state) {
@@ -323,7 +378,7 @@ const isProfileCached = (profileId: string, cachedIds: string[], timestamp: numb
 };
 
 // Cache invalidation utilities
-export const invalidateProfileCache = () => (dispatch: AppDispatch) => {
+export const invalidateProfileCache = () => () => {
   // This could be used to manually clear all cache if needed
   // For now, components can use forceRefresh=true
   console.log("Cache invalidation would be handled here");
@@ -463,30 +518,44 @@ export const fetchUserProfile = (uid?: string, forceRefresh: boolean = false) =>
   const userId = uid || localStorage.getItem("uid");
   if (!userId) throw new Error("User ID is undefined");
 
-  // Check if we have cached data and it's still valid
-  if (!forceRefresh && isCacheValid(state.profileCacheTimestamp) && state.profile?.id === userId) {
-    console.log("Using cached profile data for user:", userId);
-    // Still send success notification for cached data
-    notify(dispatch, {
-      type: "profile_fetch",
-      data: {
-        message: "Profile data loaded from cache!",
-        type: "info"
-      },
-    });
+  // Check if already fetching this user
+  if (state.fetchingUserIds.includes(userId)) {
+    console.log("Already fetching profile for user:", userId);
     return;
   }
 
+  // Check if we have cached data and it's still valid - use userId instead of profile.id
+  if (!forceRefresh && isCacheValid(state.profileCacheTimestamp, PROFILE_CACHE_DURATION) && state.cachedProfileIds.includes(userId)) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Using cached profile data for user: ${userId}. Cache age: ${Date.now() - (state.profileCacheTimestamp || 0)}ms`);
+    }
+    // Skip notifications for cached data to prevent re-renders
+    return;
+  }
+
+  // Start tracking this fetch
+  dispatch(profileSlice.actions.startFetchingUser(userId));
   dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
-    console.log(`Fetching user profile for UID: ${userId}...`);
+    // Reduced logging for performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Fetching user profile for UID: ${userId}...`);
+    }
 
-    const response = await axios.get(`https://gigartz.onrender.com/user/${userId}`);
+    const response = await axios.get(`https://gigartz.onrender.com/user/${userId}`, {
+      timeout: 15000 // 15 second timeout
+    });
 
-    console.log("User profile response:", response.data);
+    // Reduced logging for performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log("User profile response:", response.data);
+    }
 
-    dispatch(profileSlice.actions.fetchProfileSuccess(response.data));
+    dispatch(profileSlice.actions.fetchProfileSuccess({
+      ...response.data,
+      userId: userId // Pass the userId to the action
+    }));
 
     // Send success notification
     notify(dispatch, {
@@ -498,6 +567,9 @@ export const fetchUserProfile = (uid?: string, forceRefresh: boolean = false) =>
     });
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
+  } finally {
+    // Stop tracking this fetch
+    dispatch(profileSlice.actions.stopFetchingUser(userId));
   }
 };
 
@@ -507,32 +579,86 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
 
   // Get UID from localStorage if not provided
   const userId = uid || localStorage.getItem("uid");
+  
   if (!userId) throw new Error("User ID is undefined");
 
+  // Check if already fetching this user
+  if (state.fetchingUserIds.includes(userId)) {
+    console.log("Already fetching A profile for user:", userId);
+    return;
+  }
   // Check if we have cached data for this specific user profile
-  if (!forceRefresh && isProfileCached(userId, state.cachedProfileIds, state.userProfileCacheTimestamp) && state.userProfile?.id === userId) {
-    console.log("Using cached user profile data for user:", userId);
-    // Send info notification for cached data
-    notify(dispatch, {
-      type: "profile_fetch",
-      data: {
-        message: "Profile loaded from cache!",
-        type: "info"
-      },
-    });
+  const isCached = isProfileCached(userId, state.cachedProfileIds, state.userProfileCacheTimestamp);
+  const isCurrentUser = state.userProfile?.id === userId;
+
+  if (!forceRefresh && isCached && isCurrentUser) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Using cached user profile data for user: ${userId}. Cache age: ${Date.now() - (state.userProfileCacheTimestamp || 0)}ms`);
+    }
+    // Skip notifications for cached data to prevent re-renders
     return;
   }
 
+  // If cached but not current user, and user exists in userList, we can use that data
+  if (!forceRefresh && state.userList?.find(user => user.id === userId) && !isCurrentUser) {
+    const cachedUserData = state.userList.find(user => user.id === userId);
+    if (cachedUserData) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Using cached data from userList for user: ${userId}`);
+      }
+
+      // Check if we already have this user's data in userProfile to avoid unnecessary updates
+      if (state.userProfile?.id === userId) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`User profile already loaded for ${userId}, skipping update`);
+        }
+        return;
+      }
+
+      // Only update if absolutely necessary to prevent re-render cycles
+      dispatch(profileSlice.actions.fetchAProfileSuccess({
+        userProfile: cachedUserData,
+        userEvents: [],
+        likedEvents: [],
+        userTickets: [],
+        userFollowing: [],
+        userFollowers: [],
+        userGuestList: [],
+        userReviews: [],
+        userSavedEvents: [],
+        userSavedReviews: [],
+        userBookings: [],
+        userBookingsRequests: [],
+        userId: userId
+      }));
+
+      return;
+    }
+  }
+
+  // Start tracking this fetch
+  dispatch(profileSlice.actions.startFetchingUser(userId));
   dispatch(profileSlice.actions.fetchAProfileStart());
 
   try {
-    console.log(`Fetching user profile for UID: ${userId}...`);
+    // Reduced logging for performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Fetching user profile for UID: ${userId}...`);
+    }
 
-    const response = await axios.get(`https://gigartz.onrender.com/user/${userId}`);
+    const response = await axios.get(`https://gigartz.onrender.com/user/${userId}`, {
+      timeout: 15000 // 15 second timeout
+    });
 
-    console.log("User profile response:", response.data);
+    // Reduced logging for performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log("User profile response:", response.data);
+    }
 
-    dispatch(profileSlice.actions.fetchAProfileSuccess(response.data));
+    dispatch(profileSlice.actions.fetchAProfileSuccess({
+      ...response.data,
+      userId: userId // Pass the userId to the action
+    }));
 
     // Send success notification
     notify(dispatch, {
@@ -544,6 +670,9 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
     });
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchAProfileFailure);
+  } finally {
+    // Stop tracking this fetch
+    dispatch(profileSlice.actions.stopFetchingUser(userId));
   }
 };
 
@@ -562,9 +691,17 @@ export const fetchAllProfiles = (forceRefresh: boolean = false) => async (dispat
   dispatch(profileSlice.actions.fetchProfileStart());
 
   try {
-    console.log("Fetching user profiles");
-    const response = await axios.get(`https://gigartz.onrender.com/users/`);
-    console.log("User profile responses:", response.data);
+    // Reduced logging for performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Fetching user profiles");
+    }
+    const response = await axios.get(`https://gigartz.onrender.com/users/`, {
+      timeout: 15000 // 15 second timeout
+    });
+    // Reduced logging for performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log("User profile responses:", response.data);
+    }
 
     dispatch(profileSlice.actions.getProfileSuccess(response.data));
     // Send success notification
@@ -1138,6 +1275,8 @@ export const {
   updateBookingStatusStart,
   updateBookingStatusSuccess,
   updateBookingStatusFailure,
+  startFetchingUser,
+  stopFetchingUser,
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

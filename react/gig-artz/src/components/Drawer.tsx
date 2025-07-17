@@ -53,22 +53,27 @@ function Drawer() {
     }
   };
 
-  // Fetch user profile on mount or user change - use cache by default
+  // Fetch user profile on mount or user change - use cache by default with better caching logic
   useEffect(() => {
-    // fetchUserProfile now uses cache by default, only fetches if cache is invalid
-    if (user?.uid) dispatch(fetchUserProfile(user.uid));
-  }, [user, dispatch]);
+    // Only fetch if user exists and we don't already have their profile loaded or loading
+    if (user?.uid && (!profile || profile.id !== user.uid) && !loading) {
+      dispatch(fetchUserProfile(user.uid));
+    }
+  }, [user?.uid, dispatch, loading, profile]);
 
-  // Fallback for persisted user
+  // Fallback for persisted user with better caching logic
   useEffect(() => {
-    if (!user) {
+    if (!user && !loading) {
       const persistedUser = localStorage.getItem("authUser");
       if (persistedUser) {
-        // fetchUserProfile now uses cache by default, only fetches if cache is invalid
-        dispatch(fetchUserProfile(JSON.parse(persistedUser).uid));
+        const parsedUser = JSON.parse(persistedUser);
+        // Only fetch if we don't already have this user's profile
+        if (!profile || profile.id !== parsedUser.uid) {
+          dispatch(fetchUserProfile(parsedUser.uid));
+        }
       }
     }
-  }, [user, dispatch]);
+  }, [user, dispatch, loading, profile]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);

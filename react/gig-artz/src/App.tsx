@@ -34,26 +34,16 @@ import Settings from "./pages/Settings";
 import TitleUpdater from "./components/TitleUpdater";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
-import { selectAuthUser } from "../store/authSlice";
+import { useLocation } from "react-router-dom";
+import { RootState } from "../store/store";
 
-function AuthRedirect() {
-  const user = useSelector(selectAuthUser);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    // If user is logged in and on the login or register page, redirect to /home
-    if (
-      user &&
-      (location.pathname === "/" || location.pathname === "/register")
-    ) {
-      navigate("/home", { replace: true });
-    }
-  }, [user, location, navigate]);
-
-  return null;
-}
+// Import new auth components
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthRedirect from "./components/AuthRedirect";
+import NotFound from "./components/NotFound";
+import Unauthorized from "./components/Unauthorized";
+import { UserRole, Permission } from "./constants/authTypes";
 
 // App must only use Provider, BrowserRouter, and render InnerApp as a child of BrowserRouter
 function App() {
@@ -63,24 +53,27 @@ function App() {
       <BrowserRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
-        <InnerApp
-          notificationsOpen={notificationsOpen}
-          setNotificationsOpen={setNotificationsOpen}
-        />
+        <AuthProvider>
+          <InnerApp
+            notificationsOpen={notificationsOpen}
+            setNotificationsOpen={setNotificationsOpen}
+          />
+        </AuthProvider>
       </BrowserRouter>
     </Provider>
   );
 }
 
 function InnerApp({
-  notificationsOpen,
   setNotificationsOpen,
 }: {
   notificationsOpen: boolean;
   setNotificationsOpen: (open: boolean) => void;
 }) {
   const location = useLocation();
-  const toastState = useSelector((state: any) => state.notification.toast);
+  const toastState = useSelector(
+    (state: RootState) => state.notification.toast
+  );
   const dispatch = useDispatch();
   useEffect(() => {
     setNotificationsOpen(false);
@@ -107,199 +100,209 @@ function InnerApp({
         />
       )}
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot" element={<Forgot />} />
+        <Route path="/reset-password" element={<Forgot />} />
+
+        {/* Error Pages */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected Routes */}
         <Route
           path="/messages"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Messages />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/follow"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Follow />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/checkout"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Payment />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/notifications"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Notifications />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/tickets"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Tickets />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/scanner"
           element={
-            <>
+            <ProtectedRoute requiredRoles={[UserRole.FREELANCER]}>
               <Drawer />
               <Scanner />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/bookings"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Bookings />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/events"
           element={
-            <>
+            <ProtectedRoute requiredPermissions={[Permission.VIEW_EVENTS]}>
               <Drawer />
               <EventManager />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/explore"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Explore />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/explore/:search"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Explore />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/profile"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Profile />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/people/:uid"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <People />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
-        <Route path="/register" element={<Register />} />
         <Route
           path="/monetization"
           element={
-            <>
+            <ProtectedRoute requiredRoles={[UserRole.FREELANCER]}>
               <Drawer />
               <Monetization />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/wallet"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Wallet />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/guest-list"
           element={
-            <>
+            <ProtectedRoute requiredPermissions={[Permission.MANAGE_BOOKINGS]}>
               <Drawer />
               <GuestList />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/home"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Home />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/settings"
           element={
-            <>
+            <ProtectedRoute>
               <Drawer />
               <Settings />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
-        <Route path="/reset-password" element={<Forgot />} />
         <Route
           path="/events/:eventId/insights"
           element={
-            <>
+            <ProtectedRoute requiredPermissions={[Permission.VIEW_ANALYTICS]}>
               <Drawer />
               <EventInsights />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/events/insights"
           element={
-            <>
+            <ProtectedRoute requiredPermissions={[Permission.VIEW_ANALYTICS]}>
               <Drawer />
               <EventInsights />
               <SideBar />
-            </>
+            </ProtectedRoute>
           }
         />
+
+        {/* Catch all route for 404 - Must be last */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

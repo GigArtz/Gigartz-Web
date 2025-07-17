@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import EventCard from "./EventCard";
 import AdCard from "./AdCard"; // Ensure this exists
 import { FaSpinner } from "react-icons/fa";
@@ -55,4 +55,4 @@ function ScrollableEventRow({ events = [] }) {
   );
 }
 
-export default ScrollableEventRow;
+export default memo(ScrollableEventRow);

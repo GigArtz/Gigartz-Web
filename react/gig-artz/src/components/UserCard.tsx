@@ -1,9 +1,12 @@
-import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+import React, { memo } from "react";
+import { useSelector, shallowEqual } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { RootState } from "../../store/store";
+import { useRenderLogger } from "../hooks/usePerformanceMonitor";
 
 interface User {
   uid: string;
+  id?: string; // Add optional id property
   name?: string;
   userName?: string;
   bio?: string;
@@ -15,21 +18,24 @@ interface UserCardProps {
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user }) => {
+  // Monitor re-renders in development
+  useRenderLogger("UserCard", { userId: user.uid || user.id });
+
   const navigate = useNavigate();
-  const { userFollowing } = useSelector((state) => state.profile);
-  const { uid } = useSelector((state) => state.auth);
-  
+  const { userFollowing } = useSelector(
+    (state: RootState) => state.profile,
+    shallowEqual
+  );
 
   // Check if user is following current profile
-  const isFollowingUser = userFollowing?.some((u) => u?.id === user?.id );
+  const isFollowingUser =
+    userFollowing?.some((u) => u?.id === user?.id) || false;
 
   const handleClick = () => {
     navigate(`/people/${user?.uid || user?.id}`);
   };
 
-  useEffect(() => {
-    console.log(userFollowing);
-  });
+  // Removed useEffect with console.log to prevent unnecessary re-renders
 
   return (
     <div
@@ -73,4 +79,4 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
   );
 };
 
-export default UserCard;
+export default memo(UserCard);
