@@ -246,6 +246,7 @@ const EventActions: React.FC<EventActionsProps> = ({
             onClick={handleRepostEvent}
             className="w-4 h-4 md:w-5 md:h-5 hover:text-teal-500 mr-2"
           />
+          {typeof event?.repostCount === "number" ? event?.repostCount : 0}
         </p>
 
         {/* Save Event */}

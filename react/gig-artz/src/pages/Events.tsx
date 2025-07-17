@@ -19,6 +19,18 @@ import Payment from "../components/Payment";
 import EventGallery from "../components/EventGallery";
 import Header from "../components/Header";
 
+interface ResaleTicket {
+  ticketType: string;
+  createdAt: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  daysUntilEvent: number;
+  resaleId: string;
+  price: number;
+  sellerId: string;
+}
+
 interface Event {
   id: string;
   title: string;
@@ -36,6 +48,7 @@ interface Event {
   hostName: string;
   comments: string[];
   likes: number;
+  resaleTickets?: ResaleTicket[];
 }
 
 const EventDetails = () => {
@@ -46,6 +59,9 @@ const EventDetails = () => {
   const [ticketQuantities, setTicketQuantities] = useState<
     Record<string, number>
   >({});
+  const [resaleTicketQuantities, setResaleTicketQuantities] = useState<
+    Record<string, number>
+  >({});
   const eventData: Event[] = useSelector(
     (state: RootState) => state.events.events
   );
@@ -53,13 +69,11 @@ const EventDetails = () => {
   const { uid } = useSelector((state: RootState) => state.auth);
   const { profile } = useSelector((state: RootState) => state.profile);
 
-
   // Reviews Modal
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
 
   // Share Modal
   const [isShareVisible, setIsShareVisible] = useState(false);
-
 
   // Payment Modal
   const [isPaymentVisible, setIsPaymentVisible] = useState(false);
@@ -76,7 +90,21 @@ const EventDetails = () => {
         {} as Record<string, number>
       );
       setTicketQuantities(initialQuantities);
+
+      // Initialize resale ticket quantities
+      if (foundEvent.resaleTickets) {
+        const initialResaleQuantities = foundEvent.resaleTickets.reduce(
+          (acc, ticket) => {
+            acc[ticket.resaleId] = 0;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+        setResaleTicketQuantities(initialResaleQuantities);
+      }
     }
+
+    console.log(foundEvent);
   }, [eventId, eventData]);
 
   useEffect(() => {
@@ -90,6 +118,13 @@ const EventDetails = () => {
     });
   };
 
+  const handleResaleQuantityChange = (resaleId: string, delta: number) => {
+    setResaleTicketQuantities((prevQuantities) => {
+      const newQuantity = Math.max(0, (prevQuantities[resaleId] || 0) + delta);
+      return { ...prevQuantities, [resaleId]: newQuantity };
+    });
+  };
+
   const totalTicketPrice = Object.entries(ticketQuantities).reduce(
     (total, [type, quantity]) => {
       const ticketPrice = event?.ticketsAvailable[type].price || 0;
@@ -97,6 +132,19 @@ const EventDetails = () => {
     },
     0
   );
+
+  const totalResaleTicketPrice = Object.entries(resaleTicketQuantities).reduce(
+    (total, [resaleId, quantity]) => {
+      const resaleTicket = event?.resaleTickets?.find(
+        (t) => t.resaleId === resaleId
+      );
+      const ticketPrice = resaleTicket?.price || 0;
+      return total + ticketPrice * quantity;
+    },
+    0
+  );
+
+  const grandTotal = totalTicketPrice + totalResaleTicketPrice;
 
   // Handle users liked events
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
@@ -179,23 +227,42 @@ const EventDetails = () => {
           ticketType: type,
           price: event?.ticketsAvailable[type].price || 0,
           quantity,
+          isResale: false,
         }));
 
-      if (ticketTypes.length === 0) {
-        alert("Please select at least one ticket type.");
+      const resaleTicketTypes = Object.entries(resaleTicketQuantities)
+        .filter(([_, quantity]) => quantity > 0)
+        .map(([resaleId, quantity]) => {
+          const resaleTicket = event?.resaleTickets?.find(
+            (t) => t.resaleId === resaleId
+          );
+          return {
+            ticketType: resaleTicket?.ticketType || "",
+            price: resaleTicket?.price || 0,
+            quantity,
+            isResale: true,
+            resaleId,
+            sellerId: resaleTicket?.sellerId,
+          };
+        });
+
+      const allTickets = [...ticketTypes, ...resaleTicketTypes];
+
+      if (allTickets.length === 0) {
+        alert("Please select at least one ticket.");
         return;
       }
 
       const ticketDetails = {
         eventId,
-        customerUid: profile?.id || uid, // replace with actual customer UID
-        customerName: profile?.name, // replace with actual customer name
-        customerEmail: profile?.emailAddress, // replace with actual customer email
-        ticketTypes,
+        customerUid: profile?.id || uid,
+        customerName: profile?.name,
+        customerEmail: profile?.emailAddress,
+        ticketTypes: allTickets,
         location: event.venue || "Unknown",
         eventName: event.title,
         eventDate: event.date,
-        image: event.gallery[0] || "Unknown", // replace with actual image if available
+        image: event.gallery[0] || "Unknown",
       };
 
       setIsPaymentVisible(true);
@@ -217,12 +284,9 @@ const EventDetails = () => {
     navigate(`/people/${event.promoterId}`);
   };
 
-
-
   return (
     <div className="main-content px-4 md:px-8 mb-3">
-      <Header title= {event?.title} />
-   
+      <Header title={event?.title} />
 
       {/* Reviews Modal */}
       {isCommentsVisible && (
@@ -251,17 +315,33 @@ const EventDetails = () => {
       {isPaymentVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
           <Payment
-            amount={totalTicketPrice}
+            amount={grandTotal}
             ticketDetails={{
               eventId,
               customerUid: profile?.id || uid,
-              ticketTypes: Object.entries(ticketQuantities).map(
-                ([type, quantity]) => ({
+              ticketTypes: [
+                ...Object.entries(ticketQuantities).map(([type, quantity]) => ({
                   ticketType: type,
                   price: event?.ticketsAvailable[type].price || 0,
                   quantity,
-                })
-              ),
+                  isResale: false,
+                })),
+                ...Object.entries(resaleTicketQuantities).map(
+                  ([resaleId, quantity]) => {
+                    const resaleTicket = event?.resaleTickets?.find(
+                      (t) => t.resaleId === resaleId
+                    );
+                    return {
+                      ticketType: resaleTicket?.ticketType || "",
+                      price: resaleTicket?.price || 0,
+                      quantity,
+                      isResale: true,
+                      resaleId,
+                      sellerId: resaleTicket?.sellerId,
+                    };
+                  }
+                ),
+              ],
             }}
             onSuccess={handlePaymentSuccess}
             onFailure={handlePaymentFailure}
@@ -271,7 +351,6 @@ const EventDetails = () => {
       )}
 
       <div className="my-4 mb-8 md:mx-0 relative shadow-md rounded-lg">
-       
         {event.eventVideo ? (
           <div className="mt-4">
             <video autoPlay loop muted className="w-full rounded-t-lg">
@@ -284,26 +363,28 @@ const EventDetails = () => {
         )}
 
         <div className="flex bg-gray-800 rounded-b-lg p-4 gap-4 text-gray-400 text-sm md:text-base">
-        <EventActions
-          event={event}
-          profile={profile}
-          uid={uid || profile.id}
-          showComments={showComments}
-          shareEvent={shareEvent}
-          handleLike={handleLike}
-        />
-      </div>
+          <EventActions
+            event={event}
+            profile={profile}
+            uid={uid || profile.id}
+            showComments={showComments}
+            shareEvent={shareEvent}
+            handleLike={handleLike}
+          />
+        </div>
       </div>
 
       <div className="flex flex-row md:flex-row justify-between gap-4 mt-4">
-        
-          <h1 className="text-lg md:text-3xl font-bold text-white">
-            {event.title}
-          </h1>
-          <button onClick={viewHostProfile} className="text-gray-400 mt-2 flex flex-row items-center">
-            <FaUserAlt className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}{event.hostName}
-          </button>
-        
+        <h1 className="text-lg md:text-3xl font-bold text-white">
+          {event.title}
+        </h1>
+        <button
+          onClick={viewHostProfile}
+          className="text-gray-400 mt-2 flex flex-row items-center"
+        >
+          <FaUserAlt className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
+          {event.hostName}
+        </button>
       </div>
 
       <p className="mt-4 text-lg">{event.description}</p>
@@ -336,19 +417,21 @@ const EventDetails = () => {
         </div>
       </div>
 
-      
       <hr className="mt-4 border-teal-800" />
 
       <div className="mt-6 mb-10">
         <h2 className="text-lg md:text-2xl font-bold">Tickets</h2>
+
+        {/* Original Tickets */}
         {Object.entries(event.ticketsAvailable).map(([type, ticket]) => (
           <div
             key={type}
-            className="bg-gray-900 p-4 rounded-lg flex flex-row justify-between items-center mt-2"
+            className="bg-gray-900 border border-teal-500 p-4 rounded-lg flex flex-row justify-between items-center mt-2"
           >
             <div className="text-left">
               <p className="text-lg font-bold capitalize">{type} Ticket</p>
               <p className="text-gray-300">R {ticket.price}</p>
+              <p className="text-xs text-gray-500">Official</p>
             </div>
             <div className="flex items-center mt-2 sm:mt-0">
               <button
@@ -370,15 +453,80 @@ const EventDetails = () => {
           </div>
         ))}
 
-        <div className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center my-4">
-          <p className="text-lg font-bold">Total: R {totalTicketPrice}</p>
-          <button
-            onClick={handlePurchase}
-            className="bg-teal-500 px-4 py-2 rounded-lg hover:bg-teal-600 mt-2 sm:mt-0"
-          >
-            Get Tickets
-          </button>
-        </div>
+        {/* Resale Tickets */}
+        {event.resaleTickets && event.resaleTickets.length > 0 && (
+          <>
+            <h3 className="text-lg font-bold mt-6 mb-2">Resale Tickets</h3>
+            {event.resaleTickets.map((resaleTicket) => (
+              <div
+                key={resaleTicket.resaleId}
+                className="bg-gray-900 border border-orange-500 p-4 rounded-lg flex flex-row justify-between items-center mt-2"
+              >
+                <div className="text-left">
+                  <p className="text-lg font-bold capitalize">
+                    {resaleTicket.ticketType} Ticket
+                  </p>
+                  <p className="text-gray-300">R {resaleTicket.price}</p>
+                  <p className="text-xs text-orange-400">
+                    Resale • {resaleTicket.daysUntilEvent} days until event
+                  </p>
+                </div>
+                <div className="flex items-center mt-2 sm:mt-0">
+                  <button
+                    className="bg-orange-500 px-3 py-1 rounded-lg hover:bg-orange-600 disabled:bg-gray-600"
+                    onClick={() =>
+                      handleResaleQuantityChange(resaleTicket.resaleId, -1)
+                    }
+                    disabled={
+                      resaleTicketQuantities[resaleTicket.resaleId] <= 0
+                    }
+                  >
+                    -
+                  </button>
+                  <p className="px-4">
+                    {resaleTicketQuantities[resaleTicket.resaleId] || 0}
+                  </p>
+                  <button
+                    className="bg-orange-500 px-3 py-1 rounded-lg hover:bg-orange-600 disabled:bg-gray-600"
+                    onClick={() =>
+                      handleResaleQuantityChange(resaleTicket.resaleId, 1)
+                    }
+                    disabled={
+                      resaleTicketQuantities[resaleTicket.resaleId] >= 1
+                    }
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {(totalTicketPrice > 0 || totalResaleTicketPrice > 0) && (
+            <div className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center my-4">
+              <div className="text-left">
+                {totalTicketPrice > 0 && (
+                  <p className="text-sm text-gray-400">
+                    Official tickets: R {totalTicketPrice}
+                  </p>
+                )}
+                {totalResaleTicketPrice > 0 && (
+                  <p className="text-sm text-gray-400">
+                    Resale tickets: R {totalResaleTicketPrice}
+                  </p>
+                )}
+                <p className="text-lg font-bold">Total: R {grandTotal}</p>
+              </div>
+              <button
+                onClick={handlePurchase}
+                className="btn-primary-sm px-4 py-2"
+                disabled={grandTotal === 0}
+              >
+                Get Tickets
+              </button>
+            </div>
+        )}
       </div>
 
       <hr className="mt-4 border-teal-800" />
