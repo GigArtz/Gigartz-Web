@@ -1,22 +1,40 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  memo,
-  useRef,
-} from "react";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 import {
   fetchAllProfiles,
   followUser,
-  fetchAUserProfile,
+  bookFreelancer,
+  fetchVisitedUserProfile,
 } from "../../store/profileSlice";
+import avatar from "../assets/avater.png";
+import blueBackground from "../assets/blue.jpg";
 import ProfileTabs from "../components/ProfileTabs";
 import { RootState, AppDispatch } from "../../store/store";
+import {
+  FaCalendarPlus,
+  FaEnvelope,
+  FaMoneyBillAlt,
+  FaPlus,
+  FaTimesCircle,
+} from "react-icons/fa";
+import GuestListModal from "../components/GuestListModal";
 import ProfileSection from "../components/ProfileSection";
-import { useRenderLogger } from "../hooks/usePerformanceMonitor";
+import BookingModal from "../components/BookingModal";
+import TippingModal from "../components/TippingModal";
+
+// User Profile Type
+interface UserProfile {
+  name?: string;
+  userName?: string;
+  bio?: string;
+  profilePicUrl?: string;
+  coverProfile?: string;
+  following?: number;
+  followers?: number;
+  genre?: { name: string }[];
+  emailAddress?: string;
+}
 
 // Booking Form Data Type
 interface BookingFormData {
@@ -27,139 +45,73 @@ interface BookingFormData {
   additionalInfo: string;
 }
 
-// Component with custom comparison to prevent unnecessary re-renders
-const People: React.FC = memo(() => {
+// Component
+const People: React.FC = () => {
   const { uid } = useParams<{ uid: string }>(); // Extract UID from URL
   const navigate = useNavigate(); // Initialize useNavigate
   const dispatch = useDispatch<AppDispatch>();
-
-  // Monitor re-renders in development
-  useRenderLogger("People", { uid });
-
-  // Optimized selectors with shallow equality
-  const authState = useSelector((state: RootState) => state.auth, shallowEqual);
-  const profileState = useSelector(
-    (state: RootState) => state.profile,
-    shallowEqual
-  );
-
-  const { uid: user_id } = authState;
-  const { userProfile } = profileState;
-
+  const { uid: user_id, loading, error } = useSelector((state) => state.auth);
+  //const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // State for booking modal
+  const [isTippingModalOpen, setIsTippingModalOpen] = useState(false); // State for tipping modal
 
-  // Track if we've already fetched for this UID to prevent infinite loops
-  const lastFetchedUid = useRef<string | null>(null);
-  const isInitialMount = useRef(true);
-
-  // Extract ID separately to prevent re-renders from other profile changes
-  const userProfileId = userProfile?.id;
-
-  // Memoize profile checks to prevent unnecessary re-renders
-  const shouldFetchProfile = useMemo(() => {
-    // More specific check to prevent unnecessary re-renders
-    return uid && (!userProfileId || userProfileId !== uid);
-  }, [uid, userProfileId]); // Only depend on the ID, not the whole object
-
-  // Reset fetch tracking when UID changes
+  // Fetch users - use cache by default
   useEffect(() => {
-    lastFetchedUid.current = null;
-    isInitialMount.current = false;
-  }, [uid]);
+    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
+    dispatch(fetchAllProfiles());
+  }, [dispatch]);
 
-  // Optimize profile fetching with proper dependency array and aggressive deduplication
+  const userList = useSelector((state: RootState) => state.profile);
+
+  const { visitedProfile } = useSelector((state: RootState) => state.profile);
+
+  const [isFreelancer, setIsFreelancer] = useState<boolean>(false);
+
+  // Single useEffect to handle visited profile fetching
   useEffect(() => {
-    // Skip if this is the initial mount to prevent double fetching
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
+    if (uid) {
+      dispatch(fetchVisitedUserProfile(uid));
     }
+  }, [dispatch, uid]);
 
-    if (shouldFetchProfile && uid) {
-      // Prevent duplicate fetches for the same UID
-      if (lastFetchedUid.current === uid) {
-        return;
-      }
-
-      // Additional check: Don't fetch if we're already loading for this user
-      if (profileState.fetchingUserIds?.includes(uid)) {
-        return;
-      }
-
-      lastFetchedUid.current = uid;
-      dispatch(fetchAUserProfile(uid));
-    }
-  }, [dispatch, shouldFetchProfile, uid]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Fetch all profiles only once if not already loaded
+  // Update freelancer status when visitedProfile changes
   useEffect(() => {
-    // Only fetch if we don't have userList data
-    if (!profileState.userList || profileState.userList.length === 0) {
-      dispatch(fetchAllProfiles());
-    }
-  }, [dispatch, profileState.userList]);
+    setIsFreelancer(visitedProfile?.userProfile?.roles?.freelancer || false);
+  }, [visitedProfile?.userProfile?.roles?.freelancer]);
 
-  // Memoized event handlers to prevent child re-renders
-  const handleFollow = useCallback(() => {
-    if (uid && user_id) {
-      setIsFollowing((prev) => !prev);
-      dispatch(followUser(user_id, uid));
-    }
-  }, [uid, user_id, dispatch]);
+  const handleFollow = () => {
+    setIsFollowing((prev) => !prev);
+    dispatch(followUser(user_id, uid));
+  };
 
-  const handleMessageClick = useCallback(() => {
+  const handleMessageClick = () => {
     navigate(`/messages?contact=${uid}`); // Navigate to Messages with contact ID
-  }, [navigate, uid]);
+  };
 
-  const handleAddGuestToList = useCallback(
-    (listId: number, guestEmail: string) => {
-      console.log(`Adding user ${guestEmail} to list ${listId}`);
-    },
-    []
-  );
+  const handleAddGuestToList = (listId: number, guestEmail: string) => {
+    console.log(`Adding user ${guestEmail} to list ${listId}`);
+    setIsGuestListModalOpen(false);
+  };
 
-  const handleTipFreelancer = useCallback(
-    (amount: number) => {
-      console.log(`Tipping freelancer ${uid} with amount: $${amount}`);
-    },
-    [uid]
-  );
+  const handleTipFreelancer = (amount: number) => {
+    console.log(`Tipping freelancer ${uid} with amount: $${amount}`);
+    // Add logic for tipping (e.g., dispatch an action or navigate to payment page)
+  };
 
-  const handleBookFreelancer = useCallback(
-    (data: BookingFormData) => {
-      const bookingDetails = {
-        userId: user_id,
-        freelancerId: uid,
-        ...data,
-        status: "Pending",
-        createdAt: new Date().toISOString(),
-      };
-      console.log(`Booking freelancer ${uid} with details:`, bookingDetails);
-    },
-    [user_id, uid]
-  );
-
-  const { loading } = profileState;
-
-  // Memoize ProfileSection props to prevent unnecessary re-renders
-  const profileSectionProps = useMemo(
-    () => ({
-      onFollow: handleFollow,
-      onMessage: handleMessageClick,
-      onAddGuest: handleAddGuestToList,
-      onTip: handleTipFreelancer,
-      onBook: handleBookFreelancer,
-      isFollowing: isFollowing,
-    }),
-    [
-      handleFollow,
-      handleMessageClick,
-      handleAddGuestToList,
-      handleTipFreelancer,
-      handleBookFreelancer,
-      isFollowing,
-    ]
-  );
+  const handleBookFreelancer = (data: BookingFormData) => {
+    const bookingDetails = {
+      userId: user_id,
+      freelancerId: uid,
+      ...data,
+      status: "Pending",
+      createdAt: new Date().toISOString(),
+    };
+    dispatch(bookFreelancer(bookingDetails));
+    console.log(`Booking freelancer ${uid} with details:`, bookingDetails);
+    setIsBookingModalOpen(false);
+  };
 
   if (loading) {
     return (
@@ -171,13 +123,17 @@ const People: React.FC = memo(() => {
 
   return (
     <div className="main-content">
-      <ProfileSection {...profileSectionProps} />
+      <ProfileSection
+        onFollow={handleFollow}
+        onMessage={handleMessageClick}
+        onAddGuest={handleAddGuestToList}
+        onTip={handleTipFreelancer}
+        onBook={handleBookFreelancer}
+      />
       {/* Profile Tabs */}
       <ProfileTabs uid={uid} />
     </div>
   );
-});
-
-People.displayName = "People";
+};
 
 export default People;

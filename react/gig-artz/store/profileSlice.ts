@@ -87,9 +87,16 @@ interface Booking {
   image?: string;
 }
 
+interface VisitedProfileData {
+  userProfile: UserProfile | null;
+  userFollowers: unknown[] | null;
+  userFollowing: unknown[] | null;
+}
+
 interface ProfileState {
   profile: UserProfile | null;
   userProfile: UserProfile | null;
+  visitedProfile: VisitedProfileData | null;
   userList: UserProfile[] | null;
   likedEvents: null;
   userBookings: Booking[] | null;
@@ -112,6 +119,7 @@ interface ProfileState {
   profileCacheTimestamp: number | null;
   userListCacheTimestamp: number | null;
   userProfileCacheTimestamp: number | null;
+  visitedProfileCacheTimestamp: number | null;
   cachedProfileIds: string[];
   // Track fetching to prevent duplicates
   fetchingUserIds: string[];
@@ -120,6 +128,7 @@ interface ProfileState {
 const initialState: ProfileState = {
   profile: null,
   userProfile: null,
+  visitedProfile: null,
   likedEvents: null,
   userBookings: null,
   userBookingsRequests: null,
@@ -142,6 +151,7 @@ const initialState: ProfileState = {
   profileCacheTimestamp: null,
   userListCacheTimestamp: null,
   userProfileCacheTimestamp: null,
+  visitedProfileCacheTimestamp: null,
   cachedProfileIds: [],
   // Track fetching to prevent duplicates
   fetchingUserIds: [],
@@ -183,17 +193,6 @@ const profileSlice = createSlice({
     fetchAProfileSuccess(state, action: PayloadAction<Record<string, unknown>>) {
       state.loading = false;
       state.userProfile = action.payload.userProfile as UserProfile;
-      // Store all the related data for the other user
-      state.userEvents = action.payload.userEvents as unknown as null;
-      state.userFollowers = action.payload.userFollowers as unknown as null;
-      state.userFollowing = action.payload.userFollowing as unknown as null;
-      state.userGuestList = action.payload.userGuestList as unknown as null;
-      state.userReviews = action.payload.userReviews as unknown as null;
-      state.userTickets = action.payload.userTickets as unknown as null;
-      state.userSavedEvents = action.payload.userSavedEvents as unknown as null;
-      state.userSavedReviews = action.payload.userSavedReviews as unknown as null;
-      state.userBookings = action.payload.userBookings as Booking[];
-      state.userBookingsRequests = action.payload.userBookingsRequests as Booking[];
       state.error = null;
       // Update cache timestamp for individual user profile
       state.userProfileCacheTimestamp = Date.now();
@@ -202,6 +201,25 @@ const profileSlice = createSlice({
       const userId = action.payload.userId as string; // Pass userId from thunk
 
       // Use userId from thunk parameter instead of profile.id
+      if (userId && !state.cachedProfileIds.includes(userId)) {
+        state.cachedProfileIds.push(userId);
+      }
+    },
+
+    fetchVisitedProfileSuccess(state, action: PayloadAction<Record<string, unknown>>) {
+      state.loading = false;
+      state.visitedProfile = {
+        userProfile: action.payload.userProfile as UserProfile,
+        userFollowers: action.payload.userFollowers as unknown[] | null,
+        userFollowing: action.payload.userFollowing as unknown[] | null,
+      };
+      state.error = null;
+      // Update cache timestamp for visited profile
+      state.visitedProfileCacheTimestamp = Date.now();
+
+      // Add the userId to cached list
+      const userId = action.payload.userId as string;
+
       if (userId && !state.cachedProfileIds.includes(userId)) {
         state.cachedProfileIds.push(userId);
       }
@@ -579,7 +597,10 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
 
   // Get UID from localStorage if not provided
   const userId = uid || localStorage.getItem("uid");
-  
+
+  // Debug logging
+  console.log("fetchAUserProfile called with:", { uid, userId, fallbackUsed: !uid });
+
   if (!userId) throw new Error("User ID is undefined");
 
   // Check if already fetching this user
@@ -605,14 +626,6 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
     if (cachedUserData) {
       if (process.env.NODE_ENV === 'development') {
         console.log(`Using cached data from userList for user: ${userId}`);
-      }
-
-      // Check if we already have this user's data in userProfile to avoid unnecessary updates
-      if (state.userProfile?.id === userId) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`User profile already loaded for ${userId}, skipping update`);
-        }
-        return;
       }
 
       // Only update if absolutely necessary to prevent re-render cycles
@@ -673,6 +686,65 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
   } finally {
     // Stop tracking this fetch
     dispatch(profileSlice.actions.stopFetchingUser(userId));
+  }
+};
+
+// Fetch visited user profile (for profiles viewed on people/userId route)
+export const fetchVisitedUserProfile = (uid: string, forceRefresh: boolean = false) => async (dispatch: AppDispatch, getState: () => { profile: ProfileState }) => {
+  const state = getState().profile;
+
+  if (!uid) throw new Error("User ID is required for visited profile");
+
+  // Check if already fetching this user
+  if (state.fetchingUserIds.includes(uid)) {
+    console.log("Already fetching visited profile for user:", uid);
+    return;
+  }
+
+  // Check if we have cached data for this specific visited profile
+  const isCached = isProfileCached(uid, state.cachedProfileIds, state.visitedProfileCacheTimestamp);
+  const isCurrentVisitedProfile = state.visitedProfile?.id === uid;
+
+  if (!forceRefresh && isCached && isCurrentVisitedProfile) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Using cached visited profile data for user: ${uid}. Cache age: ${Date.now() - (state.visitedProfileCacheTimestamp || 0)}ms`);
+    }
+    return;
+  }
+
+  // Start tracking this fetch
+  dispatch(profileSlice.actions.startFetchingUser(uid));
+  dispatch(profileSlice.actions.fetchAProfileStart());
+
+  try {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Fetching visited profile for UID: ${uid}...`);
+    }
+
+    const response = await axios.get(`https://gigartz.onrender.com/user/${uid}`, {
+      timeout: 15000
+    });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Visited profile response:", response.data);
+    }
+
+    dispatch(profileSlice.actions.fetchVisitedProfileSuccess({
+      ...response.data,
+      userId: uid
+    }));
+
+    notify(dispatch, {
+      type: "profile_fetch",
+      data: {
+        message: "Profile loaded successfully!",
+        type: "success"
+      },
+    });
+  } catch (error: unknown) {
+    handleAxiosError(error, dispatch, profileSlice.actions.fetchAProfileFailure);
+  } finally {
+    dispatch(profileSlice.actions.stopFetchingUser(uid));
   }
 };
 
@@ -1268,6 +1340,7 @@ export const {
   fetchProfileStart,
   fetchProfileSuccess,
   fetchProfileFailure,
+  fetchVisitedProfileSuccess,
   resetError,
   updateProfile,
   fetchDrawerProfileSuccess,

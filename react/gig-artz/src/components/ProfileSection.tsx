@@ -1,4 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+/**
+ * ProfileSection Component
+ *
+ * This component now supports displaying profiles for both:
+ * 1. Current user (using userProfile from Redux store)
+ * 2. Visited users (using visitedProfile from Redux store)
+ *
+ * The component automatically determines which data to use based on:
+ * - isOwnProfile: true if the current user is viewing their own profile
+ * - displayProfile: the profile data to display (either from userProfile or visitedProfile)
+ *
+ * Parent components should dispatch fetchVisitedUserProfile(uid) when navigating to people/userId routes
+ * and continue using fetchUserProfile() for the current user's profile.
+ */
 import {
   FaCalendarPlus,
   FaEnvelope,
@@ -6,48 +20,30 @@ import {
   FaMapMarkerAlt,
   FaMoneyBillAlt,
   FaPlus,
-  FaSpinner,
 } from "react-icons/fa";
-import GuestListModal from "./GuestListModal";
 import TippingModal from "./TippingModal";
 import BookingModal from "./BookingModal";
 import avatar from "/avatar.png";
 import cover from "../../src/assets/blue.jpg";
 import Tooltip from "./Tooltip";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useSelector, shallowEqual } from "react-redux";
 import FollowersModal from "./FollowersModal";
-import { fetchAUserProfile } from "../../store/profileSlice";
-import { useParams } from "react-router-dom"; // Added for URL params
-import Profile from "@/pages/Profile";
+import { RootState } from "../../store/store";
+import { useParams } from "react-router-dom";
 import ProfileSectionUI from "./ProfileSectionUI";
 import GuestListModalFromGuestList from "./GuestListModalFromGuestList";
 import SocialLinksModal from "./SocialLinksModal";
-import { useRenderLogger } from "../hooks/usePerformanceMonitor";
-
-interface UserProfile {
-  name?: string;
-  userName?: string;
-  bio?: string;
-  profilePicUrl?: string;
-  coverProfile?: string;
-  following?: number;
-  followers?: number;
-  genre?: { name: string }[];
-  emailAddress?: string;
-  roles?: { freelancer?: boolean };
-}
 
 interface ProfileSectionProps {
   onFollow: () => void;
   onMessage: () => void;
   onAddGuest: (listId: number, guestEmail: string) => void;
   onTip: (amount: number) => void;
-  onBook: (data: any) => void;
-  isFollowing: boolean;
+  onBook: (data: unknown) => void;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
-  ({ onFollow, onMessage, onAddGuest, onTip, onBook, isFollowing }) => {
+  ({ onFollow, onMessage, onAddGuest, onTip, onBook }) => {
     const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
     const [isTippingModalOpen, setIsTippingModalOpen] = useState(false);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -55,11 +51,50 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
 
     const { uid } = useParams(); // Extract uid from URL
-    const dispatch = useDispatch();
-    const { userProfile, userFollowing, loading } = useSelector(
-      (state) => state.profile,
+    const { userProfile, visitedProfile, userFollowing, loading } = useSelector(
+      (state: RootState) => state.profile,
       shallowEqual
     );
+
+    // Get current user ID from auth state instead of localStorage
+    const { uid: currentUserId } = useSelector(
+      (state: RootState) => state.auth
+    );
+
+    // Use visitedProfile for other users, userProfile for current user
+    const isOwnProfile = useMemo(() => {
+      return uid === currentUserId && currentUserId !== null;
+    }, [uid, currentUserId]);
+
+    // Get the correct profile data based on whether it's own profile or visited profile
+    const displayProfile = useMemo(() => {
+      return isOwnProfile
+        ? userProfile?.userProfile
+        : visitedProfile?.userProfile;
+    }, [isOwnProfile, userProfile?.userProfile, visitedProfile?.userProfile]);
+
+    // Determine followers/following data based on profile type
+    const followersData = useMemo(() => {
+      return isOwnProfile
+        ? userProfile?.userFollowers
+        : visitedProfile?.userFollowers || [];
+    }, [
+      isOwnProfile,
+      userProfile?.userFollowers,
+      visitedProfile?.userFollowers,
+    ]);
+
+    const followingData = useMemo(() => {
+      return isOwnProfile
+        ? userProfile?.userFollowing
+        : visitedProfile?.userFollowing || [];
+    }, [
+      isOwnProfile,
+      userProfile?.userFollowing,
+      visitedProfile?.userFollowing,
+    ]);
+
+    // Profile data usage debug logging removed to improve performance
 
     // Remove redundant useEffect - let parent component handle profile fetching
     // useEffect(() => {
@@ -68,13 +103,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     //   }
     // }, [uid, dispatch]);
 
-    const isFreelancer = userProfile?.userProfile?.roles?.freelancer || false;
-    const isAcceptingBookings =
-      userProfile?.userProfile?.acceptBookings || false;
-    const isAcceptingTips = userProfile?.userProfile?.acceptTips || false;
+    const isFreelancer = displayProfile?.roles?.freelancer || false;
+    const isAcceptingBookings = displayProfile?.acceptBookings || false;
+    const isAcceptingTips = displayProfile?.acceptTips || false;
 
-    // Check if user is following current profile
-    const isFollowingUser = userFollowing?.some((user) => user.id === uid);
+    // Check if user is following current profile (memoized for performance)
+    const isFollowingUser = useMemo(() => {
+      return userFollowing?.some((user) => user.id === uid);
+    }, [userFollowing, uid]);
 
     // Handle profile tags
     const [showAllTags, setShowAllTags] = useState(false);
@@ -85,10 +121,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
       { platform: string; url: string }[]
     >([]);
 
-    const handleSocialLinks = () => {
-      if (!userProfile?.userProfile) return;
-
-      const profile = userProfile?.userProfile;
+    // Memoize social links processing for performance
+    const processedSocialLinks = useMemo(() => {
+      if (!displayProfile) return [];
 
       const knownPlatforms = [
         "twitter",
@@ -100,25 +135,24 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
         "website",
       ];
 
-      const socialLinks = knownPlatforms
-        .filter((key) => profile[key]) // only include non-empty
+      return knownPlatforms
+        .filter((key) => displayProfile[key]) // only include non-empty
         .map((platform) => ({
           platform,
-          url: profile[platform], // assume it's either a label or URL
+          url: displayProfile[platform], // assume it's either a label or URL
         }));
+    }, [displayProfile]);
 
-      console.log("✅ Social Links:", socialLinks);
-
-      // You can now open the modal and pass these:
-      // setShowSocialLinksModal(true);
-      setFormattedSocialLinks(socialLinks);
-    };
+    const handleSocialLinks = useCallback(() => {
+      setFormattedSocialLinks(processedSocialLinks);
+      console.log("✅ Social Links:", processedSocialLinks);
+    }, [processedSocialLinks]);
 
     useEffect(() => {
-      if (userProfile?.userProfile) {
+      if (displayProfile) {
         handleSocialLinks();
       }
-    }, [userProfile?.userProfile]);
+    }, [displayProfile, handleSocialLinks]);
 
     return (
       <div className="">
@@ -129,12 +163,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
             <div>
               <div className="relative">
                 <img
-                  src={userProfile?.userProfile?.coverProfile || cover}
+                  src={displayProfile?.coverProfile || cover}
                   alt="Cover"
                   className="w-full h-40 object-cover rounded-2xl sm:h-30 md:h-52 mb-4"
                 />
                 <img
-                  src={userProfile?.userProfile?.profilePicUrl || avatar}
+                  src={displayProfile?.profilePicUrl || avatar}
                   alt="Profile"
                   className="w-20 h-20 sm:w-28 sm:h-28 min-w-20 min-h-20 max-w-28 max-h-28 rounded-full border-4 border-gray-900 absolute top-10 left-4 sm:top-32 sm:left-8 md:top-18 md:left-10 cursor-pointer object-cover"
                 />
@@ -208,17 +242,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                     </Tooltip>
                   </div>
                   <h1 className="text-2xl font-bold">
-                    {userProfile?.userProfile?.name || "Name"}
+                    {displayProfile?.name || "Name"}
                   </h1>
                   <p className="text-sm text-gray-400">
-                    @{userProfile?.userProfile?.userName || "username"}
+                    @{displayProfile?.userName || "username"}
                   </p>
                   <p className="mt-2">
-                    {userProfile?.userProfile?.bio || "No bio available"}
+                    {displayProfile?.bio || "No bio available"}
                   </p>
                   <div className="flex gap-1 items-center text-sm text-gray-400">
                     <FaMapMarkerAlt />
-                    {userProfile?.userProfile?.city || "location"}
+                    {displayProfile?.city || "location"}
                   </div>
                   <div className="flex flex-row justify-between">
                     <div className="flex-row gap-4 mt-2">
@@ -228,7 +262,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                           onClick={() => setIsFollowingModalOpen(true)}
                         >
                           <span className="font-bold text-teal-400">
-                            {userProfile?.userFollowing?.length || 0}
+                            {followingData?.length || 0}
                           </span>{" "}
                           Following
                         </p>
@@ -237,21 +271,21 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                           onClick={() => setIsFollowersModalOpen(true)}
                         >
                           <span className="font-bold text-teal-400">
-                            {userProfile?.userFollowers?.length || 0}
+                            {followersData?.length || 0}
                           </span>{" "}
                           Followers
                         </p>
                       </div>
                       <div className="flex">
-                        {Array.isArray(userProfile?.userProfile?.genre) &&
-                          userProfile.userProfile.genre.length > 0 && (
+                        {Array.isArray(displayProfile?.genre) &&
+                          displayProfile.genre.length > 0 && (
                             <div className="flex items-center">
                               <div className="flex gap-2 my-2 overflow-x-auto whitespace-nowrap px-1 hide-scrollbar md:max-w-96 max-w-56 pb-1">
-                                {userProfile.userProfile.genre
+                                {displayProfile.genre
                                   ?.slice(
                                     0,
                                     showAllTags
-                                      ? userProfile.userProfile.genre.length
+                                      ? displayProfile.genre.length
                                       : defaultTagCount
                                   )
                                   .map((genre, index) => (
@@ -266,7 +300,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                                   ))}
                               </div>
 
-                              {userProfile.userProfile.genre.length >
+                              {displayProfile.genre.length >
                                 defaultTagCount && (
                                 <p
                                   className="ml-1 text-xs text-gray-500 cursor-pointer hover:text-teal-400"
@@ -277,7 +311,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                                   {showAllTags
                                     ? "See less"
                                     : `+${
-                                        userProfile.userProfile.genre.length -
+                                        displayProfile.genre.length -
                                         defaultTagCount
                                       } more`}
                                 </p>
@@ -296,7 +330,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           isOpen={isGuestListModalOpen}
           onClose={() => setIsGuestListModalOpen(false)}
           onAddGuest={onAddGuest}
-          preFilledEmail={userProfile?.userProfile?.emailAddress}
+          preFilledEmail={displayProfile?.emailAddress}
         />
         <TippingModal
           isOpen={isTippingModalOpen}
@@ -304,7 +338,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           onSubmit={onTip}
         />
         <BookingModal
-          services={userProfile?.userProfile?.services}
+          services={displayProfile?.services}
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
           onSubmit={onBook}
@@ -313,19 +347,19 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           isOpen={showSocialLinksModal}
           onClose={() => setShowSocialLinksModal(false)}
           links={formattedSocialLinks}
-          userName={userProfile?.userProfile?.userName || ""}
+          userName={displayProfile?.userName || ""}
         />
         <FollowersModal
           title="Followers"
           isOpen={isFollowersModalOpen}
           onClose={() => setIsFollowersModalOpen(false)}
-          users={userProfile?.userFollowers}
+          users={followersData}
         />
         <FollowersModal
           title="Following"
           isOpen={isFollowingModalOpen}
           onClose={() => setIsFollowingModalOpen(false)}
-          users={userProfile?.userFollowing}
+          users={followingData}
         />
       </div>
     );
