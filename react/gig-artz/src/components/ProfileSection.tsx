@@ -40,10 +40,20 @@ interface ProfileSectionProps {
   onAddGuest: (listId: number, guestEmail: string) => void;
   onTip: (amount: number) => void;
   onBook: (data: unknown) => void;
+  onSocialLinks?: () => void;
+  isFollowing?: boolean;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
-  ({ onFollow, onMessage, onAddGuest, onTip, onBook }) => {
+  ({
+    onFollow,
+    onMessage,
+    onAddGuest,
+    onTip,
+    onBook,
+    onSocialLinks,
+    isFollowing,
+  }) => {
     const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
     const [isTippingModalOpen, setIsTippingModalOpen] = useState(false);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -51,50 +61,51 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
 
     const { uid } = useParams(); // Extract uid from URL
-    const { userProfile, visitedProfile, userFollowing, loading } = useSelector(
-      (state: RootState) => state.profile,
-      shallowEqual
-    );
-
-    // Get current user ID from auth state instead of localStorage
-    const { uid: currentUserId } = useSelector(
-      (state: RootState) => state.auth
-    );
+    const {
+      userProfile,
+      visitedProfile,
+      userFollowing,
+      userFollowers,
+      loading,
+    } = useSelector((state: RootState) => state.profile, shallowEqual);
 
     // Use visitedProfile for other users, userProfile for current user
-    const isOwnProfile = useMemo(() => {
-      return uid === currentUserId && currentUserId !== null;
-    }, [uid, currentUserId]);
+    const authUser = localStorage.getItem("authUser");
+    let currentUserId = null;
+    try {
+      if (authUser) {
+        const parsedAuthUser = JSON.parse(authUser);
+        currentUserId = parsedAuthUser?.uid || parsedAuthUser?.id;
+      }
+    } catch (error) {
+      console.error("Error parsing authUser from localStorage:", error);
+    }
+
+    const isOwnProfile = uid === currentUserId && currentUserId !== null;
 
     // Get the correct profile data based on whether it's own profile or visited profile
-    const displayProfile = useMemo(() => {
-      return isOwnProfile
-        ? userProfile?.userProfile
-        : visitedProfile?.userProfile;
-    }, [isOwnProfile, userProfile?.userProfile, visitedProfile?.userProfile]);
+    // Now visitedProfile has a dedicated userProfile field
+    const displayProfile = isOwnProfile
+      ? userProfile
+      : visitedProfile?.userProfile || userProfile;
 
     // Determine followers/following data based on profile type
     const followersData = useMemo(() => {
-      return isOwnProfile
-        ? userProfile?.userFollowers
-        : visitedProfile?.userFollowers || [];
-    }, [
-      isOwnProfile,
-      userProfile?.userFollowers,
-      visitedProfile?.userFollowers,
-    ]);
+      return isOwnProfile ? userFollowers : visitedProfile?.userFollowers || [];
+    }, [isOwnProfile, userFollowers, visitedProfile?.userFollowers]);
 
     const followingData = useMemo(() => {
-      return isOwnProfile
-        ? userProfile?.userFollowing
-        : visitedProfile?.userFollowing || [];
-    }, [
-      isOwnProfile,
-      userProfile?.userFollowing,
-      visitedProfile?.userFollowing,
-    ]);
+      return isOwnProfile ? userFollowing : visitedProfile?.userFollowing || [];
+    }, [isOwnProfile, userFollowing, visitedProfile?.userFollowing]);
 
     // Profile data usage debug logging removed to improve performance
+    console.log("visitedProfile:", visitedProfile);
+    // console.log("userProfile:", userProfile);
+    // console.log("uid from params:", uid);
+    // console.log("authUser from localStorage:", authUser);
+    // console.log("currentUserId parsed:", currentUserId);
+    console.log("isOwnProfile:", isOwnProfile);
+    console.log("displayProfile:", displayProfile);
 
     // Remove redundant useEffect - let parent component handle profile fetching
     // useEffect(() => {
@@ -107,10 +118,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     const isAcceptingBookings = displayProfile?.acceptBookings || false;
     const isAcceptingTips = displayProfile?.acceptTips || false;
 
-    // Check if user is following current profile (memoized for performance)
-    const isFollowingUser = useMemo(() => {
-      return userFollowing?.some((user) => user.id === uid);
-    }, [userFollowing, uid]);
+    // Check if user is following current profile
+    const isFollowingUser = userFollowing?.some((user) => user.id === uid);
 
     // Handle profile tags
     const [showAllTags, setShowAllTags] = useState(false);
@@ -121,9 +130,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
       { platform: string; url: string }[]
     >([]);
 
-    // Memoize social links processing for performance
-    const processedSocialLinks = useMemo(() => {
-      if (!displayProfile) return [];
+    const handleSocialLinks = useCallback(() => {
+      if (!displayProfile) return;
+
+      const profile = displayProfile;
 
       const knownPlatforms = [
         "twitter",
@@ -135,18 +145,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
         "website",
       ];
 
-      return knownPlatforms
-        .filter((key) => displayProfile[key]) // only include non-empty
+      const socialLinks = knownPlatforms
+        .filter((key) => profile[key]) // only include non-empty
         .map((platform) => ({
           platform,
-          url: displayProfile[platform], // assume it's either a label or URL
+          url: profile[platform], // assume it's either a label or URL
         }));
-    }, [displayProfile]);
 
-    const handleSocialLinks = useCallback(() => {
-      setFormattedSocialLinks(processedSocialLinks);
-      console.log("✅ Social Links:", processedSocialLinks);
-    }, [processedSocialLinks]);
+      console.log("✅ Social Links:", socialLinks);
+
+      setFormattedSocialLinks(socialLinks);
+    }, [displayProfile]);
 
     useEffect(() => {
       if (displayProfile) {

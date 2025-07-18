@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import UserCard from "./UserCard";
 import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,12 +22,21 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  useEffect(() => {
-    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
-    dispatch(fetchAllProfiles());
-  }, [dispatch]);
+  // Track if we've already attempted to fetch to prevent infinite loops
+  const hasFetchedRef = useRef(false);
 
-  const { userList } = useSelector((state: RootState) => state.profile);
+  const { userList, loading, error } = useSelector(
+    (state: RootState) => state.profile
+  );
+
+  useEffect(() => {
+    // Only fetch once and avoid during errors to prevent infinite loops
+    if (!hasFetchedRef.current && !error?.includes("fetch_error")) {
+      // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
+      dispatch(fetchAllProfiles());
+      hasFetchedRef.current = true;
+    }
+  }, [dispatch, error]);
 
   // Memoize users with uid to prevent UserCard re-renders
   const usersWithUid = useMemo(() => {

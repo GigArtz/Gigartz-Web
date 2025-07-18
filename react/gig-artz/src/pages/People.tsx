@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 import {
@@ -61,57 +61,70 @@ const People: React.FC = () => {
   useEffect(() => {
     // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
     dispatch(fetchAllProfiles());
-  }, [dispatch]);
+  }, [dispatch]); // Removed uid from dependencies as it is not directly related to fetching all profiles
 
   const userList = useSelector((state: RootState) => state.profile);
 
   const { visitedProfile } = useSelector((state: RootState) => state.profile);
 
-  const [isFreelancer, setIsFreelancer] = useState<boolean>(false);
+  const [isFreelancer, setIsFreelancer] = useState<boolean>(
+    visitedProfile?.userProfile?.roles?.freelancer || false
+  );
 
-  // Single useEffect to handle visited profile fetching
   useEffect(() => {
     if (uid) {
       dispatch(fetchVisitedUserProfile(uid));
     }
   }, [dispatch, uid]);
 
-  // Update freelancer status when visitedProfile changes
   useEffect(() => {
     setIsFreelancer(visitedProfile?.userProfile?.roles?.freelancer || false);
-  }, [visitedProfile?.userProfile?.roles?.freelancer]);
+  }, [visitedProfile]);
 
-  const handleFollow = () => {
+  // Stabilized props using useCallback
+  const handleFollow = useCallback(() => {
     setIsFollowing((prev) => !prev);
     dispatch(followUser(user_id, uid));
-  };
+  }, [dispatch, user_id, uid]);
 
-  const handleMessageClick = () => {
-    navigate(`/messages?contact=${uid}`); // Navigate to Messages with contact ID
-  };
+  const handleMessageClick = useCallback(() => {
+    navigate(`/messages?contact=${uid}`);
+  }, [navigate, uid]);
 
-  const handleAddGuestToList = (listId: number, guestEmail: string) => {
-    console.log(`Adding user ${guestEmail} to list ${listId}`);
-    setIsGuestListModalOpen(false);
-  };
+  const handleAddGuestToList = useCallback(
+    (listId: number, guestEmail: string) => {
+      console.log(`Adding user ${guestEmail} to list ${listId}`);
+      setIsGuestListModalOpen(false);
+    },
+    []
+  );
 
-  const handleTipFreelancer = (amount: number) => {
-    console.log(`Tipping freelancer ${uid} with amount: $${amount}`);
-    // Add logic for tipping (e.g., dispatch an action or navigate to payment page)
-  };
+  const handleTipFreelancer = useCallback(
+    (amount: number) => {
+      console.log(`Tipping freelancer ${uid} with amount: $${amount}`);
+    },
+    [uid]
+  );
 
-  const handleBookFreelancer = (data: BookingFormData) => {
-    const bookingDetails = {
-      userId: user_id,
-      freelancerId: uid,
-      ...data,
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-    };
-    dispatch(bookFreelancer(bookingDetails));
-    console.log(`Booking freelancer ${uid} with details:`, bookingDetails);
-    setIsBookingModalOpen(false);
-  };
+  const handleBookFreelancer = useCallback(
+    (data: BookingFormData) => {
+      const bookingDetails = {
+        userId: user_id,
+        freelancerId: uid,
+        ...data,
+        status: "Pending",
+        createdAt: new Date().toISOString(),
+      };
+      dispatch(bookFreelancer(bookingDetails));
+      console.log(`Booking freelancer ${uid} with details:`, bookingDetails);
+      setIsBookingModalOpen(false);
+    },
+    [dispatch, user_id, uid]
+  );
+
+  const handleSocialLinks = useCallback(() => {
+    console.log(visitedProfile?.userProfile);
+  }, [visitedProfile]);
 
   if (loading) {
     return (
@@ -124,11 +137,14 @@ const People: React.FC = () => {
   return (
     <div className="main-content">
       <ProfileSection
+        //uid={userProfile?.userProfile?.id}
         onFollow={handleFollow}
         onMessage={handleMessageClick}
         onAddGuest={handleAddGuestToList}
         onTip={handleTipFreelancer}
         onBook={handleBookFreelancer}
+        onSocialLinks={handleSocialLinks}
+        isFollowing={isFollowing}
       />
       {/* Profile Tabs */}
       <ProfileTabs uid={uid} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo } from "react";
+import React, { useEffect, useState, memo, useRef } from "react";
 import {
   FaBookmark,
   FaComment,
@@ -42,13 +42,20 @@ interface ReviewCardProps {
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   const navigate = useNavigate();
 
-  const { userList, loading } = useSelector((state) => state.profile);
+  const { userList, loading, error } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
 
+  // Track if we've already attempted to fetch to prevent infinite loops
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
-    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
-    dispatch(fetchAllProfiles());
-  }, [dispatch]);
+    // Only fetch once and avoid during errors to prevent infinite loops
+    if (!hasFetchedRef.current && !error?.includes("fetch_error")) {
+      // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
+      dispatch(fetchAllProfiles());
+      hasFetchedRef.current = true;
+    }
+  }, [dispatch, error]);
 
   const handleUserClick = () => {
     if (review.user.uid) {

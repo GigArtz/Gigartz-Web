@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProfiles } from "../../store/profileSlice";
 import UserCard from "./UserCard";
@@ -76,11 +82,18 @@ function ExploreTabs() {
     }
   }, [location.search]);
 
+  // Track if we've already attempted to fetch to prevent infinite loops
+  const hasFetchedRef = useRef(false);
+
   // Load data
   useEffect(() => {
-    // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
-    dispatch(fetchAllProfiles());
-    dispatch(fetchAllEvents());
+    // Only fetch once and avoid during errors to prevent infinite loops
+    if (!hasFetchedRef.current) {
+      // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
+      dispatch(fetchAllProfiles());
+      dispatch(fetchAllEvents());
+      hasFetchedRef.current = true;
+    }
   }, [dispatch]);
 
   // Redux state

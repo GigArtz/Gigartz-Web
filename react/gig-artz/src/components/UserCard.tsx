@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useMemo, useCallback } from "react";
 import { useSelector, shallowEqual } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../store/store";
@@ -17,25 +17,41 @@ interface UserCardProps {
   user: User;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user }) => {
+const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
   // Monitor re-renders in development
   useRenderLogger("UserCard", { userId: user.uid || user.id });
 
   const navigate = useNavigate();
-  const { userFollowing } = useSelector(
-    (state: RootState) => state.profile,
-    shallowEqual
+
+  // Optimized selector - only get what we need
+  const isFollowingUser = useSelector((state: RootState) => {
+    const userFollowing = state.profile.userFollowing;
+    const userId = user?.id || user?.uid;
+    return userFollowing?.some((u) => u?.id === userId) || false;
+  }, shallowEqual);
+
+  // Memoize user data to prevent prop drilling issues
+  const userData = useMemo(
+    () => ({
+      id: user?.uid || user?.id,
+      name: user?.name || "Unknown",
+      userName: user?.userName || "username",
+      bio: user?.bio || "No bio available",
+      profilePicUrl: user?.profilePicUrl || "/avatar.png",
+    }),
+    [
+      user?.uid,
+      user?.id,
+      user?.name,
+      user?.userName,
+      user?.bio,
+      user?.profilePicUrl,
+    ]
   );
 
-  // Check if user is following current profile
-  const isFollowingUser =
-    userFollowing?.some((u) => u?.id === user?.id) || false;
-
-  const handleClick = () => {
-    navigate(`/people/${user?.uid || user?.id}`);
-  };
-
-  // Removed useEffect with console.log to prevent unnecessary re-renders
+  const handleClick = useCallback(() => {
+    navigate(`/people/${userData.id}`);
+  }, [navigate, userData.id]);
 
   return (
     <div
@@ -46,20 +62,20 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
       <div className="flex items-center gap-4 justify-between w-full">
         <div className="flex items-center gap-3 flex-nowrap sm:w-[40%] md:w-[55%] lg:w-[65%]">
           <img
-            src={user.profilePicUrl || "/avatar.png"}
+            src={userData.profilePicUrl}
             alt="Avatar"
             className="w-9 h-9 min-w-9 min-h-9 max-w-9 max-h-9 rounded-full border-2 border-teal-400 object-cover"
           />
           <div className="flex flex-col gap-1 overflow-hidden">
             <h3 className="md:text-lg font-semibold truncate w-full sm:min-w-12 text-white ">
-              {user.name || "Unknown"}
+              {userData.name}
             </h3>
             <div className="flex flex-col ">
               <p className="text-sm text-gray-400 truncate w-full sm:min-w-12">
-                @{user.userName || "username"}
+                @{userData.userName}
               </p>
               <p className="text-xs text-gray-300 truncate w-full sm:min-w-12">
-                {user.bio || "No bio available"}
+                {userData.bio}
               </p>
             </div>
           </div>
@@ -77,6 +93,8 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
       </div>
     </div>
   );
-};
+});
 
-export default memo(UserCard);
+UserCard.displayName = "UserCard";
+
+export default UserCard;
