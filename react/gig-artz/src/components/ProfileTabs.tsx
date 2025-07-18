@@ -1,23 +1,23 @@
-import React, {
-  useMemo,
-  useState,
-  memo,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useMemo, useState, memo, useCallback, useRef } from "react";
 import { useSelector, shallowEqual } from "react-redux";
-import { FaSpinner, FaUserPlus, FaUsers } from "react-icons/fa";
+import {
+  FaSpinner,
+  FaUserPlus,
+  FaUsers,
+  FaCalendarAlt,
+  FaLock,
+} from "react-icons/fa";
 import ScrollableEventCol from "./ScrollableEventCol";
 import ReviewCard from "./ReviewCard";
-import { useRenderLogger } from "../hooks/usePerformanceMonitor";
+import BaseModal from "./BaseModal";
 import type { RootState } from "../../store/store";
 
 interface ProfileTabsProps {
   uid: string;
 }
 
-interface User {
+// Define the shape of a user profile
+interface UserProfile {
   id: string;
   userEvents?: Event[];
   userReviews?: Review[];
@@ -41,6 +41,9 @@ interface GuestList {
   id: string;
   guestListName?: string;
   guests?: Guest[];
+  description?: string;
+  eventDate?: string;
+  eventDetails?: string;
 }
 
 interface Guest {
@@ -49,131 +52,44 @@ interface Guest {
   phoneNumber?: string;
 }
 
-// Global component cache to prevent unnecessary re-renders across instances
-const globalComponentCache = new Map<
-  string,
-  {
-    data: {
-      profile: User | null;
-      loading: boolean;
-      error: string | null;
-      userProfile: User | null;
-      userGuestList: GuestList[] | null;
-      userEvents: Event[];
-      userReviews: Review[];
-    };
-    timestamp: number;
-    renderCount: number;
-  }
->();
+// ProfileTabs Component
 
-// Create an ultra-stable selector that truly ignores ALL state changes except critical data
-const createStableProfileSelector = () => {
-  let lastResult: {
-    profile: User | null;
-    loading: boolean;
-    error: string | null;
-    userProfile: User | null;
-    userGuestList: GuestList[] | null;
-    userEvents: Event[];
-    userReviews: Review[];
-  } | null = null;
-  let lastUid: string | null = null;
-  let lastStateSnapshot: string | null = null;
-  let stableCounter = 0;
-  let forceStableCount = 0;
+const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
+  // State declarations
+  const [activeTab, setActiveTab] = useState("events");
+  const [selectedList, setSelectedList] = useState<GuestList | null>(null);
+  const [gigsFilter, setGigsFilter] = useState("all");
+  const [reviewsFilter, setReviewsFilter] = useState("all");
+  const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
+  const [subscribedLists, setSubscribedLists] = useState<string[]>([]);
 
-  return (uid: string) => (state: RootState) => {
-    // Check global component cache first
-    const cacheKey = `profile-${uid}`;
-    const cached = globalComponentCache.get(cacheKey);
-    const now = Date.now();
+  // Debounce state updates
+  const updateTimeout = useRef<NodeJS.Timeout | null>(null);
 
-    if (cached && now - cached.timestamp < 5000) {
-      // 5 second cache
-      if (cached.renderCount > 3) {
-        console.log(
-          `[ProfileSelector] Using global cache for ${uid} (age: ${
-            now - cached.timestamp
-          }ms)`
-        );
-        return cached.data;
-      }
+  const debouncedStateUpdate = useCallback((updateFn: () => void) => {
+    if (updateTimeout.current) {
+      clearTimeout(updateTimeout.current);
     }
+    updateTimeout.current = setTimeout(() => {
+      updateFn();
+      updateTimeout.current = null;
+    }, 50);
+  }, []);
 
-    // CRITICAL: If we just returned the same result multiple times in a row, keep returning it
-    if (uid === lastUid && lastResult && forceStableCount < 3) {
-      forceStableCount++;
-      stableCounter++;
-
-      // Update global cache
-      globalComponentCache.set(cacheKey, {
-        data: lastResult,
-        timestamp: now,
-        renderCount: (cached?.renderCount || 0) + 1,
-      });
-
-      if (stableCounter % 5 === 0) {
-        console.log(
-          `[ProfileSelector] FORCED STABLE for ${stableCounter} calls (forceCount: ${forceStableCount})`
-        );
-      }
-      return lastResult;
-    }
-
-    // Reset force counter and proceed with normal logic
-    forceStableCount = 0;
-
-    // Create a snapshot of only the critical profile data we care about
-    const { userList, loading, error, userProfile, userGuestList } =
-      state.profile;
-    const profile = userList?.find((user: User) => user.id === uid) || null;
-
-    // More conservative snapshot - only include truly essential data
-    const currentSnapshot = JSON.stringify({
-      profileExists: !!profile,
-      profileId: profile?.id,
+  // Get profile data from Redux
+  const profileData = useSelector((state: RootState) => {
+    const {
+      userList,
       loading,
-      hasError: !!error,
-      userProfileExists: !!userProfile,
-      userProfileId: userProfile?.id,
-      userEventsLength: profile?.userEvents?.length || 0,
-      userReviewsLength:
-        profile?.userReviews?.length || userProfile?.userReviews?.length || 0,
-      guestListLength: userGuestList?.length || 0,
-    });
+      error,
+      userProfile,
+      userGuestList,
+      visitedProfile,
+    } = state.profile;
 
-    // If uid and critical data snapshot haven't changed, return cached result
-    if (
-      uid === lastUid &&
-      currentSnapshot === lastStateSnapshot &&
-      lastResult
-    ) {
-      stableCounter++;
+    const profile = userList?.find((user) => user.id === uid) || null;
 
-      // Update global cache
-      globalComponentCache.set(cacheKey, {
-        data: lastResult,
-        timestamp: now,
-        renderCount: (cached?.renderCount || 0) + 1,
-      });
-
-      if (stableCounter % 10 === 0) {
-        console.log(`[ProfileSelector] Stable for ${stableCounter} calls`);
-      }
-      return lastResult;
-    }
-
-    // Reset counter when data changes
-    stableCounter = 0;
-    console.log(
-      `[ProfileSelector] Data actually changed, recomputing for uid: ${uid}`
-    );
-    console.log(`[ProfileSelector] Old snapshot:`, lastStateSnapshot);
-    console.log(`[ProfileSelector] New snapshot:`, currentSnapshot);
-
-    // Only compute new result if data actually changed
-    const result = {
+    return {
       profile,
       loading,
       error,
@@ -181,157 +97,56 @@ const createStableProfileSelector = () => {
       userGuestList,
       userEvents: profile?.userEvents || [],
       userReviews: profile?.userReviews || userProfile?.userReviews || [],
+      visitedProfile: visitedProfile
+        ? {
+            userProfile: visitedProfile.userProfile || null,
+            userEvents: visitedProfile.userEvents || [],
+            userReviews: visitedProfile.userReviews || [],
+            userGuestList: visitedProfile.userGuestList || [],
+          }
+        : null,
     };
+  }, shallowEqual);
 
-    lastResult = result;
-    lastUid = uid;
-    lastStateSnapshot = currentSnapshot;
-
-    // Update global cache
-    globalComponentCache.set(cacheKey, {
-      data: result,
-      timestamp: now,
-      renderCount: 1,
-    });
-
-    return result;
-  };
-};
-
-// Global stable selector instance
-const stableProfileSelector = createStableProfileSelector();
-
-const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
-  // Monitor re-renders in development
-  useRenderLogger("ProfileTabs", { uid });
-
-  // State first to prevent closure issues
-  const [activeTab, setActiveTab] = useState("events");
-  const [selectedList, setSelectedList] = useState<GuestList | null>(null);
-  const [gigsFilter, setGigsFilter] = useState("all");
-  const [reviewsFilter, setReviewsFilter] = useState("all");
-
-  // State lock to prevent rapid updates
-  const stateUpdateLock = useRef(false);
-
-  // Protected state setters
-  const safeSetActiveTab = useCallback(
-    (tab: string) => {
-      if (!stateUpdateLock.current && tab !== activeTab) {
-        stateUpdateLock.current = true;
-        setActiveTab(tab);
-        setTimeout(() => {
-          stateUpdateLock.current = false;
-        }, 50);
-      }
-    },
-    [activeTab]
-  );
-
-  const safeSetGigsFilter = useCallback(
-    (filter: string) => {
-      if (!stateUpdateLock.current && filter !== gigsFilter) {
-        stateUpdateLock.current = true;
-        setGigsFilter(filter);
-        setTimeout(() => {
-          stateUpdateLock.current = false;
-        }, 50);
-      }
-    },
-    [gigsFilter]
-  );
-
-  const safeSetReviewsFilter = useCallback(
-    (filter: string) => {
-      if (!stateUpdateLock.current && filter !== reviewsFilter) {
-        stateUpdateLock.current = true;
-        setReviewsFilter(filter);
-        setTimeout(() => {
-          stateUpdateLock.current = false;
-        }, 50);
-      }
-    },
-    [reviewsFilter]
-  );
-
-  // Use cached selector to prevent recreation
-  const profileData = useSelector(stableProfileSelector(uid), shallowEqual);
-
-  // Enhanced render guard with debouncing
-  const lastRenderDataRef = useRef<string | null>(null);
-  const renderCount = useRef(0);
-  const lastRenderTime = useRef(Date.now());
-
-  const currentRenderData = JSON.stringify({
-    uid,
-    profileId: profileData.profile?.id,
-    loading: profileData.loading,
-    error: profileData.error,
-    eventsLength: profileData.userEvents.length,
-    reviewsLength: profileData.userReviews.length,
-    activeTab,
-    gigsFilter,
-    reviewsFilter,
-  });
-
-  // Enhanced render guard with timing
-  const now = Date.now();
-  const timeSinceLastRender = now - lastRenderTime.current;
-
-  if (lastRenderDataRef.current === currentRenderData) {
-    renderCount.current++;
-    if (renderCount.current > 2 && timeSinceLastRender < 100) {
-      console.warn(
-        `[ProfileTabs] Rapid re-render detected! Count: ${renderCount.current}, Time: ${timeSinceLastRender}ms`
-      );
-    }
-  } else {
-    renderCount.current = 0;
-  }
-
-  lastRenderDataRef.current = currentRenderData;
-  lastRenderTime.current = now;
-
-  // Prevent renders during rapid-fire state changes
-  useEffect(() => {
-    if (renderCount.current > 5) {
-      console.error(
-        "[ProfileTabs] Too many rapid renders, component may be unstable"
-      );
-    }
-  }, [currentRenderData]);
-
-  // Memoized handlers with stable references
+  // Handlers
   const handleSubscribe = useCallback((guestListId: string) => {
     console.log(`Subscribed to guest list with id: ${guestListId}`);
+    // Add to subscribed lists
+    setSubscribedLists((prev) => [...prev, guestListId]);
+    // Keep modal open to show the newly accessible guest list
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsGuestListModalOpen(false);
   }, []);
 
   const handleTabChange = useCallback(
     (tab: string) => {
-      safeSetActiveTab(tab);
+      debouncedStateUpdate(() => setActiveTab(tab));
     },
-    [safeSetActiveTab]
+    [debouncedStateUpdate]
   );
 
   const handleGigsFilterChange = useCallback(
     (filter: string) => {
-      safeSetGigsFilter(filter);
+      debouncedStateUpdate(() => setGigsFilter(filter));
     },
-    [safeSetGigsFilter]
+    [debouncedStateUpdate]
   );
 
   const handleReviewsFilterChange = useCallback(
     (filter: string) => {
-      safeSetReviewsFilter(filter);
+      debouncedStateUpdate(() => setReviewsFilter(filter));
     },
-    [safeSetReviewsFilter]
+    [debouncedStateUpdate]
   );
 
   const handleListSelect = useCallback((list: GuestList) => {
     setSelectedList(list);
+    setIsGuestListModalOpen(true);
   }, []);
 
-  // Memoized static configurations
+  // Static configurations
   const tabConfig = useMemo(
     () => [
       { key: "events", label: "Gigs" },
@@ -341,7 +156,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
     []
   );
 
-  const gigsFilterConfig = useMemo(
+  const filterConfig = useMemo(
     () => [
       { key: "all", label: "All" },
       { key: "created", label: "Created" },
@@ -350,64 +165,31 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
     []
   );
 
-  const reviewsFilterConfig = useMemo(
-    () => [
-      { key: "all", label: "All" },
-      { key: "created", label: "Created" },
-      { key: "liked", label: "Liked" },
-    ],
-    []
-  );
-
-  // Memoized filtered data
-  const filteredEvents = useMemo(() => {
-    const events = profileData.userEvents;
+  // Get filtered events based on current filter
+  const getFilteredEvents = useCallback(() => {
+    // Use visitedProfile's events instead of the user's own events
+    const events = profileData.visitedProfile?.userEvents || [];
     if (gigsFilter === "all") return events;
     if (gigsFilter === "created") {
-      return events.filter((event: Event) => event?.createdBy === uid);
+      return events.filter((event) => event?.createdBy === uid);
     }
-    return events.filter((event: Event) => event?.likedBy?.includes?.(uid));
-  }, [profileData.userEvents, gigsFilter, uid]);
+    return events.filter((event) => event?.likedBy?.includes?.(uid));
+  }, [profileData.visitedProfile?.userEvents, gigsFilter, uid]);
 
-  const filteredReviews = useMemo(() => {
-    const reviews = profileData.userReviews;
-    if (!reviews) return [];
+  // Get filtered reviews based on current filter
+  const getFilteredReviews = useCallback(() => {
+    // Use visitedProfile's reviews instead of the user's own reviews
+    const reviews = profileData.visitedProfile?.userReviews || [];
+    if (!reviews.length) return [];
 
-    return reviews.filter((item: Review) => {
+    return reviews.filter((item) => {
       if (reviewsFilter === "all") return true;
       if (reviewsFilter === "created") return item?.data?.createdBy === uid;
       if (reviewsFilter === "liked")
         return item?.data?.likedBy?.includes?.(uid);
       return true;
     });
-  }, [profileData.userReviews, reviewsFilter, uid]);
-
-  // Circuit breaker - completely disable if too many rapid renders
-  if (renderCount.current > 5 && timeSinceLastRender < 100) {
-    console.error(
-      "[ProfileTabs] EMERGENCY CIRCUIT BREAKER - Infinite loop detected!"
-    );
-    console.error(
-      `[ProfileTabs] Render count: ${renderCount.current}, Time: ${timeSinceLastRender}ms`
-    );
-    return (
-      <div className="p-4">
-        <div className="text-red-500 text-center border border-red-500 rounded-lg p-4">
-          <h3 className="font-bold text-lg mb-2">⚠️ Component Disabled</h3>
-          <p>Infinite render loop detected and stopped</p>
-          <p className="text-sm mt-2 text-red-400">
-            Renders: {renderCount.current} in {timeSinceLastRender}ms
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  }, [profileData.visitedProfile?.userReviews, reviewsFilter, uid]);
 
   // Handle persistent fetch errors to prevent infinite loops
   if (profileData.error && profileData.error.includes("fetch_error")) {
@@ -470,7 +252,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
             <div className="snap-start flex-shrink-0 w-full p-1">
               {/* Gigs Filter */}
               <div className="flex gap-2 mb-4 justify-center">
-                {gigsFilterConfig.map(({ key, label }) => (
+                {filterConfig.map(({ key, label }) => (
                   <button
                     key={key}
                     onClick={() => handleGigsFilterChange(key)}
@@ -484,11 +266,25 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                   </button>
                 ))}
               </div>
-              <ScrollableEventCol
-                events={filteredEvents}
-                loading={profileData.loading}
-                error={profileData.error}
-              />
+
+              {/* Visited Profile Events */}
+              {profileData.visitedProfile && (
+                <div className="mt-8 pt-6 border-slate-700">
+                  {profileData.visitedProfile.userEvents.length > 0 ? (
+                    <div>
+                      <ScrollableEventCol
+                        events={getFilteredEvents()}
+                        loading={false}
+                        error={null}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 text-center py-4">
+                      No events in visited profile
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -497,7 +293,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
             <div className="mt-4">
               {/* Reviews Filter */}
               <div className="flex gap-2 mb-4 justify-center">
-                {reviewsFilterConfig.map(({ key, label }) => (
+                {filterConfig.map(({ key, label }) => (
                   <button
                     key={key}
                     onClick={() => handleReviewsFilterChange(key)}
@@ -511,16 +307,28 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                   </button>
                 ))}
               </div>
-              {filteredReviews.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredReviews.map((item: Review, idx: number) => (
-                    <ReviewCard key={item.data?.id ?? idx} review={item} />
-                  ))}
+
+              {/* Visited Profile Reviews */}
+              {profileData.visitedProfile && (
+                <div className="mt-8 pt-6">
+                  {profileData.visitedProfile.userReviews &&
+                  profileData.visitedProfile.userReviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {getFilteredReviews().map(
+                        (review: Review, idx: number) => (
+                          <ReviewCard
+                            key={review.data?.id ?? idx}
+                            review={review}
+                          />
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 text-center py-4">
+                      No reviews in visited profile
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-500 text-center mt-4">
-                  No reviews yet...
-                </p>
               )}
             </div>
           )}
@@ -528,87 +336,175 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
           {/* Guest List Tab */}
           {activeTab === "guestList" && (
             <>
-              {profileData.userGuestList?.length > 0 ? (
-                profileData.userGuestList.map((list: GuestList) => (
-                  <div
-                    key={list.id}
-                    onClick={() => handleListSelect(list)}
-                    className={`cursor-pointer p-5 flex justify-between items-center bg-slate-900 rounded-3xl mb-3 shadow-md transition-all duration-200 hover:scale-[1.025] hover:shadow-xl ${
-                      selectedList?.id === list.id
-                        ? "border-teal-400 ring-2 ring-teal-300"
-                        : "border-teal-600 hover:border-teal-400"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* List icon */}
-                      <div className="p-2 bg-gray-700 rounded-full text-white">
-                        <FaUsers className="w-5 h-5" />
-                      </div>
-
-                      {/* Guest List Name */}
-                      <span className="text-white font-semibold text-base tracking-wide">
-                        {list.guestListName || "Unnamed List"}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSubscribe(list.id);
-                      }}
-                      aria-label={`Subscribe to ${list.guestListName}`}
-                      className="flex items-center gap-2 text-white bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-teal-400"
-                    >
-                      <FaUserPlus className="w-4 h-4" />
-                      <span className="text-sm font-medium">Subscribe</span>
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center mt-4">
-                  No guest lists available.
-                </p>
-              )}
-
-              {/* Show Guest Details */}
-              {selectedList && (
-                <div className="mt-4 bg-gray-800 rounded-lg p-4">
-                  <h3 className="text-white font-semibold mb-2">Guests</h3>
-                  <ul className="space-y-2">
-                    {selectedList.guests?.map((guest: Guest, idx: number) => (
-                      <li
-                        key={idx}
-                        className="text-white text-sm flex flex-col sm:flex-row sm:justify-between"
+              {/* User's Guest Lists */}
+              <div className="mb-8">
+                {profileData.visitedProfile?.userGuestList?.length > 0 ? (
+                  profileData.visitedProfile?.userGuestList?.map(
+                    (list: GuestList) => (
+                      <div
+                        key={list.id}
+                        onClick={() => handleListSelect(list)}
+                        className={`cursor-pointer p-5 flex justify-between items-center bg-slate-900 rounded-3xl mb-3 shadow-md transition-all duration-200 hover:scale-[1.025] hover:shadow-xl ${
+                          selectedList?.id === list.id
+                            ? "border-teal-400 ring-2 ring-teal-300"
+                            : "border-teal-600 hover:border-teal-400"
+                        }`}
                       >
-                        <span>
-                          {guest.name || "Unnamed"} —{" "}
-                          {guest.email || "No email"}
-                        </span>
-                        <span className="text-gray-400">
-                          {guest.phoneNumber || "No phone"}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                        <div className="flex items-center gap-3">
+                          {/* List icon */}
+                          <div className="p-2 bg-gray-700 rounded-full text-white">
+                            <FaUsers className="w-5 h-5" />
+                          </div>
+
+                          {/* Guest List Name */}
+                          <span className="text-white font-semibold text-base tracking-wide">
+                            {list.guestListName || "Unnamed List"}
+                          </span>
+                        </div>
+
+                        {subscribedLists.includes(list.id) ? (
+                          <div className="flex items-center gap-2 text-emerald-300 bg-gray-800 px-4 py-2 rounded-full">
+                            <span className="text-sm font-medium">
+                              ✓ Subscribed
+                            </span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSubscribe(list.id);
+                            }}
+                            aria-label={`Subscribe to ${list.guestListName}`}
+                            className="flex items-center gap-2 btn-primary-sm px-4 py-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-teal-400"
+                          >
+                            <FaUserPlus className="w-4 h-4" />
+                            <span className="text-sm font-medium">
+                              Subscribe
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    )
+                  )
+                ) : (
+                  <p className="text-gray-500 text-center mt-4">
+                    No guest lists available.
+                  </p>
+                )}
+              </div>
             </>
           )}
         </>
       </div>
+
+      {/* Guest List Description Modal using BaseModal */}
+      {selectedList && (
+        <BaseModal
+          isOpen={isGuestListModalOpen}
+          onClose={handleCloseModal}
+          title={selectedList.guestListName || "Guest List"}
+          icon={<FaUsers />}
+          maxWidth="md:max-w-lg"
+          className="bg-gray-900"
+        >
+          <div className="px-2">
+            <div className="mb-6">
+        
+
+              <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                <h4 className="text-white font-medium mb-2">Description</h4>
+                <p className="text-gray-300 text-sm">
+                  {selectedList.description ||
+                    "No description provided for this guest list."}
+                </p>
+              </div>
+
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="text-white font-medium mb-2">Event Details</h4>
+                <div className="flex items-center text-gray-300 text-sm mb-1">
+                  <FaCalendarAlt className="mr-2 text-gray-400" />
+                  <span>
+                    {selectedList.eventDate || "No event date specified"}
+                  </span>
+                </div>
+                <p className="text-gray-300 text-sm">
+                  {selectedList.eventDetails || "No additional event details."}
+                </p>
+              </div>
+            </div>
+
+            {/* Guest List Preview - Only shown if subscribed */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-white font-medium">Guests</h4>
+                {!subscribedLists.includes(selectedList.id) && (
+                  <span className="text-xs text-amber-400 flex items-center">
+                    <FaLock className="mr-1" /> Subscribe to view
+                  </span>
+                )}
+              </div>
+
+              {subscribedLists.includes(selectedList.id) ? (
+                <div className="bg-gray-800 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {selectedList.guests && selectedList.guests.length > 0 ? (
+                    <ul className="space-y-2">
+                      {selectedList.guests.map((guest, idx) => (
+                        <li
+                          key={idx}
+                          className="text-gray-300 text-sm flex justify-between"
+                        >
+                          <span>{guest.name || "Unnamed Guest"}</span>
+                          <span className="text-gray-400">
+                            {guest.email || "No email"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-sm text-center">
+                      No guests in this list yet
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center justify-center opacity-70">
+                  <div className="p-3 bg-gray-700 rounded-full mb-3">
+                    <FaLock className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <p className="text-gray-400 text-sm text-center">
+                    Subscribe to access the guest list details
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Subscribe Button - Show only if not already subscribed */}
+            {!subscribedLists.includes(selectedList.id) ? (
+              <button
+                onClick={() => handleSubscribe(selectedList.id)}
+                className="w-full btn-primary py-3 flex items-center justify-center transition-colors"
+              >
+                <FaUserPlus className="mr-2" />
+                Subscribe to Guest List
+              </button>
+            ) : (
+              <div className="w-full primary-btn py-3 font-medium flex items-center justify-center">
+                <span className="text-emerald-300 mr-2">✓</span>
+                Subscribed
+              </div>
+            )}
+          </div>
+        </BaseModal>
+      )}
     </div>
   );
 });
 
-// Custom comparison function for memo to prevent unnecessary re-renders
-const ProfileTabsComparison = (
-  prevProps: ProfileTabsProps,
-  nextProps: ProfileTabsProps
-) => {
-  // Only re-render if uid actually changes
-  return prevProps.uid === nextProps.uid;
-};
-
+// Set the display name for better debugging
 ProfileTabs.displayName = "ProfileTabs";
 
-export default memo(ProfileTabs, ProfileTabsComparison);
+// Export with custom comparison function to prevent unnecessary re-renders
+export default memo(ProfileTabs, (prevProps, nextProps) => {
+  // Only re-render if uid actually changes
+  return prevProps.uid === nextProps.uid;
+});

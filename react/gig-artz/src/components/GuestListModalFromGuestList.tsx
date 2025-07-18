@@ -3,17 +3,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store/store";
 import { addGuestsToGuestList } from "../../store/eventsSlice";
 import { showToast, clearToast } from "../../store/notificationSlice";
-import { FaTimesCircle } from "react-icons/fa";
+import { FaUserPlus } from "react-icons/fa";
+import BaseModal from "./BaseModal";
 
 interface GuestListModalFromGuestListProps {
   isOpen: boolean;
   onClose: () => void;
   preFilledEmail?: string;
+  onAddGuest?: (listId: number, guestEmail: string) => void;
 }
 
 const GuestListModalFromGuestList: React.FC<
   GuestListModalFromGuestListProps
-> = ({ isOpen, onClose, preFilledEmail }) => {
+> = ({ isOpen, onClose, preFilledEmail, onAddGuest }) => {
   const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const { userGuestList, userList } = useSelector(
@@ -80,24 +82,26 @@ const GuestListModalFromGuestList: React.FC<
     }
   };
 
-  if (!isOpen) return null;
+  const handleCustomAddGuest = async () => {
+    if (selectedListId && guestEmail.trim()) {
+      if (onAddGuest) {
+        onAddGuest(selectedListId, guestEmail.trim());
+      } else {
+        await handleAddGuest();
+      }
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-dark p-6 rounded-lg w-96">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 ">
-          <h3 className="text-xl font-semibold text-white">
-            Add to Guest List
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
-          >
-            <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
-          </button>
-        </div>
-        <h3 className="text-lg font-semibold mb-4">Add to Guest List</h3>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add to Guest List"
+      icon={<FaUserPlus />}
+      maxWidth="md:max-w-md"
+      minWidth="min-w-80"
+    >
+      <div className="p-4">
         <select
           value={selectedListId || ""}
           onChange={(e) => handleListChange(Number(e.target.value))}
@@ -136,7 +140,7 @@ const GuestListModalFromGuestList: React.FC<
         </div>
         {/* Toast is now global, not local */}
       </div>
-    </div>
+    </BaseModal>
   );
 };
 
