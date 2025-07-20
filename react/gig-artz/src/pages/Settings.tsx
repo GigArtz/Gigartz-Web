@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import EditProfile from "../components/EditProfile";
 import PaymentDetails from "../components/PaymentDetails";
 import ProfileInsights from "../components/ProfileInsights";
@@ -55,16 +55,26 @@ const tabs = [
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Edit Profile");
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  // Track screen width for responsive logic
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+      // Always close mobile menu when switching to desktop
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const renderActiveComponent = () => {
     switch (activeTab) {
       case "Edit Profile":
-        return (
-          <>
-           
-            {isEditProfileModalOpen && <EditProfile useModal={true} />}
-          </>
-        );
+        return <>{ <EditProfile useModal={true} />}</>;
       case "Payment Details":
         return <PaymentDetails />;
       case "Profile Insights":
@@ -78,93 +88,98 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId);
+    // Close the mobile menu when a tab is clicked on mobile
+    if (screenWidth < 768) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   return (
-    <div className="main-content flex h-screen animate-fade-in-up">
-      {/* Sidebar - Made more compact */}
-      <div className="md:w-64 w-full md:border-r border-gray-700/50 p-4  animate-slide-in-left">
-        <div className="mb-6 animate-bounce-in">
-          <h2 className="text-xl font-bold text-white mb-2 animate-slide-in-left">
+    <div className="main-content flex h-screen bg-dark">
+      {/* Sidebar (Tabs) - always rendered, hidden on mobile when tab is selected */}
+      <div
+        className={`md:w-[30%] w-full md:border-r border-gray-700 flex flex-col bg-dark ${
+          screenWidth < 768 && activeTab ? "hidden" : ""
+        }`}
+      >
+        <div className="p-4 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+            <FaCog className="text-teal-400" />
             Settings
           </h2>
-          <p className="text-gray-400 text-xs animate-fade-in animation-delay-200">
+          <p className="text-gray-400 text-xs">
             Manage your account preferences
           </p>
         </div>
-
-        {/* Navigation - More compact */}
-        <nav className="space-y-2 animate-fade-in-up animation-delay-300">
-          {tabs.map((tab, index) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <div
-                key={tab.id}
-                className={`group cursor-pointer p-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] animate-slide-in-up ${
-                  isActive
-                    ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg shadow-teal-500/25 border border-teal-400/30"
-                    : "bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white border border-gray-700/30 hover:border-gray-600/50"
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`p-1.5 rounded-lg transition-all duration-300 ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-white"
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className={`font-medium text-sm transition-colors duration-300 ${
-                        isActive
-                          ? "text-white"
-                          : "text-gray-300 group-hover:text-white"
-                      }`}
-                    >
-                      {tab.label}
-                    </h3>
-                  </div>
-
-                  <FaChevronRight
-                    className={`w-2.5 h-2.5 transition-all duration-300 ${
-                      isActive
-                        ? "text-white/70 transform rotate-90"
-                        : "text-gray-500 group-hover:text-gray-400 group-hover:translate-x-0.5"
-                    }`}
-                  />
+        <div className="flex-1 overflow-y-auto p-2">
+          <div className="space-y-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <div
+                  key={tab.id}
+                  className={`p-3 rounded-xl cursor-pointer transition-all duration-200 border flex items-center gap-3 ${
+                    isActive
+                      ? "bg-teal-600 text-white border-teal-500 shadow-lg scale-[1.02]"
+                      : "bg-gray-800 hover:bg-gray-700 border-transparent hover:border-gray-600 text-gray-300 hover:text-white"
+                  }`}
+                  onClick={() => handleTabClick(tab.id)}
+                  tabIndex={0}
+                  aria-selected={isActive}
+                  aria-label={tab.label}
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="flex-1 font-semibold text-sm truncate">
+                    {tab.label}
+                  </span>
+                  {isActive && (
+                    <FaChevronRight className="w-4 h-4 text-white/70" />
+                  )}
                 </div>
-              </div>
-            );
-          })}
-        </nav>
-
-        {/* Bottom section - More compact */}
-        <div className="mt-6 p-3 bg-gray-800/30 rounded-lg border border-gray-700/30 animate-fade-in animation-delay-1000">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center">
-              <FaUser className="w-2.5 h-2.5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs text-white font-medium">Settings Hub</p>
-              <p className="text-[10px] text-gray-400">Customize everything</p>
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Content Area - Much larger now */}
-      <div className="flex-1 p-8 overflow-y-auto  animate-slide-in-right">
-        <div className="max-w-5xl mx-auto">
-          <div className="animate-fade-in-up animation-delay-500">
-            {renderActiveComponent()}
+      {/* Main Content Area */}
+      <div
+        className={`flex-1 flex flex-col ${
+          activeTab && screenWidth < 768 ? "" : "md:flex"
+        }`}
+      >
+        {activeTab ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
+            {/* Back button for mobile */}
+            {screenWidth < 768 && (
+              <button
+                className="absolute left-4 top-4 px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium shadow hover:bg-gray-700 transition-all"
+                onClick={() => setActiveTab(null)}
+                aria-label="Back to tabs"
+              >
+                &larr; Back
+              </button>
+            )}
+            <div className="w-full max-w-3xl mx-auto animate-fade-in-up animation-delay-500">
+              {renderActiveComponent()}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div className="bg-teal-900 rounded-full p-4 mb-6 border border-teal-500 opacity-80">
+              <FaCog className="text-4xl text-teal-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Welcome to Settings
+            </h3>
+            <p className="text-gray-400 mb-8 max-w-md">
+              Select a tab from the sidebar to view or update your settings.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
