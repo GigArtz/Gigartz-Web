@@ -43,6 +43,25 @@ function Drawer() {
   const [isMoreExpanded, setIsMoreExpanded] = useState(false);
   const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
 
+  // Auto-hide Create dropdown on outside click
+  useEffect(() => {
+    if (!isAddDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      const dropdown = document.getElementById("create-dropdown");
+      const button = document.getElementById("create-btn");
+      if (
+        dropdown &&
+        !dropdown.contains(e.target as Node) &&
+        button &&
+        !button.contains(e.target as Node)
+      ) {
+        setIsAddDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isAddDropdownOpen]);
+
   // Count unread notifications
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -376,41 +395,52 @@ function Drawer() {
         ) : (
           <div className="flex flex-row font-medium px-2 py-2 mt-4 justify-center relative">
             <button
-              onClick={() => setIsAddDropdownOpen((open) => !open)}
+              id="create-btn"
+              onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
               type="button"
-              className="inline-flex items-center text-white text-lg gap-1 justify-center w-full h-11 btn-primary rounded-full hover:bg-teal-600 focus:outline-none shadow-lg transition"
+              className={`inline-flex items-center text-white text-lg gap-1 justify-center w-48 h-11 btn-primary-sm rounded-full shadow-lg transition-all duration-200 focus:outline-none ${
+                isAddDropdownOpen
+                  ? "ring-2 ring-teal-400 scale-105 transform transition-transform"
+                  : "hover:bg-teal-600 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+              }`}
               aria-haspopup="true"
               aria-expanded={isAddDropdownOpen}
+              aria-controls="create-dropdown"
+              aria-label="Create post button"
             >
               <FaPlus className="w-4 h-4 mt-1" /> Post
             </button>
 
-            {/* Dropdown */}
-            <div
-              className={`absolute left-1/2 -translate-x-1/2 top-14 bg-dark text-center rounded-xl shadow-2xl z-50 animate-fade-in border border-gray-800 transition-all duration-200 ${
-                isAddDropdownOpen
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-95 pointer-events-none"
-              }`}
-              style={{ minWidth: "7rem" }}
-              role="menu"
-              aria-label="Create options"
-            >
-              <button
-                className="inline-flex items-center text-white text-base justify-center w-28 h-10 btn-primary rounded-full mb-2 hover:bg-teal-700 transition"
-                onClick={() => handleAddOption("event")}
-                role="menuitem"
+            {/* Dropdown: only visible when isAddDropdownOpen */}
+            {isAddDropdownOpen && (
+              <div
+                id="create-dropdown"
+                className="absolute left-1/2 -translate-x-1/2 -top-14 text-center rounded-xl shadow-2xl z-50 transition-all duration-200 animate-fade-in"
+                style={{
+                  minWidth: "8rem",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+                }}
+                role="menu"
+                aria-label="Create options"
               >
-                Gig
-              </button>
-              <button
-                className="inline-flex items-center text-white text-base justify-center w-28 h-10 btn-primary rounded-full hover:bg-teal-700 transition"
-                onClick={() => handleAddOption("review")}
-                role="menuitem"
-              >
-                Review
-              </button>
-            </div>
+                <button
+                  className="inline-flex items-center justify-center w-32 h-10 text-white text-base font-semibold btn-primary rounded-full mb-2 hover:bg-teal-700 focus:bg-teal-800 focus:outline-none transition-all duration-150 shadow-md"
+                  onClick={() => handleAddOption("event")}
+                  role="menuitem"
+                  tabIndex={0}
+                >
+                  Gig
+                </button>
+                <button
+                  className="inline-flex items-center justify-center w-32 h-10 text-white text-base font-semibold btn-primary rounded-full hover:bg-teal-700 focus:bg-teal-800 focus:outline-none transition-all duration-150 shadow-md"
+                  onClick={() => handleAddOption("review")}
+                  role="menuitem"
+                  tabIndex={0}
+                >
+                  Review
+                </button>
+              </div>
+            )}
           </div>
         )}
       </aside>

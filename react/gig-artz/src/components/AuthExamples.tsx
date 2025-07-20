@@ -25,15 +25,15 @@ const AuthExamples: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Role-based Content</h2>
 
-        <PermissionGuard roles={[UserRole.NORMAL]}>
+        <PermissionGuard roles={[UserRole.GENERAL_USER]}>
           <div className="p-3 bg-blue-900 rounded mb-2">
-            ✅ This content is visible to Normal Users
+            ✅ This content is visible to General Users
           </div>
         </PermissionGuard>
 
-        <PermissionGuard roles={[UserRole.PRO]}>
+        <PermissionGuard roles={[UserRole.FREELANCER]}>
           <div className="p-3 bg-green-900 rounded mb-2">
-            ✅ This content is visible to Pro users
+            ✅ This content is visible to Freelancer users
           </div>
         </PermissionGuard>
 
@@ -85,13 +85,13 @@ const AuthExamples: React.FC = () => {
 
           <button
             onClick={() =>
-              authUtils.requireRole(UserRole.PRO, () => {
-                alert("Accessing pro features...");
+              authUtils.requireRole(UserRole.FREELANCER, () => {
+                alert("Accessing freelancer features...");
               })
             }
             className="block w-full text-left p-3 bg-blue-600 hover:bg-blue-700 rounded transition"
           >
-            Pro Features (Requires PRO role)
+            Freelancer Features (Requires FREELANCER role)
           </button>
 
           <button

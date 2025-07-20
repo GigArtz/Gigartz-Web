@@ -19,6 +19,7 @@ interface EventCardEvent {
   gallery?: string[];
   comments?: unknown[];
   likes?: unknown[];
+  category?: string | string[];
 }
 
 interface EventCardProps {
@@ -236,15 +237,26 @@ const EventCard: React.FC<EventCardProps> = memo(
     // Loader UI
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center h-40">
-          <span className="animate-spin text-teal-500 text-3xl">⏳</span>
+        <div className="flex justify-center items-center h-40 animate-pulse">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="relative">
+              <div className="w-8 h-8 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
+              <div
+                className="absolute inset-0 w-8 h-8 border-4 border-transparent border-r-teal-300/50 rounded-full animate-spin animate-reverse"
+                style={{ animationDelay: "0.1s" }}
+              ></div>
+            </div>
+            <div className="text-gray-400 text-sm animate-pulse">
+              Loading event...
+            </div>
+          </div>
         </div>
       );
     }
     // Error handling moved to Toast component - the event is always accessible
 
     return (
-      <div className="animate-in fade-in-0 duration-300">
+      <div className="animate-in fade-in-0 duration-300 transform transition-all">
         {/* Reviews Modal */}
         <CommentsModal
           user={profile}
@@ -280,72 +292,133 @@ const EventCard: React.FC<EventCardProps> = memo(
           </div>
         )}
 
-        <div className="w-full h-full flex flex-col min-w-0 rounded-xl border border-gray-800 bg-gray-900 cursor-pointer overflow-hidden group transform transition-transform duration-200 ease-out hover:scale-[1.01] active:scale-[0.99]">
+        <div
+          className="w-full h-full flex flex-col min-w-0 rounded-xl border border-gray-800 bg-gray-900 
+                       cursor-pointer overflow-hidden group relative
+                       transform transition-all duration-300 ease-out 
+                        hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/10
+                       active:scale-[0.98] active:shadow-lg
+                       animate-in fade-in-0 slide-in-from-bottom-4 
+                       before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:to-transparent
+                       hover:before:from-teal-500/5 hover:before:to-transparent before:transition-all before:duration-300
+                       after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/5 after:to-transparent after:opacity-0
+                       hover:after:opacity-100 after:transition-all after:duration-300 after:pointer-events-none
+                       focus-within:ring-2 focus-within:ring-teal-500/30 focus-within:border-teal-500/70"
+          style={{
+            animationDuration: "0.6s",
+            animationDelay: "0.1s",
+            animationFillMode: "both",
+          }}
+        >
           <Link
             to={`/events/?eventId=${event?.eventId || event?.id}`}
-            className="block w-full h-58 sm:h-full relative overflow-hidden"
+            className="block w-full h-58 sm:h-full relative overflow-hidden group-hover:transform group-hover:scale-[1.01] transition-transform duration-300"
           >
             {/* Image Container with Loading State */}
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full overflow-hidden group">
               {/* Loading skeleton */}
               {!isImageLoaded && (
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 animate-pulse rounded-t-xl" />
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 
+                               animate-pulse rounded-t-xl
+                               before:absolute before:inset-0 before:bg-gradient-to-r 
+                               before:from-transparent before:via-white/10 before:to-transparent
+                               before:animate-shimmer"
+                />
               )}
 
               {/* Main Image */}
               <img
-                className={`${imageClasses} transition-opacity duration-300 ${
-                  isImageLoaded ? "opacity-100" : "opacity-0"
-                }`}
+                className={`${imageClasses} transition-all duration-500 
+                           group-hover:scale-110 group-hover:brightness-110 group-hover:contrast-105
+                           ${isImageLoaded ? "opacity-100" : "opacity-0"}`}
                 src={imageSrc}
                 alt={event?.title || "Event Image"}
                 onLoad={handleImageLoad}
               />
 
-                {/* Event Badges */}
-                {Array.isArray(event?.category)
-                  ? (
-                      <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                        {event.category.slice(0, 2).map((cat: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                    )
-                  : typeof event?.category === "string"
-                  ? (
-                      <div className="absolute top-4 left-4 bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
-                        {event.category || "Live Event"}
-                      </div>
-                    )
-                  : null}
+              {/* Hover overlay */}
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent 
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              />
+
+              {/* Event Badges */}
+              {Array.isArray(event?.category) ? (
+                <div className="absolute top-4 left-4 flex flex-wrap gap-2 animate-in slide-in-from-top-2 fade-in-0 duration-500 delay-200">
+                  {event.category
+                    .slice(0, 2)
+                    .map((cat: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm 
+                                     transform transition-all duration-200 ease-out hover:bg-teal-400/95 hover:scale-105 
+                                     hover:shadow-lg hover:shadow-teal-500/25 active:scale-95 cursor-pointer"
+                        style={{
+                          animationDelay: `${idx * 100 + 300}ms`,
+                          animation: "slideInFromLeft 0.7s ease-out forwards",
+                        }}
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                </div>
+              ) : typeof event?.category === "string" ? (
+                <div
+                  className="absolute top-4 left-4 bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm
+                                  transform transition-all duration-200 ease-out hover:bg-teal-400/95 hover:scale-105 
+                                  hover:shadow-lg hover:shadow-teal-500/25 active:scale-95 cursor-pointer"
+                  style={{
+                    animation: "slideInFromTop 0.5s ease-out 0.2s forwards",
+                    opacity: 0,
+                  }}
+                >
+                  {event.category || "Live Event"}
+                </div>
+              ) : null}
             </div>
 
             {/* Content Section */}
-            <div className="p-4 flex flex-col flex-1">
+            <div
+              className="p-4 flex flex-col flex-1 relative z-10 
+                           transform transition-all duration-300 ease-out
+                           group-hover:translate-y-[-2px]"
+            >
               <div className="flex justify-between items-start">
                 <h5
-                  className={`${titleClasses} transition-colors duration-200`}
+                  className={`${titleClasses} transition-all duration-300 
+                             group-hover:text-teal-100 group-hover:transform group-hover:scale-[1.02]`}
                 >
                   {event.title}
                 </h5>
               </div>
 
               {/* Date with icon */}
-              <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm mt-2">
-                <FaCalendarAlt className="w-3 h-3 text-teal-500" />
-                <span>{formattedDate}</span>
+              <div
+                className="flex items-center gap-2 text-gray-400 text-xs md:text-sm mt-2
+                            transition-all duration-300 group-hover:text-gray-300"
+              >
+                <FaCalendarAlt
+                  className="w-3 h-3 text-teal-500 transition-all duration-300 
+                                       group-hover:text-teal-400 group-hover:scale-110"
+                />
+                <span className="transition-all duration-300 group-hover:tracking-wide">
+                  {formattedDate}
+                </span>
               </div>
             </div>
           </Link>
 
           {cardSize === "lg" && (
-            <div className="p-5 flex flex-col flex-1">
-              <div className="flex border-t border-gray-800 pt-2 px-2 gap-2">
+            <div
+              className="p-5 flex flex-col flex-1 relative z-10
+                           transform transition-all duration-300 ease-out
+                           group-hover:translate-y-[-1px]"
+            >
+              <div
+                className="flex border-t border-gray-800 pt-2 px-2 gap-2
+                            transition-colors duration-300 group-hover:border-gray-700"
+              >
                 <EventActions
                   event={{
                     ...event,
@@ -353,6 +426,9 @@ const EventCard: React.FC<EventCardProps> = memo(
                     likes: Array.isArray(event.likes)
                       ? event.likes.length
                       : event.likes || 0,
+                    category: Array.isArray(event.category)
+                      ? event.category[0] // Use first category for EventActions
+                      : event.category,
                   }}
                   uid={uid}
                   showComments={showComments}

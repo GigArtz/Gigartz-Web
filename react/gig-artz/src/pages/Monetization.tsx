@@ -9,7 +9,6 @@ import Loader from "../components/Loader";
 import ServicesForm from "../components/ServicesForm";
 import { useNavigate } from "react-router-dom";
 import { categories } from "../constants/Categories";
-import Header from "../components/Header";
 
 const Monetization = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -21,7 +20,6 @@ const Monetization = () => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-  const [service, setService] = useState({ name: "", description: "" });
   const [services, setServices] = useState([]);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -36,7 +34,7 @@ const Monetization = () => {
 
   // Update `isFreelancer` state based on Redux profile
   useEffect(() => {
-    setIsFreelancer(profile?.roles?.pro || profile?.roles?.admin || false);
+    setIsFreelancer(profile?.roles?.freelancer || false);
   }, [profile]);
 
   // Auto-check Accept Bookings if there are services added

@@ -137,7 +137,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
 
     const isFreelancer =
       displayProfile?.roles?.freelancer ||
-      displayProfile?.roles?.pro ||
       displayProfile?.roles?.admin ||
       false;
     const isAcceptingBookings = displayProfile?.acceptBookings || false;

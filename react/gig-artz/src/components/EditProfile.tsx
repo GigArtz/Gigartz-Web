@@ -2,26 +2,65 @@ import React, { useState } from "react";
 import ProfileMultiStepForm from "./ProfileMultiStepForm";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-import BaseModal from "./BaseModal";
-import { FaUserEdit } from "react-icons/fa";
+import { FaUserEdit, FaUser } from "react-icons/fa";
 
-const EditProfile: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface EditProfileProps {
+  useModal?: boolean; // Optional prop to control modal behavior
+}
+
+const EditProfile: React.FC<EditProfileProps> = ({ useModal = true }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading] = useState(false);
-
   const { profile } = useSelector((state: RootState) => state.profile);
 
-  const handleOpen = () => {
-    setIsOpen(true);
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
   };
 
-  const handleClose = () => {
-    setIsOpen(false);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
+
+  // If useModal is false, render the form directly
+  if (!useModal) {
+    return (
+      <div className="animate-fade-in-up">
+        {/* Loading overlay */}
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="p-4 bg-gray-800 rounded-lg shadow-lg flex flex-col items-center">
+              <div className="w-16 h-16 border-t-4 border-teal-500 border-solid rounded-full animate-spin"></div>
+              <p className="mt-4 text-white font-medium">Updating profile...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Header section */}
+        <div className="mb-8 animate-slide-in-left">
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Edit Your Profile
+          </h2>
+          <p className="text-gray-400 text-lg">
+            Update your profile information and preferences
+          </p>
+        </div>
+
+        {/* Direct form integration */}
+        <div className="animate-fade-in-up animation-delay-300">
+          <ProfileMultiStepForm
+            isOpen={true}
+            onClose={() => {}} // No-op since we're not using a modal
+            initialValues={profile}
+            renderAsModal={false}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="justify-center items-center z-30">
-      {/* Loading overlay - matches EventForm.tsx */}
+    <div className="animate-fade-in-up">
+      {/* Loading overlay */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="p-4 bg-gray-800 rounded-lg shadow-lg flex flex-col items-center">
@@ -32,40 +71,47 @@ const EditProfile: React.FC = () => {
       )}
 
       {/* Header section */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white">Edit Your Profile</h2>
-        <p className="text-gray-400">Update your profile information below</p>
+      <div className="mb-8 animate-slide-in-left">
+        <h2 className="text-3xl font-bold text-white mb-2">
+          Edit Your Profile
+        </h2>
+        <p className="text-gray-400 text-lg">
+          Update your profile information and preferences
+        </p>
       </div>
 
-      {/* Main content */}
-      <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
-        <div className="flex justify-center">
-          <button
-            onClick={handleOpen}
-            className="inline-flex items-center px-6 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
-          >
-            Edit Profile
-          </button>
+      {/* Profile Overview Card */}
+      <div className="bg-gray-800/50 rounded-xl p-6 mb-6 border border-gray-700/50 animate-fade-in-up animation-delay-200">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center">
+            <FaUser className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-white">
+              {profile?.name || "Your Profile"}
+            </h3>
+            <p className="text-gray-400">
+              {profile?.emailAddress || "Update your information"}
+            </p>
+          </div>
         </div>
 
-        {/* Using BaseModal component */}
-        <BaseModal
-          isOpen={isOpen}
-          onClose={handleClose}
-          title="Edit Profile"
-          subtitle="Update your profile information"
-          icon={<FaUserEdit />}
-          maxWidth="md:max-w-3xl"
+        <button
+          onClick={handleOpenModal}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg font-medium hover:from-teal-700 hover:to-teal-800 transition-all duration-300 transform hover:scale-[1.02]"
         >
-          <div className="p-2">
-            <ProfileMultiStepForm
-              isOpen={isOpen}
-              onClose={handleClose}
-              initialValues={profile}
-            />
-          </div>
-        </BaseModal>
+          <FaUserEdit className="w-4 h-4" />
+          Edit Profile Information
+        </button>
       </div>
+
+      {/* ProfileMultiStepForm with its own BaseModal */}
+      <ProfileMultiStepForm
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        initialValues={profile}
+        renderAsModal={true}
+      />
     </div>
   );
 };

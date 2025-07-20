@@ -36,6 +36,7 @@ interface ProfileMultiStepFormProps {
   isOpen: boolean;
   onClose: () => void;
   initialValues?: Partial<typeof initialState>;
+  renderAsModal?: boolean; // New prop to control modal rendering
 }
 
 type ProfileFormAction = { type: "update"; name: string; value: unknown };
@@ -91,6 +92,7 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
   isOpen,
   onClose,
   initialValues,
+  renderAsModal = true, // Default to modal behavior
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const uid = useSelector((state: RootState) => state.auth.uid);
@@ -519,15 +521,9 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
     </div>
   );
 
-  return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Update Profile: ${steps[step - 1]}`}
-      subtitle="Complete your profile details"
-      icon={<FaUser className="w-5 h-5" />}
-      maxWidth="md:max-w-2xl"
-    >
+  // Form content that can be rendered with or without modal
+  const formContent = (
+    <>
       <div className="flex-1 flex justify-center">
         <div className="flex items-center justify-center gap-2">
           {steps.map((stepName, i) => (
@@ -603,6 +599,34 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
           )}
         </div>
       </form>
+    </>
+  );
+
+  // Conditional rendering based on renderAsModal prop
+  if (!renderAsModal) {
+    return (
+      <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 animate-fade-in-up">
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-white mb-2">
+            {`Update Profile: ${steps[step - 1]}`}
+          </h3>
+          <p className="text-gray-400">Complete your profile details</p>
+        </div>
+        {formContent}
+      </div>
+    );
+  }
+
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Update Profile: ${steps[step - 1]}`}
+      subtitle="Complete your profile details"
+      icon={<FaUser className="w-5 h-5" />}
+      maxWidth="md:max-w-2xl"
+    >
+      {formContent}
     </BaseModal>
   );
 };

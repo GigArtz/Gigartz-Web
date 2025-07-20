@@ -1,5 +1,22 @@
 import React, { useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { FaTimesCircle } from "react-icons/fa";
+
+/**
+ * BaseModal - Enhanced with React Portal
+ *
+ * WHAT CHANGED:
+ * - Now uses ReactDOM.createPortal() to render outside parent component tree
+ * - Modal renders at document.body level in a "modal-root" container
+ * - Higher z-index (z-[9999]) for better stacking
+ * - CSS isolation with style={{ isolation: "isolate" }}
+ *
+ * BENEFITS:
+ * - Better fullscreen capability
+ * - No z-index conflicts with parent components
+ * - Prevents parent CSS from affecting modal styling
+ * - Modal truly appears above everything else
+ */
 
 interface BaseModalProps {
   isOpen: boolean;
@@ -42,6 +59,14 @@ const BaseModal: React.FC<BaseModalProps> = ({
       document.addEventListener("keydown", handleEscapeKey);
       // Prevent body scroll when modal is open
       document.body.style.overflow = "hidden";
+
+      // Create modal root if it doesn't exist
+      let modalRoot = document.getElementById("modal-root");
+      if (!modalRoot) {
+        modalRoot = document.createElement("div");
+        modalRoot.id = "modal-root";
+        document.body.appendChild(modalRoot);
+      }
     }
 
     return () => {
@@ -63,10 +88,20 @@ const BaseModal: React.FC<BaseModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  // Get or create modal root for React Portal
+  let modalRoot = document.getElementById("modal-root");
+  if (!modalRoot) {
+    modalRoot = document.createElement("div");
+    modalRoot.id = "modal-root";
+    document.body.appendChild(modalRoot);
+  }
+
+  // Use React Portal to render modal outside component tree
+  return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]"
       onClick={handleBackdropClick}
+      style={{ isolation: "isolate" }}
     >
       <div
         ref={modalRef}
@@ -107,7 +142,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
         {/* Modal Content */}
         <div className="modal-content">{children}</div>
       </div>
-    </div>
+    </div>,
+    modalRoot // Render at document.body level using React Portal
   );
 };
 

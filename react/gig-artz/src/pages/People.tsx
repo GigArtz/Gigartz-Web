@@ -68,7 +68,7 @@ const People: React.FC = () => {
   const { visitedProfile } = useSelector((state: RootState) => state.profile);
 
   const [isFreelancer, setIsFreelancer] = useState<boolean>(
-    visitedProfile?.userProfile?.roles?.pro ||
+    visitedProfile?.userProfile?.roles?.freelancer ||
       visitedProfile?.userProfile?.roles?.admin ||
       false
   );
@@ -81,7 +81,7 @@ const People: React.FC = () => {
 
   useEffect(() => {
     setIsFreelancer(
-      visitedProfile?.userProfile?.roles?.pro ||
+      visitedProfile?.userProfile?.roles?.freelancer ||
         visitedProfile?.userProfile?.roles?.admin ||
         false
     );

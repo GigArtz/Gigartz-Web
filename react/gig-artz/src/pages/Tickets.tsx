@@ -21,6 +21,7 @@ import type { AppDispatch } from "../../store/store";
 import type { RootState } from "../../store/store";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "../styles/bookings-animations.css";
 
 function Tickets() {
   const [modalType, setModalType] = useState(null);
@@ -200,59 +201,65 @@ function Tickets() {
       />
 
       <div className="space-y-6">
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gradient-to-r from-teal-600 to-teal-700 p-3 rounded-lg text-center">
-            <p className="text-lg font-bold text-white">{tickets.length}</p>
+        {/* Summary Stats with Enhanced Animations */}
+        <div className="grid grid-cols-3 gap-3 animate-fade-in-up">
+          <div className="bg-gradient-to-r from-teal-600 to-teal-700 p-3 rounded-lg text-center transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/25 animate-slide-in-left">
+            <p className="text-lg font-bold text-white animate-bounce-in">
+              {tickets.length}
+            </p>
             <p className="text-xs text-white opacity-90">Total Tickets</p>
           </div>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 rounded-lg text-center">
-            <p className="text-lg font-bold text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 rounded-lg text-center transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 animate-fade-in-up animation-delay-100">
+            <p className="text-lg font-bold text-white animate-bounce-in animation-delay-150">
               {tickets.filter((t) => t.status === "active").length ||
                 tickets.length}
             </p>
             <p className="text-xs text-white opacity-90">Active</p>
           </div>
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-3 rounded-lg text-center">
-            <p className="text-lg font-bold text-white">
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-3 rounded-lg text-center transform hover:scale-105 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 animate-slide-in-right animation-delay-200">
+            <p className="text-lg font-bold text-white animate-bounce-in animation-delay-300">
               {tickets.filter((t) => t.status === "used").length || 0}
             </p>
             <p className="text-xs text-white opacity-90">Used</p>
           </div>
         </div>
 
-        {/* Tickets Section */}
-        <div className="space-y-3">
+        {/* Tickets Section with Enhanced Animations */}
+        <div className="space-y-3 animate-fade-in-left">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 animate-slide-in-left">
+              <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
               My Tickets
             </h3>
             {Object.keys(groupedTickets).length > 0 && (
-              <span className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full animate-bounce-in animation-delay-500">
                 {tickets.length}
               </span>
             )}
           </div>
 
           {Object.keys(groupedTickets).length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-fade-in">
               {Object.entries(groupedTickets).map(
-                ([eventName, eventTickets]) => (
-                  <div key={eventName} className="space-y-2">
-                    {/* Event Group Header */}
+                ([eventName, eventTickets], index) => (
+                  <div
+                    key={eventName}
+                    className="space-y-2 animate-slide-in-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {/* Event Group Header with Enhanced Animations */}
                     <div
-                      className="bg-gray-900 p-3 rounded-lg border border-teal-400/30 cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="bg-gray-900 p-3 rounded-lg border border-teal-400/30 cursor-pointer hover:bg-gray-800 hover:border-teal-400/60 hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-1"
                       onClick={() => toggleGroup(`tickets-${eventName}`)}
                     >
                       <div className="flex items-center justify-between">
-                        <h4 className="text-md font-semibold text-teal-300 flex items-center gap-2">
+                        <h4 className="text-md font-semibold text-teal-300 flex items-center gap-2 group-hover:text-teal-200">
                           <svg
-                            className={`w-4 h-4 transition-transform ${
+                            className={`w-4 h-4 transition-all duration-300 transform ${
                               collapsedGroups.has(`tickets-${eventName}`)
-                                ? "rotate-0"
-                                : "rotate-90"
-                            }`}
+                                ? "rotate-0 text-teal-400"
+                                : "rotate-90 text-teal-300"
+                            } hover:scale-110`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -265,7 +272,7 @@ function Tickets() {
                             />
                           </svg>
                           <svg
-                            className="w-4 h-4"
+                            className="w-4 h-4 animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -277,52 +284,57 @@ function Tickets() {
                               d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1V7a2 2 0 00-2-2H5zM5 21a2 2 0 01-2-2v-3a1 1 0 011-1h1a1 1 0 011 1v3a2 2 0 01-2 2H5z"
                             />
                           </svg>
-                          {eventName}
+                          <span className="animate-fade-in">{eventName}</span>
                         </h4>
-                        <span className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full">
+                        <span className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full transform hover:scale-105 transition-transform duration-200 animate-bounce-in">
                           {(eventTickets as any[]).length} ticket
                           {(eventTickets as any[]).length !== 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                        <span>📍 {(eventTickets as any[])[0].location}</span>
-                        <span>📅 {(eventTickets as any[])[0].eventDate}</span>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 animate-fade-in animation-delay-200">
+                        <span className="hover:text-gray-300 transition-colors duration-200">
+                          📍 {(eventTickets as any[])[0].location}
+                        </span>
+                        <span className="hover:text-gray-300 transition-colors duration-200">
+                          📅 {(eventTickets as any[])[0].eventDate}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Individual Tickets - Collapsible */}
+                    {/* Individual Tickets - Collapsible with Enhanced Animations */}
                     {!collapsedGroups.has(`tickets-${eventName}`) && (
-                      <div className="space-y-2">
-                        {(eventTickets as any[]).map((ticket) => (
+                      <div className="space-y-2 animate-slide-down">
+                        {(eventTickets as any[]).map((ticket, ticketIndex) => (
                           <div
                             key={ticket.id}
-                            className="bg-gray-800 border border-gray-700 hover:border-teal-500 transition-all duration-200 p-3 rounded-lg group relative ml-4"
+                            className="bg-gray-800 border border-gray-700 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 p-3 rounded-lg group relative ml-4 transform hover:scale-[1.02] hover:-translate-y-1 animate-fade-in-up"
+                            style={{ animationDelay: `${ticketIndex * 100}ms` }}
                           >
                             <div className="flex items-center gap-3">
                               <div className="relative">
                                 <img
                                   src={ticket.image}
                                   alt={ticket.eventName}
-                                  className="w-10 h-10 rounded-lg object-cover border border-teal-400"
+                                  className="w-10 h-10 rounded-lg object-cover border border-teal-400 transform hover:scale-110 transition-transform duration-300"
                                 />
-                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-teal-500 rounded-full"></div>
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
                               </div>
 
                               <div className="flex-grow min-w-0">
                                 <div className="flex items-center justify-between mb-1">
-                                  <h5 className="text-sm text-gray-300 truncate group-hover:text-teal-300">
+                                  <h5 className="text-sm text-gray-300 truncate group-hover:text-teal-300 transition-colors duration-300">
                                     Ticket #{ticket.id.slice(-6)}
                                   </h5>
                                   <div className="flex items-center gap-2">
-                                    <span className="bg-teal-100 text-teal-800 text-xs px-1.5 py-0.5 rounded-full">
+                                    <span className="bg-teal-100 text-teal-800 text-xs px-1.5 py-0.5 rounded-full animate-bounce-in">
                                       🎫
                                     </span>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3 text-xs text-gray-400">
-                                    <span className="flex items-center gap-1">
+                                  <div className="flex items-center gap-3 text-xs text-gray-400 animate-fade-in animation-delay-200">
+                                    <span className="flex items-center gap-1 hover:text-gray-300 transition-colors duration-200">
                                       <svg
                                         className="w-3 h-3"
                                         fill="none"
@@ -340,11 +352,11 @@ function Tickets() {
                                     </span>
                                   </div>
 
-                                  {/* Compact Action Buttons */}
-                                  <div className="flex items-center gap-1">
+                                  {/* Enhanced Action Buttons */}
+                                  <div className="flex items-center gap-1 animate-fade-in animation-delay-300">
                                     <button
                                       onClick={() => handleViewTicket(ticket)}
-                                      className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors flex items-center"
+                                      className="bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/50 text-white px-2 py-1 rounded text-xs transition-all duration-300 flex items-center transform hover:scale-110 hover:-translate-y-0.5"
                                       title="View Ticket"
                                     >
                                       <FaEye className="w-3 h-3" />
@@ -353,7 +365,7 @@ function Tickets() {
                                       onClick={() =>
                                         openModal("options", ticket)
                                       }
-                                      className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                                      className="bg-gray-600 hover:bg-gray-700 hover:shadow-lg hover:shadow-gray-500/50 text-white px-2 py-1 rounded text-xs transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5"
                                       title="Options"
                                     >
                                       <FaEllipsisV className="w-3 h-3" />
@@ -371,9 +383,9 @@ function Tickets() {
               )}
             </div>
           ) : (
-            <div className="bg-gray-800 border-2 border-dashed border-gray-600 p-8 rounded-lg text-center">
+            <div className="bg-gray-800 border-2 border-dashed border-gray-600 p-8 rounded-lg text-center animate-fade-in transform hover:scale-105 transition-transform duration-300">
               <svg
-                className="w-12 h-12 mx-auto mb-4 text-gray-400"
+                className="w-12 h-12 mx-auto mb-4 text-gray-400 animate-pulse"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -397,8 +409,10 @@ function Tickets() {
                   d="M19 21a2 2 0 002-2v-3a1 1 0 00-1-1h-1a1 1 0 00-1 1v3a2 2 0 002 2h-1z"
                 />
               </svg>
-              <p className="text-gray-400 text-lg">No tickets found</p>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-gray-400 text-lg animate-fade-in animation-delay-200">
+                No tickets found
+              </p>
+              <p className="text-gray-500 text-sm mt-2 animate-fade-in animation-delay-400">
                 Your purchased tickets will appear here
               </p>
             </div>
@@ -414,14 +428,14 @@ function Tickets() {
         maxWidth="md:max-w-md"
       >
         {selectedTicket && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in">
             <div className="space-y-3">
               <button
                 onClick={() => {
                   closeModal();
                   openModal("reassigned", selectedTicket);
                 }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg transition-colors flex items-center gap-3"
+                className="w-full bg-green-600 hover:bg-green-700 hover:shadow-lg hover:shadow-green-500/50 text-white p-3 rounded-lg transition-all duration-300 flex items-center gap-3 transform hover:scale-105 hover:-translate-y-1 animate-slide-in-left"
               >
                 <FaExchangeAlt className="w-4 h-4" />
                 Reassign Ticket
@@ -431,7 +445,7 @@ function Tickets() {
                   closeModal();
                   openModal("refund", selectedTicket);
                 }}
-                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg transition-colors flex items-center gap-3"
+                className="w-full bg-yellow-600 hover:bg-yellow-700 hover:shadow-lg hover:shadow-yellow-500/50 text-white p-3 rounded-lg transition-all duration-300 flex items-center gap-3 transform hover:scale-105 hover:-translate-y-1 animate-fade-in-up animation-delay-100"
               >
                 <FaDollarSign className="w-4 h-4" />
                 Request Refund
@@ -441,7 +455,7 @@ function Tickets() {
                   closeModal();
                   openModal("resale", selectedTicket);
                 }}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition-colors flex items-center gap-3"
+                className="w-full bg-purple-600 hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-500/50 text-white p-3 rounded-lg transition-all duration-300 flex items-center gap-3 transform hover:scale-105 hover:-translate-y-1 animate-slide-in-right animation-delay-200"
               >
                 <FaTag className="w-4 h-4" />
                 Resale Ticket

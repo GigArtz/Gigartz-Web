@@ -78,30 +78,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Get user roles from profile
   const getUserRoles = (): UserRole[] => {
-    // Default to NORMAL role if user is authenticated but no profile or roles exist
-    if (!userProfile) return [UserRole.NORMAL];
+    // Default to GENERAL_USER role if user is authenticated but no profile or roles exist
+    if (!userProfile) return [UserRole.GENERAL_USER];
 
     // If roles object doesn't exist on profile, provide default role
-    if (!userProfile.roles) return [UserRole.NORMAL];
+    if (!userProfile.roles) return [UserRole.GENERAL_USER];
 
     const roles: UserRole[] = [];
 
-    // Check for explicitly set roles
-    if (userProfile.roles.normal) {
-      roles.push(UserRole.NORMAL);
+    // Check for explicitly set roles based on your profile structure
+    if (userProfile.roles.generalUser) {
+      roles.push(UserRole.GENERAL_USER);
     }
 
-    if (userProfile.roles.pro) {
-      roles.push(UserRole.PRO);
+    if (userProfile.roles.freelancer) {
+      roles.push(UserRole.FREELANCER);
     }
 
     if (userProfile.roles.admin) {
       roles.push(UserRole.ADMIN);
     }
 
-    // Always ensure at least NORMAL role if any profile exists
+    // Always ensure at least GENERAL_USER role if any profile exists
     if (roles.length === 0) {
-      roles.push(UserRole.NORMAL);
+      roles.push(UserRole.GENERAL_USER);
     }
 
     console.log("Current user roles:", roles);

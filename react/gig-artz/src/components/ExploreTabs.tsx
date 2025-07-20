@@ -12,14 +12,11 @@ import { AppDispatch, RootState } from "../../store/store";
 import { fetchAllEvents } from "../../store/eventsSlice";
 import { FaFilter, FaSearch, FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
-import LgScrollableEventRow from "./LgScrollableEventRow";
-import ScrollableEventCol from "./ScrollableEventCol";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   eventCategories,
   freelancerCategories,
 } from "../constants/EventCategories";
-import SwitchToProCard from "./SwitchToProCard";
 import PreferencesModal from "./PreferencesModal";
 
 function ExploreTabs() {
@@ -144,7 +141,7 @@ function ExploreTabs() {
         const matchesFreelancer =
           selectedFreelancers.length === 0 ||
           selectedFreelancers.some((f) =>
-            user?.roles?.pro || user?.roles?.admin
+            user?.roles?.freelancer || user?.roles?.admin
               ? userGenres.includes(f)
               : false
           );
@@ -160,6 +157,27 @@ function ExploreTabs() {
       tab = "people";
     }
     navigate(`/explore?tab=${tab}`);
+  };
+
+  // Navigate to SeeAllEventsPage with section context
+  const handleSeeAllEvents = (
+    sectionType: "trending" | "forYou" | "interest" | "location",
+    options: { interest?: string; location?: string; title?: string } = {}
+  ) => {
+    const params = new URLSearchParams();
+    params.set("section", sectionType);
+
+    if (options.title) {
+      params.set("title", options.title);
+    }
+    if (options.interest) {
+      params.set("interest", options.interest);
+    }
+    if (options.location) {
+      params.set("location", options.location);
+    }
+
+    navigate(`/explore/see-all?${params.toString()}`);
   };
 
   // Infinite scroll handler for all tabs
@@ -429,25 +447,41 @@ function ExploreTabs() {
               <div className="flex flex-col gap-6">
                 {/* Trending */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-white text-lg font-semibold mb-2">
-                    Trending
-                  </h2>
-                  <ScrollableEventRow
-                    events={topData.trendingEvents}
-                    loading={loading}
-                    error={error}
-                  />
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-white text-lg font-semibold">
+                      Trending
+                    </h2>
+                    <button
+                      onClick={() =>
+                        handleSeeAllEvents("trending", {
+                          title: "Trending Events",
+                        })
+                      }
+                      className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                    >
+                      See All →
+                    </button>
+                  </div>
+                  <ScrollableEventRow events={topData.trendingEvents} />
                 </div>
                 {/* For You */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-white text-lg font-semibold mb-2">
-                    For You
-                  </h2>
-                  <ScrollableEventRow
-                    events={topData.forYouEvents}
-                    loading={loading}
-                    error={error}
-                  />
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-white text-lg font-semibold">
+                      For You
+                    </h2>
+                    <button
+                      onClick={() =>
+                        handleSeeAllEvents("forYou", {
+                          title: "Events For You",
+                        })
+                      }
+                      className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                    >
+                      See All →
+                    </button>
+                  </div>
+                  <ScrollableEventRow events={topData.forYouEvents} />
                 </div>
 
                 {/* Popular Professionals */}
@@ -467,14 +501,30 @@ function ExploreTabs() {
                 {(
                   topData.interestSections as {
                     interest: string;
-                    events: any[];
+                    events: unknown[];
                   }[]
                 ).map(({ interest, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-white text-lg font-semibold mb-2">
-                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
-                      </h2>
+                      <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-white text-lg font-semibold">
+                          {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleSeeAllEvents("interest", {
+                              interest,
+                              title: `${
+                                interest.charAt(0).toUpperCase() +
+                                interest.slice(1)
+                              } Events`,
+                            })
+                          }
+                          className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                        >
+                          See All →
+                        </button>
+                      </div>
                       <ScrollableEventRow
                         events={events}
                         loading={loading}
@@ -485,13 +535,29 @@ function ExploreTabs() {
                 )}
                 {/* Dynamic location sections for events */}
                 {(
-                  topData.locationSections as { loc: string; events: any[] }[]
+                  topData.locationSections as {
+                    loc: string;
+                    events: unknown[];
+                  }[]
                 ).map(({ loc, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={loc}>
-                      <h2 className="text-white text-lg font-semibold mb-2">
-                        Gigs in {loc}
-                      </h2>
+                      <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-white text-lg font-semibold">
+                          Gigs in {loc}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleSeeAllEvents("location", {
+                              location: loc,
+                              title: `Gigs in ${loc}`,
+                            })
+                          }
+                          className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                        >
+                          See All →
+                        </button>
+                      </div>
                       <ScrollableEventRow
                         events={events}
                         loading={loading}
@@ -512,9 +578,21 @@ function ExploreTabs() {
               <div className="flex flex-col gap-6">
                 {/* Trending */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-white text-lg font-semibold mb-2">
-                    Trending
-                  </h2>
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-white text-lg font-semibold">
+                      Trending
+                    </h2>
+                    <button
+                      onClick={() =>
+                        handleSeeAllEvents("trending", {
+                          title: "Latest Trending Events",
+                        })
+                      }
+                      className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                    >
+                      See All →
+                    </button>
+                  </div>
                   <ScrollableEventRow
                     events={latestData.trendingEvents}
                     loading={loading}
@@ -523,9 +601,21 @@ function ExploreTabs() {
                 </div>
                 {/* For You */}
                 <div className="w-full p-2 rounded-xl">
-                  <h2 className="text-white text-lg font-semibold mb-2">
-                    For You
-                  </h2>
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-white text-lg font-semibold">
+                      For You
+                    </h2>
+                    <button
+                      onClick={() =>
+                        handleSeeAllEvents("forYou", {
+                          title: "Latest Events For You",
+                        })
+                      }
+                      className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                    >
+                      See All →
+                    </button>
+                  </div>
                   <ScrollableEventRow
                     events={latestData.forYouEvents}
                     loading={loading}
@@ -549,14 +639,30 @@ function ExploreTabs() {
                 {(
                   latestData.interestSections as {
                     interest: string;
-                    events: any[];
+                    events: unknown[];
                   }[]
                 ).map(({ interest, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-white text-lg font-semibold mb-2">
-                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
-                      </h2>
+                      <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-white text-lg font-semibold">
+                          {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleSeeAllEvents("interest", {
+                              interest,
+                              title: `Latest ${
+                                interest.charAt(0).toUpperCase() +
+                                interest.slice(1)
+                              } Events`,
+                            })
+                          }
+                          className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                        >
+                          See All →
+                        </button>
+                      </div>
                       <ScrollableEventRow
                         events={events}
                         loading={loading}
@@ -569,14 +675,27 @@ function ExploreTabs() {
                 {(
                   latestData.locationSections as {
                     loc: string;
-                    events: any[];
+                    events: unknown[];
                   }[]
                 ).map(({ loc, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={loc}>
-                      <h2 className="text-white text-lg font-semibold mb-2">
-                        Gigs in {loc}
-                      </h2>
+                      <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-white text-lg font-semibold">
+                          Gigs in {loc}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleSeeAllEvents("location", {
+                              location: loc,
+                              title: `Latest Gigs in ${loc}`,
+                            })
+                          }
+                          className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                        >
+                          See All →
+                        </button>
+                      </div>
                       <ScrollableEventRow
                         events={events}
                         loading={loading}
@@ -697,14 +816,30 @@ function ExploreTabs() {
                 {(
                   gigsData.interestSections as {
                     interest: string;
-                    events: any[];
+                    events: unknown[];
                   }[]
                 ).map(({ interest, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={interest}>
-                      <h2 className="text-white text-lg font-semibold mb-2">
-                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
-                      </h2>
+                      <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-white text-lg font-semibold">
+                          {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleSeeAllEvents("interest", {
+                              interest,
+                              title: `Promoted ${
+                                interest.charAt(0).toUpperCase() +
+                                interest.slice(1)
+                              } Events`,
+                            })
+                          }
+                          className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                        >
+                          See All →
+                        </button>
+                      </div>
                       <ScrollableEventRow
                         events={events}
                         loading={loading}
@@ -715,13 +850,29 @@ function ExploreTabs() {
                 )}
                 {/* Dynamic location sections for events */}
                 {(
-                  gigsData.locationSections as { loc: string; events: any[] }[]
+                  gigsData.locationSections as {
+                    loc: string;
+                    events: unknown[];
+                  }[]
                 ).map(({ loc, events }) =>
                   events.length > 0 ? (
                     <div className="w-full p-2 rounded-xl" key={loc}>
-                      <h2 className="text-white text-lg font-semibold mb-2">
-                        Gigs in {loc}
-                      </h2>
+                      <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-white text-lg font-semibold">
+                          Gigs in {loc}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleSeeAllEvents("location", {
+                              location: loc,
+                              title: `Promoted Gigs in ${loc}`,
+                            })
+                          }
+                          className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                        >
+                          See All →
+                        </button>
+                      </div>
                       <ScrollableEventRow
                         events={events}
                         loading={loading}

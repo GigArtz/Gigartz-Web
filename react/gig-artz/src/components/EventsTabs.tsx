@@ -42,7 +42,7 @@ const EventsTabs: React.FC<EventsTabsProps> = ({ events, loading, error }) => {
   const usersWithUid = useMemo(() => {
     return (
       userList
-        ?.filter((user) => user.roles?.pro || user.roles?.admin)
+        ?.filter((user) => user.roles?.freelancer || user.roles?.admin)
         .map((user) => ({
           ...user,
           uid: user.id,

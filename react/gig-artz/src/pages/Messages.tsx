@@ -331,7 +331,7 @@ const Messages: React.FC = () => {
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="bg-gray-700 rounded-full p-8 mb-6">
+            <div className="bg-teal-900 rounded-full p-4 mb-6 border border-teal-500 opacity-80">
               <FaUsers className="text-4xl text-teal-400" />
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">
@@ -408,7 +408,7 @@ const Messages: React.FC = () => {
               setIsModalOpen(false);
             }}
             disabled={!selectedContact || !newMessage.trim()}
-            className="px-6 py-2 bg-gradient-to-r from-teal-500 to-purple-600 text-white font-semibold rounded-lg hover:from-teal-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+            className="px-6 py-2 btn-primary-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
           >
             Send Message
           </button>

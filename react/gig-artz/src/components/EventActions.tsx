@@ -7,13 +7,12 @@ import {
   FaShareAlt,
   FaExclamationTriangle,
 } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
 import CRUDModal from "../components/CRUDModal";
 import EditEventModal from "../components/EditEventModal";
 import ReportModal from "./ReportModal";
 import "./EventActions.css";
-import { useEffect, useState } from "react";
 
-import type { UserProfile } from "../../store/profileSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ShareModal from "./ShareModal";

@@ -37,6 +37,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { RootState } from "../store/store";
+import SeeAllEventsPage from "./components/SeeAllEventsPage";
 
 // Import new auth components
 import { AuthProvider } from "./contexts/AuthContext";
@@ -44,6 +45,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AuthRedirect from "./components/AuthRedirect";
 import NotFound from "./components/NotFound";
 import Unauthorized from "./components/Unauthorized";
+import ScrollToTop from "./components/ScrollToTop";
 import { UserRole, Permission } from "./constants/authTypes";
 
 // App must only use Provider, BrowserRouter, and render InnerApp as a child of BrowserRouter
@@ -104,6 +106,7 @@ function InnerApp({
           }
         />
       )}
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Login />} />
@@ -168,7 +171,7 @@ function InnerApp({
         <Route
           path="/scanner"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.PRO, UserRole.ADMIN]}>
+            <ProtectedRoute>
               <Drawer />
               <Scanner />
               <SideBar />
@@ -216,6 +219,14 @@ function InnerApp({
           }
         />
         <Route
+          path="/explore/see-all"
+          element={
+            <ProtectedRoute>
+              <SeeAllEventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
@@ -238,7 +249,7 @@ function InnerApp({
         <Route
           path="/monetization"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.PRO, UserRole.ADMIN]}>
+            <ProtectedRoute>
               <Drawer />
               <Monetization />
               <SideBar />

@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import BaseModal from "./BaseModal";
 import { FaInfoCircle } from "react-icons/fa";
+import BookingsComponent from "./BookingsComponent";
 
 function WalletTabs() {
   // Use RootState for type safety
