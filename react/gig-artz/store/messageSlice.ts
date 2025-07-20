@@ -46,7 +46,7 @@ export interface Contact {
 
 // Conversation interface
 export interface Conversation {
-  contactId: string;
+  contact: string;
   messages: Message[];
 }
 
@@ -138,8 +138,8 @@ const messageSlice = createSlice({
       // Find the conversation to update using receiverId or senderId
       let conversation = state.conversations?.find(
         (conv) =>
-          conv.contactId === newMessage.receiverId || // Match receiverId
-          conv.contactId === newMessage.senderId      // Match senderId (for two-way conversations)
+          conv.contact === newMessage.receiverId || // Match receiverId
+          conv.contact === newMessage.senderId      // Match senderId (for two-way conversations)
       );
 
       if (conversation) {
@@ -150,7 +150,7 @@ const messageSlice = createSlice({
 
         // Create a new conversation if none exists
         const newConversation = {
-          contactId: newMessage.receiverId,
+          contact: newMessage.receiverId,
           messages: [newMessage],
         };
         state.conversations.push(newConversation);
@@ -171,7 +171,7 @@ const messageSlice = createSlice({
 
       // Match conversation using receiverId
       const conversation = state.conversations?.find(
-        (conv) => conv.contactId === contact
+        (conv) => conv.contact === contact
       );
 
       if (conversation) {

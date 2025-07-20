@@ -7,9 +7,14 @@ import {
   Message,
   addConversation, // Import action to add a new conversation
 } from "../../store/messageSlice";
+import {
+  getDisplayNameByContactId,
+  getConversationUserData,
+} from "../../store/profileSlice";
 import Loader from "../components/Loader";
 import Chat from "../components/Chat";
-import { FaTimesCircle } from "react-icons/fa";
+import BaseModal from "../components/BaseModal";
+import { FaSearch, FaPlus, FaUsers } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Messages: React.FC = () => {
@@ -19,7 +24,7 @@ const Messages: React.FC = () => {
   const contactFromQuery = queryParams.get("contact");
 
   const dispatch = useDispatch<AppDispatch>();
-  const { contacts, conversations, loading } = useSelector(
+  const { conversations, loading } = useSelector(
     (state: RootState) => state.messages
   );
   const { userList } = useSelector((state: RootState) => state.profile);
@@ -31,10 +36,19 @@ const Messages: React.FC = () => {
   const [activeConversation, setActiveConversation] = useState<string | null>(
     contactFromQuery || null
   );
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Memoized local conversations
+  // Memoized local conversations with deduplication
   const localConversations = useMemo(() => {
-    return conversations || [];
+    if (!conversations) return [];
+
+    // Remove duplicates based on contact ID
+    const uniqueConversations = conversations.filter(
+      (conversation, index, arr) =>
+        arr.findIndex((conv) => conv.contact === conversation.contact) === index
+    );
+
+    return uniqueConversations;
   }, [conversations]);
 
   const fetchConversations = useCallback(() => {
@@ -107,72 +121,196 @@ const Messages: React.FC = () => {
     navigate("/messages");
   };
 
-  const getUsernameById = (userId: string) => {
-    const user = userList?.find((user) => user.id === userId);
-    return user ? user.userName : "Unknown User";
-  };
+  const getUsernameById = useCallback(
+    (contactId: string) => {
+      return getDisplayNameByContactId(contactId, userList || []);
+    },
+    [userList]
+  );
+
+  // Get full conversation user data for enhanced display
+  const getConversationData = useCallback(
+    (contactId: string) => {
+      return getConversationUserData(contactId, userList || []);
+    },
+    [userList]
+  );
+
+  // Filter conversations based on search term
+  const filteredConversations = useMemo(() => {
+    if (!searchTerm.trim()) return localConversations;
+    return localConversations.filter((conversation) => {
+      const username = getUsernameById(conversation.contact) || "Unknown";
+      return username.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [localConversations, searchTerm, getUsernameById]);
 
   return (
-    <div className="main-content flex h-screen">
+    <div className="main-content flex h-screen bg-dark">
       {!activeConversation || window.innerWidth >= 768 ? (
-        <div className="md:w-[30%] w-full md:border-r border-gray-700 p-4">
-          <h2 className="hidden md:block text-xl font-semibold text-white-800 mb-4">
-            Messages
-          </h2>
-
-          {loading && !conversations?.length ? (
-            <Loader />
-          ) : (
-            <div className="max-h-[100vh] overflow-y-auto space-y-3">
-              {localConversations.length === 0 ? (
-                <p className="text-gray-500">No messages yet</p>
-              ) : (
-                localConversations.map((conversation) => {
-                  const contact = contacts?.find(
-                    (c) =>
-                      c.userName === conversation.contact ||
-                      c.id === conversation.contact
-                  );
-                  const lastMessage = conversation.messages.at(-1);
-
-                  return (
-                    <div
-                      key={conversation.contact}
-                      className={`p-3 rounded-lg cursor-pointer transition ${
-                        activeConversation === conversation.contact
-                          ? "bg-teal-500 text-white"
-                          : "bg-gray-800 hover:bg-gray-700"
-                      }`}
-                      onClick={() =>
-                        handleConversationClick(conversation.contact)
-                      }
-                    >
-                      <h3 className="font-semibold">
-                        {getUsernameById(conversation?.contact) ||
-                          contact?.userName ||
-                          "Unknown"}
-                      </h3>
-                      {lastMessage && (
-                        <p className="text-sm text-gray-300 truncate">
-                          {lastMessage.senderId === currentUserId
-                            ? "You: "
-                            : ""}
-                          {lastMessage.message}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+        <div className="md:w-[30%] w-full md:border-r border-gray-700 flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <FaUsers className="text-teal-400" />
+                Messages
+              </h2>
+            
             </div>
-          )}
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="fixed bottom-5 right-4 md:hidden text-white w-40 rounded-3xl btn-primary"
-          >
-            New Message
-          </button>
+            {/* Search Bar */}
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Conversations List */}
+          <div className="flex-1 overflow-y-auto">
+            {loading && !conversations?.length ? (
+              <div className="p-4">
+                <Loader />
+              </div>
+            ) : (
+              <div className="p-2">
+                {filteredConversations.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    {searchTerm ? (
+                      <div>
+                        <FaSearch className="mx-auto text-2xl mb-2 opacity-50" />
+                        <p>No conversations found</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <FaUsers className="mx-auto text-2xl mb-2 opacity-50" />
+                        <p>No messages yet</p>
+                        <p className="text-sm mt-1">Start a new conversation</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredConversations.map((conversation) => {
+                      const lastMessage = conversation.messages.at(-1);
+                      const isActive =
+                        activeConversation === conversation.contact;
+                      const hasUnread =
+                        lastMessage && lastMessage.senderId !== currentUserId;
+
+                      // Get comprehensive user data for this conversation
+                      const conversationData = getConversationData(
+                        conversation.contact
+                      );
+
+                      return (
+                        <div
+                          key={conversation.contact}
+                          className={`p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
+                            isActive
+                              ? "bg-teal-600 text-white border-teal-500 shadow-lg transform scale-[1.02]"
+                              : "bg-gray-800 hover:bg-gray-700 border-transparent hover:border-gray-600"
+                          }`}
+                          onClick={() =>
+                            handleConversationClick(conversation.contact)
+                          }
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              {/* Profile picture or avatar */}
+                              {conversationData.profilePic ? (
+                                <img
+                                  src={conversationData.profilePic}
+                                  alt={conversationData.displayName}
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+                                  onError={(e) => {
+                                    // Fallback to gradient avatar if image fails to load
+                                    e.currentTarget.style.display = "none";
+                                    const nextElement = e.currentTarget
+                                      .nextElementSibling as HTMLElement;
+                                    if (nextElement)
+                                      nextElement.style.display = "flex";
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className={`w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg ${
+                                  conversationData.profilePic
+                                    ? "hidden"
+                                    : "flex"
+                                }`}
+                              >
+                                {(conversationData.displayName ||
+                                  "U")[0].toUpperCase()}
+                              </div>
+                              {hasUnread && !isActive && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-gray-800"></div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-sm truncate">
+                                  {conversationData.displayName}
+                                </h3>
+                               
+                              </div>
+                              
+                              {lastMessage && (
+                                <p
+                                  className={`text-xs truncate ${
+                                    isActive ? "text-gray-200" : "text-gray-400"
+                                  }`}
+                                >
+                                  {lastMessage.senderId === currentUserId
+                                    ? "You: "
+                                    : ""}
+                                  {lastMessage.message}
+                                </p>
+                              )}
+                              {lastMessage && (
+                                <p
+                                  className={`text-xs ${
+                                    isActive ? "text-gray-300" : "text-gray-500"
+                                  }`}
+                                >
+                                  {new Date(
+                                    typeof lastMessage.timestamp === "string"
+                                      ? lastMessage.timestamp
+                                      : Date.now()
+                                  ).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* New Message Button */}
+          <div className="p-4">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 btn-primary transition-all transform hover:scale-105"
+            >
+              <FaPlus className="text-sm" />
+              New Message
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -181,7 +319,7 @@ const Messages: React.FC = () => {
           activeConversation && window.innerWidth < 768
             ? "flex"
             : "hidden md:flex"
-        } flex-1 items-center justify-center sm:ps-4`}
+        } flex-1 flex flex-col`}
       >
         {activeConversation ? (
           <Chat
@@ -192,59 +330,90 @@ const Messages: React.FC = () => {
             handleCloseConversation={handleCloseConversation}
           />
         ) : (
-          <div className="text-center p-8">
-            <p className="mb-16">Select a conversation to start chatting.</p>
-            <button
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div className="bg-gray-700 rounded-full p-8 mb-6">
+              <FaUsers className="text-4xl text-teal-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Welcome to Messages
+            </h3>
+            <p className="text-gray-400 mb-8 max-w-md">
+              Select a conversation from the sidebar to start chatting, or
+              create a new message to get started.
+            </p>
+            <div className="flex justify-center">
+              <button
               onClick={() => setIsModalOpen(true)}
-              className="hidden md:block mb-4 text-white w-40 rounded-3xl btn-primary"
-            >
-              New Message
-            </button>
+              className="flex items-center gap-2 px-6 py-3 btn-primary transition-all transform hover:scale-105"
+              >
+              <FaPlus className="text-sm text-center" />
+              Start New Conversation
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-[#060512] z-30 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white dark:bg-[#1F1C29] border border-gray-700 p-5 rounded-lg shadow-lg w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold mb-3">New Message</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-3 py-1 rounded-full hover:bg-red-400"
-              >
-                <FaTimesCircle className="w-5 h-5" />
-              </button>
-            </div>
+      <BaseModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="New Message"
+        icon={<FaPlus />}
+        maxWidth="md:max-w-md"
+        minWidth="min-w-80"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Select Contact
+            </label>
             <select
               value={selectedContact || ""}
               onChange={(e) => setSelectedContact(e.target.value)}
-              className="input-field mb-4"
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
             >
-              <option value="">Select a contact</option>
-              {contacts?.map((contact) => (
-                <option key={contact.id} value={contact.id}>
-                  {contact.userName}
+              <option value="">Choose a contact</option>
+              {userList?.map((user) => (
+                <option key={user.userId} value={user.userId}>
+                  {user.userName}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Message
+            </label>
             <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type your message..."
-              className="input-field mb-4"
+              rows={4}
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
             />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={(e) => handleSendMessage(newMessage, null, e)}
-                className="w-28 rounded-3xl btn-primary"
-              >
-                Send
-              </button>
-            </div>
           </div>
         </div>
-      )}
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={(e) => {
+              handleSendMessage(newMessage, null, e);
+              setIsModalOpen(false);
+            }}
+            disabled={!selectedContact || !newMessage.trim()}
+            className="px-6 py-2 bg-gradient-to-r from-teal-500 to-purple-600 text-white font-semibold rounded-lg hover:from-teal-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+          >
+            Send Message
+          </button>
+        </div>
+      </BaseModal>
     </div>
   );
 };

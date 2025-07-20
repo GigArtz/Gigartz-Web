@@ -93,7 +93,7 @@ declare global {
 
 // User Profile Interface
 export interface UserProfile {
-  id?: string;
+  userId?: string;
   userName: string;
   name: string;
   emailAddress: string;
@@ -473,7 +473,7 @@ const profileSlice = createSlice({
 
         const profileData = state.visitedProfile.userProfile;
         const profileSummary = profileData ? {
-          id: profileData.id,
+          userId: profileData.userId,
           name: profileData.name,
           followers: profileData.followers,
           following: profileData.following,
@@ -666,8 +666,8 @@ const profileSlice = createSlice({
       // Update per-user cache timestamps for all fetched users
       const now = Date.now();
       action.payload.forEach(profile => {
-        if (profile.id) {
-          state.userCacheTimestamps[profile.id] = now;
+        if (profile.userId) {
+          state.userCacheTimestamps[profile.userId] = now;
         }
       });
     },
@@ -2054,6 +2054,87 @@ export const invalidateUserCache = (uid: string) => (dispatch: AppDispatch) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`Invalidated global cache for user: ${uid}`);
   }
+};
+
+// Utility function to get user information by contact ID
+export const getUserInfoByContactId = (contactId: string, userList: UserProfile[]): UserProfile | null => {
+  if (!contactId || !userList || userList.length === 0) {
+    return null;
+  }
+
+  // Strategy 1: Try exact userId match first (most common case)
+  let user = userList.find(user => user.userId === contactId);
+  if (user) {
+    return user;
+  }
+
+  // Strategy 1b: Try exact id match (in case id is used instead of userId)
+  user = userList.find(user => (user as UserProfile & { id?: string }).id === contactId);
+  if (user) {
+    return user;
+  }
+
+  // Strategy 2: Try userName match (for legacy data like "Molabe")
+  user = userList.find(user => user.userName === contactId);
+  if (user) {
+    return user;
+  }
+
+  // Strategy 3: Try case-insensitive userName match
+  user = userList.find(user =>
+    user.userName && user.userName.toLowerCase() === contactId.toLowerCase()
+  );
+  if (user) {
+    return user;
+  }
+
+  // Strategy 4: Try name field match (if available)
+  user = userList.find(user =>
+    user.name && user.name.toLowerCase() === contactId.toLowerCase()
+  );
+  if (user) {
+    return user;
+  }
+
+
+  return null;
+};
+
+// Helper function to get username from contact ID
+export const getUsernameByContactId = (contactId: string, userList: UserProfile[]): string => {
+  const user = getUserInfoByContactId(contactId, userList);
+  return user ? user.userName : contactId || "Unknown User";
+};
+
+// Helper function to get display name from contact ID (prefers name over userName)
+export const getDisplayNameByContactId = (contactId: string, userList: UserProfile[]): string => {
+  const user = getUserInfoByContactId(contactId, userList);
+  if (user) {
+    // Prefer actual name if available and not empty, otherwise use userName
+    return (user.name && user.name.trim()) ? user.name : user.userName;
+  }
+  return contactId || "Unknown User";
+};
+
+// Helper function to get profile picture URL from contact ID
+export const getProfilePicByContactId = (contactId: string, userList: UserProfile[]): string | null => {
+  const user = getUserInfoByContactId(contactId, userList);
+  return user ? (user.profilePicUrl || user.profilePicture) : null;
+};
+
+// Helper function to get full user data for conversation display
+export const getConversationUserData = (contactId: string, userList: UserProfile[]) => {
+  const user = getUserInfoByContactId(contactId, userList);
+  return {
+    user,
+    displayName: user ? ((user.name && user.name.trim()) ? user.name : user.userName) : contactId || "Unknown User",
+    userName: user ? user.userName : contactId || "Unknown User",
+    profilePic: user ? (user.profilePicUrl || user.profilePicture) : null,
+    isOnline: false, // Could be extended with online status
+    bio: user ? user.bio : '',
+    city: user ? user.city : '',
+    country: user ? user.country : '',
+  };
 };
 
 export default profileSlice.reducer;
