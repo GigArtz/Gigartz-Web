@@ -12,6 +12,7 @@ import { FaSpinner } from "react-icons/fa";
 import LgScrollableEventRow from "../components/LgScrollableEventRow";
 import UserCard from "../components/UserCard";
 import { showToast } from "../../store/notificationSlice";
+import { fetchAllProfiles } from "../../store/profileSlice";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -72,7 +73,10 @@ const Home: React.FC = () => {
     [eventsState]
   );
   const uid = useMemo(() => authState, [authState]);
-  const { userList } = useMemo(() => profileState, [profileState]);
+  const { userList, loading: profileLoading } = useMemo(
+    () => profileState,
+    [profileState]
+  );
 
   // Add state for selected tab
   const [selectedTab, setSelectedTab] = useState("reviews");
@@ -99,14 +103,24 @@ const Home: React.FC = () => {
 
   // Memoize professionals list to prevent unnecessary re-computation
   const professionals = useMemo(() => {
-    return Array.isArray(userList)
-      ? userList
-          .filter((user) => user.roles?.freelancer)
-          .map((user) => ({
-            ...user,
-            uid: user.uid || user.id, // Normalize uid property once
-          }))
-      : [];
+    if (Array.isArray(userList)) {
+      // Filter to show freelancer users or users with events (professionals)
+      const filteredUsers = userList.filter((user) => {
+        // Show freelancers OR users who have created events (content creators/professionals)
+        return (
+          user.roles?.freelancer === true ||
+          (user.userEvents &&
+            Array.isArray(user.userEvents) &&
+            user.userEvents.length > 0)
+        );
+      });
+
+      return filteredUsers.map((user) => ({
+        ...user,
+        uid: user.uid || user.id, // Normalize uid property once
+      }));
+    }
+    return [];
   }, [userList]);
 
   const currentUid = uid?.uid;
@@ -119,7 +133,11 @@ const Home: React.FC = () => {
     if (currentUid && reviews.length === 0) {
       dispatch(fetchAllReviews(currentUid));
     }
-  }, [dispatch, currentUid, events.length, reviews.length]);
+    // Fetch all profiles for Popular Professionals section
+    if (currentUid && (!userList || userList.length === 0)) {
+      dispatch(fetchAllProfiles());
+    }
+  }, [dispatch, currentUid, events.length, reviews.length, userList]);
 
   // Infinite scroll for events tab
   useEffect(() => {
@@ -249,7 +267,14 @@ const Home: React.FC = () => {
             </h2>
 
             <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 pb-2">
-              {professionals.length > 0 ? (
+              {profileLoading ? (
+                <div className="flex justify-center items-center py-4">
+                  <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+                  <span className="text-gray-400 ml-2">
+                    Loading professionals...
+                  </span>
+                </div>
+              ) : professionals.length > 0 ? (
                 professionals.map((user) => (
                   <div
                     key={user.uid || user.id}
@@ -259,9 +284,14 @@ const Home: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-400 text-center mt-4">
-                  No users found.
-                </p>
+                <div className="text-center mt-4">
+                  <p className="text-gray-400">No users found.</p>
+                  <p className="text-gray-500 text-sm">
+                    {userList
+                      ? `Total users: ${userList.length}`
+                      : "User list not loaded"}
+                  </p>
+                </div>
               )}
             </div>
           </div>

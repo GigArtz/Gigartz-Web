@@ -1,0 +1,41 @@
+/* Styling for action icons */
+.event-action-icon {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.event-action-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Heart icon animation */
+.event-action-heart {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.event-action-heart:hover {
+  color: #ef4444;
+  transform: scale(1.2);
+}
+
+/* Bookmark icon animation */
+.event-action-bookmark {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.event-action-bookmark:hover {
+  color: #eab308;
+  transform: scale(1.2);
+}
+
+/* Active states - these ensure buttons are colored appropriately when active */
+.event-action-heart-active {
+  color: #ef4444 !important; /* Red color for liked state */
+  fill: #ef4444 !important; /* Ensure SVG fill is also set */
+  transform: scale(1.05);
+}
+
+.event-action-bookmark-active {
+  color: #eab308 !important; /* Yellow color for saved state */
+  fill: #eab308 !important; /* Ensure SVG fill is also set */
+  transform: scale(1.05);
+}

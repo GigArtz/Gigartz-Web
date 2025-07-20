@@ -85,18 +85,17 @@ const TippingModal: React.FC<TippingModalProps> = ({
             Tip
           </button>
         </div>
-        {showPayment && (
-          <Payment
-            amount={selectedAmount === "" ? 0 : Number(selectedAmount)}
-            type="tip"
-            tipDetails={{
-              amount: selectedAmount === "" ? 0 : Number(selectedAmount),
-            }}
-            onSuccess={handlePaymentSuccess}
-            onFailure={handlePaymentFailure}
-            onClose={() => setShowPayment(false)}
-          />
-        )}
+        <Payment
+          isOpen={showPayment}
+          amount={selectedAmount === "" ? 0 : Number(selectedAmount)}
+          type="tip"
+          tipDetails={{
+            amount: selectedAmount === "" ? 0 : Number(selectedAmount),
+          }}
+          onSuccess={handlePaymentSuccess}
+          onFailure={handlePaymentFailure}
+          onClose={() => setShowPayment(false)}
+        />
       </form>
     </BaseModal>
   );

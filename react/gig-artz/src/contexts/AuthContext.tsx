@@ -78,21 +78,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Get user roles from profile
   const getUserRoles = (): UserRole[] => {
-    if (!userProfile?.roles) return [];
+    // Default to NORMAL role if user is authenticated but no profile or roles exist
+    if (!userProfile) return [UserRole.NORMAL];
+
+    // If roles object doesn't exist on profile, provide default role
+    if (!userProfile.roles) return [UserRole.NORMAL];
 
     const roles: UserRole[] = [];
 
-    if (userProfile.roles.generalUser) {
-      roles.push(UserRole.GENERAL_USER);
+    // Check for explicitly set roles
+    if (userProfile.roles.normal) {
+      roles.push(UserRole.NORMAL);
     }
 
-    if (userProfile.roles.freelancer) {
-      roles.push(UserRole.FREELANCER);
+    if (userProfile.roles.pro) {
+      roles.push(UserRole.PRO);
     }
 
-    // Add additional role checks here if you extend the roles system
-    // For now, we'll add admin/moderator based on future implementation
+    if (userProfile.roles.admin) {
+      roles.push(UserRole.ADMIN);
+    }
 
+    // Always ensure at least NORMAL role if any profile exists
+    if (roles.length === 0) {
+      roles.push(UserRole.NORMAL);
+    }
+
+    console.log("Current user roles:", roles);
     return roles;
   };
 
@@ -126,11 +138,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check if user has a specific permission
   const hasPermission = useCallback(
     (permission: Permission): boolean => {
-      return userRoles.some((role) =>
+      // Special case: VIEW_EVENTS permission is available to all authenticated users
+      if (permission === Permission.VIEW_EVENTS && isAuthenticated) {
+        return true;
+      }
+
+      const hasPermission = userRoles.some((role) =>
         rolePermissions[role]?.includes(permission)
       );
+
+      console.log(`Checking permission ${permission}:`, {
+        userRoles,
+        hasPermission,
+      });
+
+      return hasPermission;
     },
-    [userRoles]
+    [userRoles, isAuthenticated]
   );
 
   // Check if user has all specified permissions

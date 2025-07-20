@@ -1,9 +1,22 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { buyTicket } from "../../store/eventsSlice";
-import type { EventBooking } from "../../store/eventsSlice";
-import { FaTimesCircle } from "react-icons/fa";
-import Loader from "./Loader";
+import { AppDispatch } from "../../store/store";
+import { FaCreditCard } from "react-icons/fa";
+import BaseModal from "./BaseModal";
+
+// Define the EventBooking type based on eventsSlice.ts
+type EventBooking = {
+  eventId: string;
+  customerUid: string;
+  customerName: string;
+  customerEmail: string;
+  ticketTypes: unknown[]; // This is what is used in the eventsSlice.ts
+  location: string;
+  eventName: string;
+  eventDate: string;
+  image: string;
+};
 
 interface PaymentProps {
   amount: number;
@@ -14,6 +27,7 @@ interface PaymentProps {
   onSuccess: () => void;
   onFailure: () => void;
   onClose: () => void;
+  isOpen: boolean;
 }
 
 const Payment: React.FC<PaymentProps> = ({
@@ -25,19 +39,28 @@ const Payment: React.FC<PaymentProps> = ({
   onSuccess,
   onFailure,
   onClose,
+  isOpen,
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
+    // Don't make API request if component is not visible
+    if (!isOpen) return;
+
     const payload: {
       amount: number;
       order?: unknown[];
       tip?: Record<string, unknown>;
       booking?: Record<string, unknown>;
-    } = { amount };
+      type: string;
+    } = {
+      amount,
+      type,
+    };
+
     if (type === "ticket") {
       if (
         !ticketDetails ||
@@ -64,6 +87,12 @@ const Payment: React.FC<PaymentProps> = ({
 
     const fetchPaymentUrl = async () => {
       try {
+        // Clear previous data
+        setUrl("");
+        setError("");
+
+        console.log("Payment payload:", payload);
+
         const response = await fetch(
           "https://peach-payment-backend.onrender.com/checkout",
           {
@@ -73,13 +102,28 @@ const Payment: React.FC<PaymentProps> = ({
           }
         );
 
-        console.log(response);
+        console.log("Payment response:", response);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch payment URL.");
+        const textData = await response.text();
+        let data;
+
+        try {
+          // Try to parse as JSON
+          data = JSON.parse(textData);
+          console.log("Payment response data:", data);
+        } catch {
+          console.error("Failed to parse response as JSON:", textData);
+          throw new Error("Invalid response format from payment server");
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch payment URL.");
+        }
+
+        if (!data.url) {
+          throw new Error("Payment URL not found in response");
+        }
+
         setUrl(data.url);
       } catch (error) {
         setError("Failed to initialize payment. Please try again.");
@@ -88,7 +132,7 @@ const Payment: React.FC<PaymentProps> = ({
     };
 
     fetchPaymentUrl();
-  }, [amount, type, ticketDetails, tipDetails, bookingDetails]);
+  }, [amount, type, ticketDetails, tipDetails, bookingDetails, isOpen]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -102,10 +146,19 @@ const Payment: React.FC<PaymentProps> = ({
           event.data.result.code.startsWith("000.100")
         ) {
           if (type === "ticket" && ticketDetails) {
-            dispatch(buyTicket(ticketDetails));
+            try {
+              console.log("Processing ticket purchase:", ticketDetails);
+              // Using properly typed dispatch
+              dispatch(buyTicket(ticketDetails));
+              // Note: we call onSuccess even if the API call fails
+              // since the payment was actually successful
+            } catch (err) {
+              console.error("Error processing ticket purchase:", err);
+            }
           }
           onSuccess();
         } else {
+          console.warn("Payment failed with code:", event.data.result.code);
           onFailure();
         }
       }
@@ -117,36 +170,36 @@ const Payment: React.FC<PaymentProps> = ({
   }, [onSuccess, onFailure, type, ticketDetails, dispatch]);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-dark rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-red-500 flex items-center"
-        >
-          <FaTimesCircle className="w-4 h-4" />
-        </button>
-
-        {error ? (
-          <div>
-            <h2 className="text-xl font-bold text-red-500">Error</h2>
-            <p className="mt-4">{error}</p>
-          </div>
-        ) : !url ? (
-          <div>
-            <h2 className="text-xl font-bold text-teal-500">Initializing...</h2>
-            <p className="mt-4">Please wait while we set up your payment.</p>
-          </div>
-        ) : (
-          <iframe
-            ref={iframeRef}
-            src={url}
-            title="Payment"
-            className="w-full h-96 rounded-lg border"
-            sandbox="allow-scripts allow-same-origin allow-forms"
-          ></iframe>
-        )}
-      </div>
-    </div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Payment - ${
+        type ? type.charAt(0).toUpperCase() + type.slice(1) : "Processing"
+      }`}
+      subtitle={`Amount: R${amount.toFixed(2)}`}
+      icon={<FaCreditCard className="w-5 h-5" />}
+      maxWidth="md:max-w-2xl"
+    >
+      {error ? (
+        <div>
+          <h2 className="text-xl font-bold text-red-500">Error</h2>
+          <p className="mt-4">{error}</p>
+        </div>
+      ) : !url ? (
+        <div>
+          <h2 className="text-xl font-bold text-teal-500">Initializing...</h2>
+          <p className="mt-4">Please wait while we set up your payment.</p>
+        </div>
+      ) : (
+        <iframe
+          ref={iframeRef}
+          src={url}
+          title="Payment"
+          className="w-full h-96 rounded-lg border"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        ></iframe>
+      )}
+    </BaseModal>
   );
 };
 

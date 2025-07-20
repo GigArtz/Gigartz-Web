@@ -144,7 +144,9 @@ function ExploreTabs() {
         const matchesFreelancer =
           selectedFreelancers.length === 0 ||
           selectedFreelancers.some((f) =>
-            user?.roles?.freelancer ? userGenres.includes(f) : false
+            user?.roles?.pro || user?.roles?.admin
+              ? userGenres.includes(f)
+              : false
           );
 
         return matchesSearch && matchesFreelancer;

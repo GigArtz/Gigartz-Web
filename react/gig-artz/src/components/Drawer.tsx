@@ -25,7 +25,6 @@ import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
 import { fetchUserProfile } from "../../store/profileSlice";
 import CommentForm from "./CommentForm";
-import Loader from "./Loader";
 
 function Drawer() {
   const navigate = useNavigate();
@@ -39,9 +38,7 @@ function Drawer() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const [isMoreExpanded, setIsMoreExpanded] = useState(false);
-
   const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
-  const [userReview, setUserReview] = useState();
 
   // Add this handler:
   const handleAddOption = (option: string) => {
@@ -53,27 +50,30 @@ function Drawer() {
     }
   };
 
-  // Fetch user profile on mount or user change - use cache by default with better caching logic
+  // Combined user profile fetch logic with improved caching
   useEffect(() => {
-    // Only fetch if user exists and we don't already have their profile loaded or loading
-    if (user?.uid && (!profile || profile.id !== user.uid) && !loading) {
-      dispatch(fetchUserProfile(user.uid));
-    }
-  }, [user?.uid, dispatch, loading, profile]);
+    let userId = user?.uid;
 
-  // Fallback for persisted user with better caching logic
-  useEffect(() => {
-    if (!user && !loading) {
+    // If no active user, try to get from local storage
+    if (!userId && !loading) {
       const persistedUser = localStorage.getItem("authUser");
       if (persistedUser) {
-        const parsedUser = JSON.parse(persistedUser);
-        // Only fetch if we don't already have this user's profile
-        if (!profile || profile.id !== parsedUser.uid) {
-          dispatch(fetchUserProfile(parsedUser.uid));
+        try {
+          const parsedUser = JSON.parse(persistedUser);
+          userId = parsedUser.uid;
+        } catch (error) {
+          console.error("Failed to parse persisted user:", error);
         }
       }
     }
-  }, [user, dispatch, loading, profile]);
+
+    // Only fetch if we have a userId and either:
+    // 1. We don't have a profile yet, or
+    // 2. The profile we have doesn't match the current user
+    if (userId && (!profile || profile.id !== userId) && !loading) {
+      dispatch(fetchUserProfile(userId));
+    }
+  }, [user?.uid, dispatch, loading, profile]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -159,14 +159,30 @@ function Drawer() {
             >
               <FaTimesCircle className="w-6 h-6" />
             </button>
-            <CommentForm
-              buttonText="Submit"
-              loading={loading}
-              onSubmit={(review, rating) => {
-                handleCommentSubmit(review, rating);
-                setIsCommentModalOpen(false);
-              }}
-            />
+            {loading ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 w-32 bg-gray-700 rounded mb-4"></div>
+                <div className="h-24 bg-gray-700 rounded mb-4"></div>
+                <div className="flex space-x-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-6 h-6 rounded-full bg-gray-700"
+                    ></div>
+                  ))}
+                </div>
+                <div className="h-10 w-full bg-gray-700 rounded-full"></div>
+              </div>
+            ) : (
+              <CommentForm
+                buttonText="Submit"
+                loading={loading}
+                onSubmit={(review, rating) => {
+                  handleCommentSubmit(review, rating);
+                  setIsCommentModalOpen(false);
+                }}
+              />
+            )}
           </div>
         </div>
       )}
@@ -179,16 +195,29 @@ function Drawer() {
             onClick={goBack}
             aria-label="Go back"
           />
-          <span className="text-white text-lg font-semibold capitalize truncate max-w-[120px]">
-            {location.pathname.split("/")[1] || "Explore"}
-          </span>
+          {loading ? (
+            <div className="h-6 w-20 bg-gray-700 rounded animate-pulse"></div>
+          ) : (
+            <span className="text-white text-lg font-semibold capitalize truncate max-w-[120px]">
+              {location.pathname.split("/")[1]
+                ? location.pathname.split("/")[1]
+                : ""}
+            </span>
+          )}
         </div>
-        <img
-          src={profile?.profilePicUrl || avatar}
-          className="w-10 h-10 rounded-full border-2 border-gray-800 cursor-pointer object-cover hover:scale-105 transition"
-          onClick={toggleDrawer}
-          alt="Open drawer"
-        />
+        {loading ? (
+          <div className="w-10 h-10 rounded-full border-2 border-gray-800 bg-gray-700 animate-pulse"></div>
+        ) : (
+          <img
+            src={profile?.profilePicUrl || avatar}
+            className="w-10 h-10 rounded-full border-2 border-gray-800 cursor-pointer object-cover hover:scale-105 transition"
+            onClick={toggleDrawer}
+            alt="Open drawer"
+            onError={(e) => {
+              e.currentTarget.src = avatar;
+            }}
+          />
+        )}
       </div>
 
       {/* Drawer */}
@@ -213,20 +242,22 @@ function Drawer() {
               alt="Profile"
               className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 mx-auto border-teal-500 object-cover cursor-pointer hover:scale-105 transition"
               onClick={toggleDrawer}
+              onError={(e) => {
+                e.currentTarget.src = avatar;
+              }}
             />
             <p
               className="text-white text-lg font-semibold mt-2 hover:underline cursor-pointer truncate"
               onClick={handleUsernameClick}
-              title={profile?.userName || "brooke lines"}
+              title={profile?.userName || ""}
             >
-              {profile?.userName || "brooke lines"}
+              {profile?.userName || ""}
             </p>
-            <p
-              className="text-teal-400 text-sm truncate"
-              title={profile?.bio || "brooke lines"}
-            >
-              {profile?.bio || "brooke lines"}
-            </p>
+            {profile?.bio && (
+              <p className="text-teal-400 text-sm truncate" title={profile.bio}>
+                {profile.bio}
+              </p>
+            )}
           </div>
         )}
 
@@ -314,7 +345,11 @@ function Drawer() {
         </nav>
 
         {/* Create Button */}
-        {!loading && (
+        {loading ? (
+          <div className="flex flex-row font-medium px-2 py-2 mt-4 justify-center relative">
+            <div className="w-full h-11 rounded-full bg-gray-700 animate-pulse"></div>
+          </div>
+        ) : (
           <div className="flex flex-row font-medium px-2 py-2 mt-4 justify-center relative">
             <button
               onClick={() => setIsAddDropdownOpen((open) => !open)}

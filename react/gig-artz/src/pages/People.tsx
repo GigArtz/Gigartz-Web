@@ -68,7 +68,9 @@ const People: React.FC = () => {
   const { visitedProfile } = useSelector((state: RootState) => state.profile);
 
   const [isFreelancer, setIsFreelancer] = useState<boolean>(
-    visitedProfile?.userProfile?.roles?.freelancer || false
+    visitedProfile?.userProfile?.roles?.pro ||
+      visitedProfile?.userProfile?.roles?.admin ||
+      false
   );
 
   useEffect(() => {
@@ -78,7 +80,11 @@ const People: React.FC = () => {
   }, [dispatch, uid]);
 
   useEffect(() => {
-    setIsFreelancer(visitedProfile?.userProfile?.roles?.freelancer || false);
+    setIsFreelancer(
+      visitedProfile?.userProfile?.roles?.pro ||
+        visitedProfile?.userProfile?.roles?.admin ||
+        false
+    );
   }, [visitedProfile]);
 
   // Stabilized props using useCallback

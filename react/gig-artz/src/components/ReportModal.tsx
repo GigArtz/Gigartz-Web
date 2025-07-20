@@ -6,7 +6,8 @@ import BaseModal from "./BaseModal";
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectReason: (reason: string) => void;
+  onSelectReason?: (reason: string) => void;
+  onSubmit?: (reason: string, additionalDetails?: string) => void;
 }
 
 const REPORT_REASONS = [
@@ -24,6 +25,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
   isOpen,
   onClose,
   onSelectReason,
+  onSubmit,
 }) => {
   if (!isOpen) return null;
 
@@ -37,16 +39,20 @@ const ReportModal: React.FC<ReportModalProps> = ({
       closeOnClickOutside={true}
       maxWidth="max-w-md"
       minWidth="min-w-80"
+      className="bg-dark p-0 rounded-xl overflow-hidden shadow-2xl"
+      showCloseButton={false}
     >
-      <ul className="divide-y divide-gray-600">
+      <ul className="divide-y divide-gray-800">
         {REPORT_REASONS.map((reason) => (
           <li key={reason}>
             <button
-              className="w-full text-left py-3 px-2 hover:bg-gray-800 flex items-center justify-between text-gray-300 hover:text-white transition-colors"
-              onClick={() => onSelectReason(reason)}
+              className="w-full text-left py-2 px-4 hover:bg-gray-900 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+              onClick={() => {
+                if (onSelectReason) onSelectReason(reason);
+                if (onSubmit) onSubmit(reason);
+              }}
             >
-              <span>{reason}</span>
-              <span className="text-gray-400">&gt;</span>
+              <span className="text-sm">{reason}</span>
             </button>
           </li>
         ))}

@@ -418,16 +418,15 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 </div>
 
                 {/* Optional Payment Modal */}
-                {showPayment && (
-                  <Payment
-                    amount={pendingAmount}
-                    type="booking"
-                    bookingDetails={pendingBooking || {}}
-                    onSuccess={handlePaymentSuccess}
-                    onFailure={handlePaymentFailure}
-                    onClose={() => setShowPayment(false)}
-                  />
-                )}
+                <Payment
+                  isOpen={showPayment}
+                  amount={pendingAmount}
+                  type="booking"
+                  bookingDetails={pendingBooking || {}}
+                  onSuccess={handlePaymentSuccess}
+                  onFailure={handlePaymentFailure}
+                  onClose={() => setShowPayment(false)}
+                />
               </>
             );
           })()}

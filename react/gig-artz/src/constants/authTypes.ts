@@ -1,9 +1,8 @@
 // Define user roles
 export enum UserRole {
-    GENERAL_USER = 'generalUser',
-    FREELANCER = 'freelancer',
-    ADMIN = 'admin',
-    MODERATOR = 'moderator'
+    NORMAL = 'normal',
+    PRO = 'pro',
+    ADMIN = 'admin'
 }
 
 // Define permissions
@@ -20,35 +19,18 @@ export enum Permission {
 
 // Role to permissions mapping
 export const rolePermissions: Record<UserRole, Permission[]> = {
-    [UserRole.GENERAL_USER]: [
-        Permission.VIEW_EVENTS,
-        Permission.MANAGE_BOOKINGS,
+    [UserRole.NORMAL]: [
         Permission.VIEW_EVENTS,
         Permission.CREATE_EVENTS,
         Permission.EDIT_EVENTS,
-        Permission.MANAGE_BOOKINGS,
-        Permission.VIEW_ANALYTICS,
-        Permission.VIEW_EVENTS,
-        Permission.CREATE_EVENTS,
-        Permission.EDIT_EVENTS,
-        Permission.MANAGE_BOOKINGS,
-        Permission.VIEW_ANALYTICS,
-        Permission.MODERATE_CONTENT
+        Permission.MANAGE_BOOKINGS
     ],
-    [UserRole.FREELANCER]: [
+    [UserRole.PRO]: [
         Permission.VIEW_EVENTS,
         Permission.CREATE_EVENTS,
         Permission.EDIT_EVENTS,
         Permission.MANAGE_BOOKINGS,
         Permission.VIEW_ANALYTICS
-    ],
-    [UserRole.MODERATOR]: [
-        Permission.VIEW_EVENTS,
-        Permission.CREATE_EVENTS,
-        Permission.EDIT_EVENTS,
-        Permission.MANAGE_BOOKINGS,
-        Permission.VIEW_ANALYTICS,
-        Permission.MODERATE_CONTENT
     ],
     [UserRole.ADMIN]: [
         Permission.VIEW_EVENTS,

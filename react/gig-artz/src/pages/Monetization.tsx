@@ -36,7 +36,7 @@ const Monetization = () => {
 
   // Update `isFreelancer` state based on Redux profile
   useEffect(() => {
-    setIsFreelancer(profile?.roles?.freelancer || false);
+    setIsFreelancer(profile?.roles?.pro || profile?.roles?.admin || false);
   }, [profile]);
 
   // Auto-check Accept Bookings if there are services added

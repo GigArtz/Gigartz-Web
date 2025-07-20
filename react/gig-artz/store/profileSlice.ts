@@ -116,8 +116,9 @@ export interface UserProfile {
   };
   fcmToken: string;
   roles: {
-    generalUser: boolean;
-    freelancer: boolean;
+    normal: boolean;
+    pro: boolean;
+    admin: boolean;
   };
   // Nested data properties that come from API responses
   likedEvents?: unknown[];

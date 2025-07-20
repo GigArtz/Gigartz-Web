@@ -288,9 +288,10 @@ const EventDetails = () => {
     <div className="main-content px-4 md:px-8 mb-3">
       <Header title={event?.title} />
 
+      {/* Modals rendered outside main content to prevent animation interference */}
       {/* Reviews Modal */}
       {isCommentsVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center animate-fade-in">
           <CommentsModal
             user={profile}
             event={event}
@@ -302,67 +303,76 @@ const EventDetails = () => {
 
       {/* Share Modal */}
       {isShareVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center animate-fade-in">
           <ShareModal
             isVisible={isShareVisible}
-            shareUrl={window.location.href} // Gets the current URL
+            shareUrl={window.location.href}
             onClose={() => setIsShareVisible(false)}
           />
         </div>
       )}
 
       {/* Payment Modal */}
-      {isPaymentVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-          <Payment
-            amount={grandTotal}
-            ticketDetails={{
-              eventId,
-              customerUid: profile?.id || uid,
-              ticketTypes: [
-                ...Object.entries(ticketQuantities).map(([type, quantity]) => ({
-                  ticketType: type,
-                  price: event?.ticketsAvailable[type].price || 0,
+      <Payment
+        isOpen={isPaymentVisible}
+        type="ticket"
+        amount={grandTotal}
+        ticketDetails={{
+          eventId,
+          customerUid: profile?.id || uid,
+          ticketTypes: [
+            ...Object.entries(ticketQuantities).map(([type, quantity]) => ({
+              ticketType: type,
+              price: event?.ticketsAvailable[type].price || 0,
+              quantity,
+              isResale: false,
+            })),
+            ...Object.entries(resaleTicketQuantities).map(
+              ([resaleId, quantity]) => {
+                const resaleTicket = event?.resaleTickets?.find(
+                  (t) => t.resaleId === resaleId
+                );
+                return {
+                  ticketType: resaleTicket?.ticketType || "",
+                  price: resaleTicket?.price || 0,
                   quantity,
-                  isResale: false,
-                })),
-                ...Object.entries(resaleTicketQuantities).map(
-                  ([resaleId, quantity]) => {
-                    const resaleTicket = event?.resaleTickets?.find(
-                      (t) => t.resaleId === resaleId
-                    );
-                    return {
-                      ticketType: resaleTicket?.ticketType || "",
-                      price: resaleTicket?.price || 0,
-                      quantity,
-                      isResale: true,
-                      resaleId,
-                      sellerId: resaleTicket?.sellerId,
-                    };
-                  }
-                ),
-              ],
-            }}
-            onSuccess={handlePaymentSuccess}
-            onFailure={handlePaymentFailure}
-            onClose={() => setIsPaymentVisible(false)}
-          />
-        </div>
-      )}
+                  isResale: true,
+                  resaleId,
+                  sellerId: resaleTicket?.sellerId,
+                };
+              }
+            ),
+          ],
+        }}
+        onSuccess={handlePaymentSuccess}
+        onFailure={handlePaymentFailure}
+        onClose={() => setIsPaymentVisible(false)}
+      />
 
-      <div className="my-4 mb-8 md:mx-0 relative shadow-md rounded-lg">
+      {/* Hero Section with Enhanced Media Display */}
+      <div className="my-4 mb-8 md:mx-0 relative shadow-2xl rounded-xl overflow-hidden group">
         {event.eventVideo ? (
-          <div className="mt-4">
-            <video autoPlay loop muted className="w-full rounded-t-lg">
+          <div className="relative">
+            <video
+              autoPlay
+              loop
+              muted
+              className="w-full rounded-t-xl transition-all duration-500 ease-out group-hover:scale-105"
+            >
               <source src={event.eventVideo} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
+            {/* Video Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
         ) : (
-          <EventGalleryCarousel event={event} />
+          <div className="relative overflow-hidden">
+            <EventGalleryCarousel event={event} />
+          </div>
         )}
 
-        <div className="flex bg-gray-800 rounded-b-lg p-4 gap-4 text-gray-400 text-sm md:text-base">
+        {/* Enhanced Actions Section */}
+        <div className="flex bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-b-xl p-4 gap-4 text-gray-400 text-sm md:text-base border-t border-gray-700 transition-all duration-300 group-hover:border-teal-500/30">
           <EventActions
             event={event}
             profile={profile}
@@ -374,53 +384,83 @@ const EventDetails = () => {
         </div>
       </div>
 
-      <div className="flex flex-row md:flex-row justify-between gap-4 mt-4">
-        <h1 className="text-lg md:text-3xl font-bold text-white">
+      {/* Enhanced Event Header Section */}
+      <div className="flex flex-col justify-between items-start gap-4 mt-6 mb-6 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-xl border border-gray-700 shadow-lg">
+        <div className="flex-1">
+          <h1 className="text-2xl md:text-4xl font-bold mb-3">
+        <span className="bg-gradient-to-r from-teal-300 via-white to-teal-300 bg-clip-text text-transparent">
           {event.title}
-        </h1>
-        <button
-          onClick={viewHostProfile}
-          className="text-gray-400 mt-2 flex flex-row items-center"
-        >
-          <FaUserAlt className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
-          {event.hostName}
-        </button>
-      </div>
-
-      <p className="mt-4 text-lg">{event.description}</p>
-
-      <br />
-
-      <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
-        <div>
-          <p className="flex items-center ">
-            <FaCalendar className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
-            {new Date(event.date).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </p>
-          <p className="flex items-center">
-            <FaLocationArrow className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
-            {event.venue}
-          </p>
+        </span>
+          </h1>
+          <button
+        onClick={viewHostProfile}
+        className="group text-gray-400 flex items-center transition-all duration-300 hover:text-teal-300 hover:translate-x-1"
+          >
+        <FaUserAlt className="w-4 h-4 text-teal-400 mr-2 transition-all duration-300 group-hover:scale-110" />
+        <span className="font-medium">{event.hostName}</span>
+          </button>
         </div>
-        <div className="">
-          <p className="flex items-center">
-            <FaClock className="w-4 h-4 text-teal-200 mr-1 pr-1" /> {event.time}
-          </p>
-          <p className="flex items-center">
-            <FaRandom className="w-4 h-4 text-teal-200 mr-1 pr-1" />{" "}
-            {event.category}
+        <div className="flex-1">
+          <p className="text-lg leading-relaxed text-gray-300">
+        {event.description}
           </p>
         </div>
       </div>
 
-      <hr className="mt-4 border-teal-800" />
+      {/* Enhanced Event Details Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="space-y-4">
+          <div className="group flex items-center p-4 bg-gray-900 rounded-xl border border-gray-700 transition-all duration-300 hover:border-teal-500/30 hover:shadow-lg">
+            <FaCalendar className="w-5 h-5 text-teal-400 mr-3 transition-all duration-300 group-hover:scale-110" />
+            <div>
+              <p className="text-sm text-gray-400">Event Date</p>
+              <p className="text-white font-medium">
+                {new Date(event.date).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
 
-      <div className="mt-6 mb-10">
-        <h2 className="text-lg md:text-2xl font-bold">Tickets</h2>
+          <div className="group flex items-center p-4 bg-gray-900 rounded-xl border border-gray-700 transition-all duration-300 hover:border-teal-500/30 hover:shadow-lg">
+            <FaLocationArrow className="w-5 h-5 text-teal-400 mr-3 transition-all duration-300 group-hover:scale-110" />
+            <div>
+              <p className="text-sm text-gray-400">Venue</p>
+              <p className="text-white font-medium">{event.venue}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="group flex items-center p-4 bg-gray-900 rounded-xl border border-gray-700 transition-all duration-300 hover:border-teal-500/30 hover:shadow-lg">
+            <FaClock className="w-5 h-5 text-teal-400 mr-3 transition-all duration-300 group-hover:scale-110" />
+            <div>
+              <p className="text-sm text-gray-400">Time</p>
+              <p className="text-white font-medium">{event.time}</p>
+            </div>
+          </div>
+
+          <div className="group flex items-center p-4 bg-gray-900 rounded-xl border border-gray-700 transition-all duration-300 hover:border-teal-500/30 hover:shadow-lg">
+            <FaRandom className="w-5 h-5 text-teal-400 mr-3 transition-all duration-300 group-hover:scale-110" />
+            <div>
+              <p className="text-sm text-gray-400">Category</p>
+              <p className="text-white font-medium">{event.category}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <hr className="mt-4 border-teal-800/30 border-2" />
+
+      {/* Enhanced Tickets Section */}
+      <div className="mt-8 mb-10">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+          Get Your Tickets
+        </h2>
 
         {/* Original Tickets */}
         {Object.entries(event.ticketsAvailable).map(([type, ticket]) => (
@@ -504,28 +544,28 @@ const EventDetails = () => {
         )}
 
         {(totalTicketPrice > 0 || totalResaleTicketPrice > 0) && (
-            <div className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center my-4">
-              <div className="text-left">
-                {totalTicketPrice > 0 && (
-                  <p className="text-sm text-gray-400">
-                    Official tickets: R {totalTicketPrice}
-                  </p>
-                )}
-                {totalResaleTicketPrice > 0 && (
-                  <p className="text-sm text-gray-400">
-                    Resale tickets: R {totalResaleTicketPrice}
-                  </p>
-                )}
-                <p className="text-lg font-bold">Total: R {grandTotal}</p>
-              </div>
-              <button
-                onClick={handlePurchase}
-                className="btn-primary-sm px-4 py-2"
-                disabled={grandTotal === 0}
-              >
-                Get Tickets
-              </button>
+          <div className="bg-gray-800 p-4 rounded-lg flex flex-row justify-between items-center my-4">
+            <div className="text-left">
+              {totalTicketPrice > 0 && (
+                <p className="text-sm text-gray-400">
+                  Official tickets: R {totalTicketPrice}
+                </p>
+              )}
+              {totalResaleTicketPrice > 0 && (
+                <p className="text-sm text-gray-400">
+                  Resale tickets: R {totalResaleTicketPrice}
+                </p>
+              )}
+              <p className="text-lg font-bold">Total: R {grandTotal}</p>
             </div>
+            <button
+              onClick={handlePurchase}
+              className="btn-primary-sm px-4 py-2"
+              disabled={grandTotal === 0}
+            >
+              Get Tickets
+            </button>
+          </div>
         )}
       </div>
 

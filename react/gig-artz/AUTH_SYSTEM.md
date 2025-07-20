@@ -11,10 +11,9 @@ This comprehensive authentication and authorization system provides secure acces
 - Flexible route protection with role and permission requirements
 
 ### ✅ **Role-based Access Control**
-- **General User**: Basic app access and event viewing
-- **Freelancer**: Event creation, analytics, and monetization features
-- **Moderator**: Content moderation capabilities
-- **Admin**: Full system access and user management
+- **Normal**: Basic access with event viewing, creation, and booking management
+- **Pro**: All Normal features plus analytics and advanced features
+- **Admin**: Full system access including user management and content moderation
 
 ### ✅ **Permission System**
 - Granular permissions for specific actions

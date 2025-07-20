@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 /**
  * ProfileSection Component
  *
@@ -20,6 +26,15 @@ import {
   FaMapMarkerAlt,
   FaMoneyBillAlt,
   FaPlus,
+  FaTwitter,
+  FaInstagram,
+  FaGithub,
+  FaLinkedin,
+  FaYoutube,
+  FaGlobe,
+  FaFacebook,
+  FaTiktok,
+  FaStar,
 } from "react-icons/fa";
 import TippingModal from "./TippingModal";
 import BookingModal from "./BookingModal";
@@ -32,7 +47,7 @@ import { RootState } from "../../store/store";
 import { useParams } from "react-router-dom";
 import ProfileSectionUI from "./ProfileSectionUI";
 import GuestListModalFromGuestList from "./GuestListModalFromGuestList";
-import SocialLinksModal from "./SocialLinksModal";
+// Social links now displayed inline
 
 interface ProfileSectionProps {
   onFollow: () => void;
@@ -44,21 +59,27 @@ interface ProfileSectionProps {
   isFollowing?: boolean;
 }
 
+// Define iconMap to use with social links
+const iconMap: Record<string, JSX.Element> = {
+  twitter: <FaTwitter />,
+  instagram: <FaInstagram />,
+  facebook: <FaFacebook />,
+  github: <FaGithub />,
+  linkedin: <FaLinkedin />,
+  youtube: <FaYoutube />,
+  tiktok: <FaTiktok />,
+  website: <FaGlobe />,
+};
+
 const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
-  ({
-    onFollow,
-    onMessage,
-    onAddGuest,
-    onTip,
-    onBook,
-    onSocialLinks,
-    isFollowing,
-  }) => {
+  ({ onFollow, onMessage, onAddGuest, onTip, onBook }) => {
     const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
     const [isTippingModalOpen, setIsTippingModalOpen] = useState(false);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
     const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
+    const [isSocialDropdownOpen, setIsSocialDropdownOpen] = useState(false);
+    const socialLinksDropdownRef = useRef<HTMLDivElement>(null);
 
     const { uid } = useParams(); // Extract uid from URL
     const {
@@ -114,7 +135,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     //   }
     // }, [uid, dispatch]);
 
-    const isFreelancer = displayProfile?.roles?.freelancer || false;
+    const isFreelancer =
+      displayProfile?.roles?.freelancer ||
+      displayProfile?.roles?.pro ||
+      displayProfile?.roles?.admin ||
+      false;
     const isAcceptingBookings = displayProfile?.acceptBookings || false;
     const isAcceptingTips = displayProfile?.acceptTips || false;
 
@@ -125,7 +150,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     const [showAllTags, setShowAllTags] = useState(false);
     const defaultTagCount = 3; // or whatever your default number is
 
-    const [showSocialLinksModal, setShowSocialLinksModal] = useState(false);
+    // State for social links
     const [formattedSocialLinks, setFormattedSocialLinks] = useState<
       { platform: string; url: string }[]
     >([]);
@@ -162,6 +187,23 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
         handleSocialLinks();
       }
     }, [displayProfile, handleSocialLinks]);
+
+    // Handle click outside for social links dropdown
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          socialLinksDropdownRef.current &&
+          !socialLinksDropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsSocialDropdownOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
     return (
       <div className="">
@@ -201,6 +243,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                           <FaEnvelope className="w-3 h-3" />
                         </button>
                       </Tooltip>
+
                       {isFreelancer && (
                         <div className="flex items-center gap-1">
                           {isAcceptingTips && (
@@ -223,16 +266,44 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                               </button>
                             </Tooltip>
                           )}
+                        </div>
+                      )}
 
-                          {formattedSocialLinks.length > 0 && (
-                            <Tooltip text="Link Tree">
-                              <button
-                                onClick={() => setShowSocialLinksModal(true)}
-                                className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
-                              >
-                                <FaLink className="w-3 h-3" />
-                              </button>
-                            </Tooltip>
+                      {/* Social Media Links Dropdown */}
+                      {formattedSocialLinks.length > 0 && (
+                        <div className="relative" ref={socialLinksDropdownRef}>
+                          <Tooltip text="Social Links">
+                            <button
+                              onClick={() =>
+                                setIsSocialDropdownOpen(!isSocialDropdownOpen)
+                              }
+                              className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
+                            >
+                              <FaLink className="w-3 h-3" />
+                            </button>
+                          </Tooltip>
+
+                          {/* Dropdown Menu */}
+                          {isSocialDropdownOpen && (
+                            <div className="absolute right-0 mt-1 rounded-md shadow-lg z-50 p-1">
+                              {formattedSocialLinks.map(
+                                ({ platform, url }, index) => (
+                                  <a
+                                    key={index}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center px-4 py-2 text-sm rounded-full text-white hover:bg-gray-700 transition-colors"
+                                  >
+                                    <span className="text-teal-400">
+                                      {iconMap[platform.toLowerCase()] || (
+                                        <FaGlobe />
+                                      )}
+                                    </span>
+                                  </a>
+                                )
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
@@ -259,9 +330,55 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                   <p className="mt-2">
                     {displayProfile?.bio || "No bio available"}
                   </p>
-                  <div className="flex gap-1 items-center text-sm text-gray-400">
+                  <div className="flex gap-1 items-center text-sm text-gray-400 mb-2">
                     <FaMapMarkerAlt />
                     {displayProfile?.city || "location"}
+                  </div>
+                  {/* Rating display - always show, grayed out stars for no rating */}
+                  <div className="flex gap-1 items-center text-sm text-gray-400">
+                    <div className="flex gap-1">
+                      {displayProfile?.rating && displayProfile.rating > 0 ? (
+                        <>
+                          {[...Array(Math.floor(displayProfile.rating))].map(
+                            (_, index) => (
+                              <FaStar key={index} className="text-yellow-400" />
+                            )
+                          )}
+                          {/* Show partial star if rating has decimal */}
+                          {displayProfile.rating % 1 >= 0.5 && (
+                            <FaStar className="text-yellow-200" />
+                          )}
+                          {/* Fill remaining stars with gray */}
+                          {[...Array(5 - Math.ceil(displayProfile.rating))].map(
+                            (_, index) => (
+                              <FaStar
+                                key={`gray-${index}`}
+                                className="text-gray-600"
+                              />
+                            )
+                          )}
+                        </>
+                      ) : (
+                        // Show 5 grayed out stars when no rating
+                        [...Array(5)].map((_, index) => (
+                          <FaStar key={index} className="text-gray-600" />
+                        ))
+                      )}
+                    </div>
+                    <span
+                      className={`font-medium ${
+                        displayProfile?.rating && displayProfile.rating > 0
+                          ? "text-yellow-400"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {displayProfile?.rating && displayProfile.rating > 0
+                        ? displayProfile.rating.toFixed(1)
+                        : "No rating"}
+                    </span>
+                    <span className="text-gray-400">
+                      ({displayProfile?.reviews?.reviewReceived || 0} reviews)
+                    </span>
                   </div>
                   <div className="flex flex-row justify-between">
                     <div className="flex-row gap-4 mt-2">
@@ -352,12 +469,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           onClose={() => setIsBookingModalOpen(false)}
           onSubmit={onBook}
         />
-        <SocialLinksModal
-          isOpen={showSocialLinksModal}
-          onClose={() => setShowSocialLinksModal(false)}
-          links={formattedSocialLinks}
-          userName={displayProfile?.userName || ""}
-        />
+        {/* Social Links Modal removed - now displayed as dropdown */}
         <FollowersModal
           title="Followers"
           isOpen={isFollowersModalOpen}

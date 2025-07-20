@@ -21,15 +21,29 @@ const Toast: React.FC<ToastProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(true);
 
+  // Simpler auto-dismiss logic
   useEffect(() => {
-    if (!action) {
+    // Only set a timeout if there's a duration (allow permanent toasts)
+    if (duration) {
       const timer = setTimeout(() => {
         setIsVisible(false);
         setTimeout(onClose, 300); // Small delay for fade-out effect
       }, duration);
+
+      // Clean up on unmount
       return () => clearTimeout(timer);
     }
-  }, [onClose, duration, action]);
+  }, [onClose, duration]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Ensure we always call onClose when component unmounts
+      if (isVisible) {
+        onClose();
+      }
+    };
+  }, [onClose, isVisible]);
 
   const getToastTypeStyles = () => {
     switch (type) {
@@ -66,7 +80,11 @@ const Toast: React.FC<ToastProps> = ({
           </button>
         )}
         <button
-          onClick={() => setIsVisible(false)}
+          onClick={() => {
+            setIsVisible(false);
+            // Immediately call onClose after clicking the X button
+            setTimeout(onClose, 300);
+          }}
           className="rounded-full p-1 text-gray-300 hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
           aria-label="Close"
           style={{ background: "rgba(255,255,255,0.1)" }}

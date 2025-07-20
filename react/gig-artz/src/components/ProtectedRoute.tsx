@@ -36,8 +36,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const location = useLocation();
 
   // Memoize auth checks to prevent unnecessary recalculations
-  const authChecks = useMemo(
-    () => ({
+  const authChecks = useMemo(() => {
+    // Special case: Always allow access to events if authenticated
+    const isViewEventsPermission =
+      requiredPermissions.length === 1 &&
+      requiredPermissions.includes(Permission.VIEW_EVENTS);
+
+    return {
       needsAuth: requireAuth && !isAuthenticated,
       hasRequiredRoles:
         requiredRoles.length > 0
@@ -45,28 +50,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             ? hasAllRoles(requiredRoles)
             : hasAnyRole(requiredRoles)
           : true,
-      hasRequiredPermissions:
-        requiredPermissions.length > 0
-          ? requireAllPermissions
-            ? checkPermissions(requiredPermissions)
-            : requiredPermissions.some((permission) =>
-                hasPermission(permission)
-              )
-          : true,
-    }),
-    [
-      requireAuth,
-      isAuthenticated,
-      requiredRoles,
-      requiredPermissions,
-      requireAllRoles,
-      requireAllPermissions,
-      hasAllRoles,
-      hasAnyRole,
-      checkPermissions,
-      hasPermission,
-    ]
-  );
+      // Special handling for VIEW_EVENTS permission - allow for all authenticated users
+      hasRequiredPermissions: isViewEventsPermission
+        ? isAuthenticated // Only check if authenticated for view events
+        : requiredPermissions.length > 0
+        ? requireAllPermissions
+          ? checkPermissions(requiredPermissions)
+          : requiredPermissions.some((permission) => hasPermission(permission))
+        : true,
+    };
+  }, [
+    requireAuth,
+    isAuthenticated,
+    requiredRoles,
+    requiredPermissions,
+    requireAllRoles,
+    requireAllPermissions,
+    hasAllRoles,
+    hasAnyRole,
+    checkPermissions,
+    hasPermission,
+  ]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -100,6 +104,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check permission requirements
   if (requiredPermissions.length > 0 && !authChecks.hasRequiredPermissions) {
+    console.log("Permission check failed:", {
+      requiredPermissions,
+      path: location.pathname,
+      hasRequiredPermissions: authChecks.hasRequiredPermissions,
+    });
+
+    // Special case for VIEW_EVENTS - allow it for all users
+    if (
+      requiredPermissions.length === 1 &&
+      requiredPermissions.includes(Permission.VIEW_EVENTS) &&
+      isAuthenticated
+    ) {
+      console.log("Allowing access to view events for authenticated user");
+      return <>{children}</>;
+    }
+
     if (showUnauthorized) {
       return <Navigate to="/unauthorized" replace />;
     }

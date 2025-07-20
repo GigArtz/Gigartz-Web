@@ -163,7 +163,7 @@ function InnerApp({
         <Route
           path="/scanner"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.FREELANCER]}>
+            <ProtectedRoute requiredRoles={[UserRole.PRO, UserRole.ADMIN]}>
               <Drawer />
               <Scanner />
               <SideBar />
@@ -183,7 +183,7 @@ function InnerApp({
         <Route
           path="/events"
           element={
-            <ProtectedRoute requiredPermissions={[Permission.VIEW_EVENTS]}>
+            <ProtectedRoute requireAuth={true}>
               <Drawer />
               <EventManager />
               <SideBar />
@@ -233,7 +233,7 @@ function InnerApp({
         <Route
           path="/monetization"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.FREELANCER]}>
+            <ProtectedRoute requiredRoles={[UserRole.PRO, UserRole.ADMIN]}>
               <Drawer />
               <Monetization />
               <SideBar />

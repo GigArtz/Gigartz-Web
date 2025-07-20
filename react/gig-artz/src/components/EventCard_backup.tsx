@@ -9,7 +9,7 @@ import CommentsModal from "./CommentsModal";
 import Toast from "./Toast";
 import { addLike } from "../../store/eventsSlice";
 import { useRenderLogger } from "../hooks/usePerformanceMonitor";
-import { FaCalendarAlt } from "react-icons/fa";
+import { FaHeart, FaShare, FaComment, FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 
 interface EventCardEvent {
   id: string;
@@ -57,7 +57,10 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const [isCommentsVisible, setIsCommentsVisible] = useState(false);
     const [isShareVisible, setIsShareVisible] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeAnimation, setLikeAnimation] = useState(false);
     const [toast, setToast] = useState<{
       visible: boolean;
       message: string;
@@ -159,10 +162,16 @@ const EventCard: React.FC<EventCardProps> = memo(
       (eventId: string, uid: string) => {
         if (!likedEvents.includes(eventId)) {
           try {
+            // Trigger like animation
+            setLikeAnimation(true);
+            setIsLiked(true);
+            setTimeout(() => setLikeAnimation(false), 600);
+
             dispatch(addLike(eventId, uid));
             setLikedEvents((prevLikedEvents) => [...prevLikedEvents, eventId]);
             showToast("Event liked successfully", "success");
           } catch {
+            setIsLiked(false);
             showToast("Failed to like event", "error");
           }
         } else {
@@ -191,10 +200,24 @@ const EventCard: React.FC<EventCardProps> = memo(
       setIsShareVisible(false);
     }, []);
 
+    // Handle hover effects
+    const handleMouseEnter = useCallback(() => {
+      setIsHovered(true);
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+      setIsHovered(false);
+    }, []);
+
     // Handle image loading
     const handleImageLoad = useCallback(() => {
       setIsImageLoaded(true);
     }, []);
+
+    // Initialize liked state
+    useEffect(() => {
+      setIsLiked(likedEvents.includes(event.id || event.eventId || ''));
+    }, [likedEvents, event.id, event.eventId]);
 
     // Memoized image source
     const imageSrc = useMemo(() => {
@@ -244,7 +267,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     // Error handling moved to Toast component - the event is always accessible
 
     return (
-      <div className="animate-in fade-in-0 duration-300">
+      <div>
         {/* Reviews Modal */}
         <CommentsModal
           user={profile}
@@ -280,7 +303,22 @@ const EventCard: React.FC<EventCardProps> = memo(
           </div>
         )}
 
-        <div className="w-full h-full flex flex-col min-w-0 rounded-xl border border-gray-800 bg-gray-900 cursor-pointer overflow-hidden group transform transition-transform duration-200 ease-out hover:scale-[1.01] active:scale-[0.99]">
+        <div
+          className={`w-full h-full flex flex-col min-w-0 rounded-xl shadow-lg border border-gray-800 bg-gray-900 cursor-pointer overflow-hidden group 
+            transform transition-all duration-300 ease-out
+            hover:scale-[1.02] hover:-translate-y-2 hover:shadow-2xl hover:shadow-teal-500/20 hover:border-teal-500/30
+            active:scale-[0.98] animate-in fade-in-0 slide-in-from-bottom-4 duration-500`}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+        <div
+          className={`w-full h-full flex flex-col min-w-0 rounded-xl shadow-lg border border-gray-800 bg-gray-900 cursor-pointer overflow-hidden group 
+            transform transition-all duration-300 ease-out
+            hover:scale-[1.02] hover:-translate-y-2 hover:shadow-2xl hover:shadow-teal-500/20 hover:border-teal-500/30
+            active:scale-[0.98] animate-in fade-in-0 slide-in-from-bottom-4`}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <Link
             to={`/events/?eventId=${event?.eventId || event?.id}`}
             className="block w-full h-58 sm:h-full relative overflow-hidden"
@@ -291,60 +329,102 @@ const EventCard: React.FC<EventCardProps> = memo(
               {!isImageLoaded && (
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 animate-pulse rounded-t-xl" />
               )}
-
+              
               {/* Main Image */}
               <img
-                className={`${imageClasses} transition-opacity duration-300 ${
-                  isImageLoaded ? "opacity-100" : "opacity-0"
-                }`}
+                className={`${imageClasses} transition-all duration-500 group-hover:scale-110 
+                  ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 src={imageSrc}
                 alt={event?.title || "Event Image"}
                 onLoad={handleImageLoad}
               />
 
-                {/* Event Badges */}
-                {Array.isArray(event?.category)
-                  ? (
-                      <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                        {event.category.slice(0, 2).map((cat: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                    )
-                  : typeof event?.category === "string"
-                  ? (
-                      <div className="absolute top-4 left-4 bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
-                        {event.category || "Live Event"}
-                      </div>
-                    )
-                  : null}
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              {/* Quick Action Buttons */}
+              <div className={`absolute top-4 right-4 flex gap-2 transition-all duration-300 ${
+                isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+              }`}>
+                <button
+                  className={`p-2 rounded-full backdrop-blur-sm border transition-all duration-300 transform hover:scale-110 active:scale-90 ${
+                    isLiked 
+                      ? 'bg-red-500/80 text-white border-red-500' 
+                      : 'bg-black/40 text-white border-white/20 hover:bg-red-500/80 hover:border-red-500'
+                  } ${likeAnimation ? 'animate-pulse' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLike(event?.eventId || event?.id || '', uid);
+                  }}
+                >
+                  <FaHeart className={`w-4 h-4 transition-transform duration-300 ${
+                    isLiked ? 'text-white scale-110' : ''
+                  }`} />
+                </button>
+
+                <button
+                  className="p-2 rounded-full bg-black/40 text-white border border-white/20 hover:bg-teal-500/80 hover:border-teal-500 backdrop-blur-sm transition-all duration-300 transform hover:scale-110 active:scale-90"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    shareEvent();
+                  }}
+                >
+                  <FaShare className="w-4 h-4" />
+                </button>
+
+                <button
+                  className="p-2 rounded-full bg-black/40 text-white border border-white/20 hover:bg-blue-500/80 hover:border-blue-500 backdrop-blur-sm transition-all duration-300 transform hover:scale-110 active:scale-90"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    showComments();
+                  }}
+                >
+                  <FaComment className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Event Badge */}
+              <div className="absolute top-4 left-4 bg-teal-500/90 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm animate-in slide-in-from-left-4 fade-in-0 duration-500 delay-200">
+                Live Event
+              </div>
             </div>
 
             {/* Content Section */}
-            <div className="p-4 flex flex-col flex-1">
+            <div className="p-4 flex flex-col flex-1 animate-in fade-in-0 slide-in-from-bottom-2 duration-400 delay-100">
               <div className="flex justify-between items-start">
-                <h5
-                  className={`${titleClasses} transition-colors duration-200`}
-                >
+                <h5 className={`${titleClasses} group-hover:text-teal-400 transition-colors duration-300 animate-in fade-in-0 duration-400 delay-200`}>
                   {event.title}
                 </h5>
               </div>
-
+              
               {/* Date with icon */}
-              <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm mt-2">
+              <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm mt-2 animate-in fade-in-0 duration-400 delay-300">
                 <FaCalendarAlt className="w-3 h-3 text-teal-500" />
                 <span>{formattedDate}</span>
+              </div>
+
+              {/* Additional hover content */}
+              <div className={`mt-3 transition-all duration-300 overflow-hidden ${
+                isHovered ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0'
+              }`}>
+                <div className="flex items-center gap-2 text-gray-500 text-xs">
+                  <FaMapMarkerAlt className="w-3 h-3 text-teal-500" />
+                  <span>View Location</span>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <span className="text-xs bg-gray-800 px-2 py-1 rounded-full text-gray-300 transition-colors duration-200 hover:bg-gray-700">
+                    {Array.isArray(event.comments) ? event.comments.length : 0} comments
+                  </span>
+                  <span className="text-xs bg-gray-800 px-2 py-1 rounded-full text-gray-300 transition-colors duration-200 hover:bg-gray-700">
+                    {Array.isArray(event.likes) ? event.likes.length : event.likes || 0} likes
+                  </span>
+                </div>
               </div>
             </div>
           </Link>
 
           {cardSize === "lg" && (
-            <div className="p-5 flex flex-col flex-1">
+            <div className="p-5 flex flex-col flex-1 animate-in fade-in-0 duration-400 delay-400">
               <div className="flex border-t border-gray-800 pt-2 px-2 gap-2">
                 <EventActions
                   event={{
