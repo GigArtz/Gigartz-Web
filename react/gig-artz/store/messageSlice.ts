@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import { AppDispatch } from "./store";
+import { notify } from "../src/helpers/notify";
 
 // User Profile Interface
 export interface UserProfile {
@@ -223,8 +224,27 @@ export const sendMessage =
 
       // Dispatch success action and add the sent message to the state
       dispatch(messageSlice.actions.sendMessageSuccess(newMessage));
+
+      // Add notification for successful message send
+      notify(dispatch, {
+        type: "general",
+        data: {
+          message: "Message sent successfully!",
+          type: "success"
+        }
+      });
+
     } catch (error: unknown) {
       handleAxiosError(error, dispatch, messageSlice.actions.sendMessageFailure);
+
+      // Add notification for message send failure
+      notify(dispatch, {
+        type: "general",
+        data: {
+          message: "Failed to send message. Please try again.",
+          type: "error"
+        }
+      });
     }
   };
 

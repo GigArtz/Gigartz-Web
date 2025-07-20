@@ -22,6 +22,7 @@ import Explore from "./pages/Explore";
 import Drawer from "./components/Drawer";
 import SideBar from "./components/SideBar";
 import Toast from "./components/Toast";
+import GlobalNotification from "./components/GlobalNotification";
 import { useDispatch } from "react-redux";
 import { clearToast } from "../store/notificationSlice";
 import Monetization from "./pages/Monetization";
@@ -83,6 +84,10 @@ function InnerApp({
     <>
       <TitleUpdater />
       <AuthRedirect />
+
+      {/* Global Notifications System - displays notifications across all pages */}
+      <GlobalNotification />
+
       {/* Global Toast for all notifications and alerts */}
       {toastState && toastState.message && (
         <Toast

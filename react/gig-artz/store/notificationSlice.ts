@@ -67,7 +67,7 @@ export interface Notification {
 export interface NotificationState {
     toast: {
         message: string;
-        type?: "success" | "error" | "info";
+        type?: "success" | "error" | "info" | "warning";
         action?: { label: string; onClick: string } | null;
         id: number;
     } | null;
@@ -118,7 +118,7 @@ const notificationSlice = createSlice({
             state,
             action: PayloadAction<{
                 message: string;
-                type?: "success" | "error" | "info";
+                type?: "success" | "error" | "info" | "warning";
                 action?: { label: string; onClick: string } | null;
             }>
         ) => {
@@ -137,13 +137,7 @@ const notificationSlice = createSlice({
             const newNotification = createNotification(action.payload);
             state.notifications.unshift(newNotification);
             saveNotificationsToStorage(state.notifications);
-            // Auto-remove after 5 seconds (for toast-like notifications)
-            setTimeout(() => {
-                state.notifications = state.notifications.filter(
-                    (n) => n.id !== newNotification.id
-                );
-                saveNotificationsToStorage(state.notifications);
-            }, 5000);
+            // Note: Auto-removal is handled in the GlobalNotification component, not here
         },
         markAsRead: (state, action: PayloadAction<string>) => {
             const notification = state.notifications.find(
@@ -180,5 +174,14 @@ const notificationSlice = createSlice({
     },
 });
 
-export const { setToken, showToast, clearToast } = notificationSlice.actions;
+export const {
+    setToken,
+    showToast,
+    clearToast,
+    loadNotificationsFromLocalStorage,
+    addNotification,
+    markAsRead,
+    clearNotifications,
+    removeNotification
+} = notificationSlice.actions;
 export default notificationSlice.reducer;

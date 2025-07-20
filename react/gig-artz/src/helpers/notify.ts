@@ -1,35 +1,29 @@
 
-import { showToast } from "../../store/notificationSlice";
-import { AppDispatch } from "../../store/store";
+import { showToast, addNotification } from "../../store/notificationSlice";
+import store from "../../store/store";
 
-export interface NotificationPayload {
-    type: string;
-    data: Record<string, unknown>;
-    read?: boolean;
-}
+/**
+ * Simple notification API
+ * @param message - The notification message to display
+ * @param type - The type of notification (success, error, info, warning)
+ */
+export function notify(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info'): void {
+    const dispatch = store.dispatch;
 
-export const notify = (dispatch: AppDispatch, payload: NotificationPayload) => {
-    console.log('[notify] Dispatching notification', payload);
-    // Only show global Toast
-
-    // Show global Toast (single, unified)
-    let toastType: 'success' | 'error' | 'info' = 'info';
-    let message = '';
-    if (payload.type === 'event' || payload.type === 'review' || payload.type === 'guestlist') {
-        // Try to extract a message and type from payload.data
-        if (typeof payload.data?.message === 'string') message = payload.data.message;
-        if (typeof payload.data?.type === 'string' && ['success', 'error', 'info'].includes(payload.data.type)) {
-            toastType = payload.data.type as 'success' | 'error' | 'info';
-        }
-        // Fallbacks
-        if (!message) message = payload.type.charAt(0).toUpperCase() + payload.type.slice(1) + ' notification';
-    } else {
-        message = typeof payload.data?.message === 'string' ? payload.data.message : 'Notification';
-    }
+    // Dispatch toast notification (temporary popup)
     dispatch(
         showToast({
             message,
-            type: toastType,
+            type: type,
         })
     );
-};
+
+    // Also add persistent notification to the notifications page
+    dispatch(
+        addNotification({
+            type: 'general',
+            data: { message, type },
+            read: false
+        })
+    );
+}

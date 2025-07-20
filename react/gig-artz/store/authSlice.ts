@@ -139,10 +139,32 @@ export const registerUser = (formData: RegistrationData) => async (dispatch: App
     );
     console.log("Registration response:", response.data);
     dispatch(authSlice.actions.registerSuccess({ user: response.data.user, uid: response.data.user.uid }));
+
+    // Add notification for successful registration
+    const { notify } = await import("../src/helpers/notify");
+    notify(dispatch, {
+      type: "general",
+      data: {
+        message: `Welcome to GigArtz, ${response.data.user.userName || 'user'}! Your account has been created successfully.`,
+        type: "success"
+      }
+    });
+
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       console.error("Axios error response:", error.response);
       dispatch(authSlice.actions.registerFailure(error.response?.data.error || "An error occurred"));
+
+      // Add notification for registration failure
+      const { notify } = await import("../src/helpers/notify");
+      notify(dispatch, {
+        type: "general",
+        data: {
+          message: error.response?.data.error || "Registration failed. Please try again.",
+          type: "error"
+        }
+      });
+
     } else if (error instanceof Error) {
       console.error("Error during registration:", error.message);
       dispatch(authSlice.actions.registerFailure(error.message));

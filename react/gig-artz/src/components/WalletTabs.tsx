@@ -173,8 +173,65 @@ function WalletTabs() {
     })
   );
 
+  // Group bookings by event title
+  const groupBookingsByEvent = (bookings: any[]) => {
+    const grouped = bookings.reduce((acc, booking) => {
+      const eventTitle = booking.title;
+      if (!acc[eventTitle]) {
+        acc[eventTitle] = [];
+      }
+      acc[eventTitle].push(booking);
+      return acc;
+    }, {});
+    return grouped;
+  };
+
+  const groupedConfirmedBookings = React.useMemo(
+    () => groupBookingsByEvent(confirmedBookings),
+    [confirmedBookings]
+  );
+  const groupedPendingBookings = React.useMemo(
+    () => groupBookingsByEvent(pendingBookings),
+    [pendingBookings]
+  );
+
   // Modal state for booking actions
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Set all groups as collapsed by default only when bookings data changes
+  React.useEffect(() => {
+    if (confirmedBookings.length > 0 || pendingBookings.length > 0) {
+      // Compute groups directly to avoid circular dependency
+      const confirmedGroups = groupBookingsByEvent(confirmedBookings);
+      const pendingGroups = groupBookingsByEvent(pendingBookings);
+
+      const allGroups = new Set([
+        ...Object.keys(confirmedGroups).map((title) => `confirmed-${title}`),
+        ...Object.keys(pendingGroups).map((title) => `pending-${title}`),
+      ]);
+      setCollapsedGroups(allGroups);
+    }
+  }, [
+    confirmedBookings.length,
+    pendingBookings.length,
+    JSON.stringify(confirmedBookings.map((b) => b.id + b.title)),
+    JSON.stringify(pendingBookings.map((b) => b.id + b.title)),
+  ]);
+
+  const toggleGroup = (groupName: string) => {
+    setCollapsedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupName)) {
+        newSet.delete(groupName);
+      } else {
+        newSet.add(groupName);
+      }
+      return newSet;
+    });
+  };
 
   const openModal = (booking) => setSelectedBooking(booking);
   const closeModal = () => setSelectedBooking(null);
@@ -350,123 +407,583 @@ function WalletTabs() {
 
             {/* Bookings */}
             {activeTab === "bookings" && (
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    Confirmed Bookings
-                  </h3>
-                  {confirmedBookings.length > 0 ? (
-                    confirmedBookings.map((booking) => (
-                      <div
-                        key={booking.id}
-                        className="bg-gray-900 p-4 rounded-lg shadow-md w-full flex items-center gap-4 mb-2 cursor-pointer"
-                        onClick={() => openModal(booking)}
-                      >
-                        <img
-                          src={booking.image}
-                          alt={booking.title}
-                          className="w-16 h-16 rounded-md border-2 border-teal-400"
-                        />
-                        <div className="flex-grow">
-                          <h2 className="text-lg font-semibold text-white line-clamp-1">
-                            {booking.title}
-                          </h2>
-                          <p className="text-sm text-gray-400">
-                            {booking.location}
-                          </p>
-                          <p className="text-xs text-gray-300">
-                            {booking.date}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400 text-center mt-4">
-                      No confirmed bookings.
+              <div className="space-y-6">
+                {/* Compact Summary Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gradient-to-r from-green-600 to-green-700 p-3 rounded-lg text-center">
+                    <p className="text-lg font-bold text-white">
+                      {confirmedBookings.length}
                     </p>
+                    <p className="text-xs text-white opacity-90">Confirmed</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 p-3 rounded-lg text-center">
+                    <p className="text-lg font-bold text-white">
+                      {pendingBookings.length}
+                    </p>
+                    <p className="text-xs text-white opacity-90">Pending</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 rounded-lg text-center">
+                    <p className="text-lg font-bold text-white">
+                      {confirmedBookings.length + pendingBookings.length}
+                    </p>
+                    <p className="text-xs text-white opacity-90">Total</p>
+                  </div>
+                </div>
+
+                {/* Confirmed Bookings - Compact */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Confirmed
+                    </h3>
+                    {Object.keys(groupedConfirmedBookings).length > 0 && (
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                        {confirmedBookings.length}
+                      </span>
+                    )}
+                  </div>
+
+                  {Object.keys(groupedConfirmedBookings).length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.entries(groupedConfirmedBookings).map(
+                        ([eventTitle, bookings]) => (
+                          <div key={eventTitle} className="space-y-2">
+                            {/* Event Group Header */}
+                            <div
+                              className="bg-gray-900 p-3 rounded-lg border border-green-400/30 cursor-pointer hover:bg-gray-800 transition-colors"
+                              onClick={() =>
+                                toggleGroup(`confirmed-${eventTitle}`)
+                              }
+                            >
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-md font-semibold text-green-300 flex items-center gap-2">
+                                  <svg
+                                    className={`w-4 h-4 transition-transform ${
+                                      collapsedGroups.has(
+                                        `confirmed-${eventTitle}`
+                                      )
+                                        ? "rotate-0"
+                                        : "rotate-90"
+                                    }`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M9 5l7 7-7 7"
+                                    />
+                                  </svg>
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h4z"
+                                    />
+                                  </svg>
+                                  {eventTitle}
+                                </h4>
+                                <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                                  {(bookings as any[]).length} booking
+                                  {(bookings as any[]).length !== 1 ? "s" : ""}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                                <span>
+                                  📍 {(bookings as any[])[0].location}
+                                </span>
+                                <span>📅 {(bookings as any[])[0].date}</span>
+                              </div>
+                            </div>
+
+                            {/* Individual Bookings - Collapsible */}
+                            {!collapsedGroups.has(
+                              `confirmed-${eventTitle}`
+                            ) && (
+                              <div className="space-y-2">
+                                {(bookings as any[]).map((booking) => (
+                                  <div
+                                    key={booking.id}
+                                    className="bg-gray-800 border border-gray-700 hover:border-green-500 transition-all duration-200 p-3 rounded-lg cursor-pointer group ml-4"
+                                    onClick={() => openModal(booking)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative">
+                                        <img
+                                          src={booking.image}
+                                          alt={booking.title}
+                                          className="w-10 h-10 rounded-lg object-cover border border-green-400"
+                                        />
+                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
+                                      </div>
+
+                                      <div className="flex-grow min-w-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <h5 className="text-sm text-gray-300 truncate group-hover:text-green-300">
+                                            Booking #{booking.id.slice(-6)}
+                                          </h5>
+                                          <span className="bg-green-100 text-green-800 text-xs px-1.5 py-0.5 rounded-full ml-2">
+                                            ✓
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-xs text-gray-400">
+                                          <span className="flex items-center gap-1">
+                                            <svg
+                                              className="w-3 h-3"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                              />
+                                            </svg>
+                                            {booking.guests}
+                                          </span>
+                                          <span className="text-green-400 font-medium">
+                                            {booking.status}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <svg
+                                        className="w-4 h-4 text-gray-400 group-hover:text-green-300"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M9 5l7 7-7 7"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-800 border-2 border-dashed border-gray-600 p-4 rounded-lg text-center">
+                      <svg
+                        className="w-8 h-8 mx-auto mb-2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <p className="text-gray-400 text-sm">
+                        No confirmed bookings
+                      </p>
+                    </div>
                   )}
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2 mt-4">
-                    Pending Bookings
-                  </h3>
-                  {pendingBookings.length > 0 ? (
-                    pendingBookings.map((booking) => (
-                      <div
-                        key={booking.id}
-                        className="bg-gray-800 p-4 rounded-lg shadow-md w-full flex items-center gap-4 mb-2 cursor-pointer"
-                        onClick={() => openModal(booking)}
-                      >
-                        <img
-                          src={booking.image}
-                          alt={booking.title}
-                          className="w-16 h-16 rounded-md border-2 border-teal-400"
-                        />
-                        <div className="flex-grow">
-                          <h2 className="text-lg font-semibold text-white line-clamp-1">
-                            {booking.title}
-                          </h2>
-                          <p className="text-sm text-gray-400">
-                            {booking.location}
-                          </p>
-                          <p className="text-xs text-gray-300">
-                            {booking.date}
-                          </p>
-                        </div>
-                      </div>
-                    ))
+
+                {/* Pending Bookings - Compact */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                      Pending
+                    </h3>
+                    {Object.keys(groupedPendingBookings).length > 0 && (
+                      <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
+                        {pendingBookings.length}
+                      </span>
+                    )}
+                  </div>
+
+                  {Object.keys(groupedPendingBookings).length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.entries(groupedPendingBookings).map(
+                        ([eventTitle, bookings]) => (
+                          <div key={eventTitle} className="space-y-2">
+                            {/* Event Group Header */}
+                            <div
+                              className="bg-gray-900 p-3 rounded-lg border border-yellow-400/30 cursor-pointer hover:bg-gray-800 transition-colors"
+                              onClick={() =>
+                                toggleGroup(`pending-${eventTitle}`)
+                              }
+                            >
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-md font-semibold text-yellow-300 flex items-center gap-2">
+                                  <svg
+                                    className={`w-4 h-4 transition-transform ${
+                                      collapsedGroups.has(
+                                        `pending-${eventTitle}`
+                                      )
+                                        ? "rotate-0"
+                                        : "rotate-90"
+                                    }`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M9 5l7 7-7 7"
+                                    />
+                                  </svg>
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  {eventTitle}
+                                </h4>
+                                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
+                                  {(bookings as any[]).length} booking
+                                  {(bookings as any[]).length !== 1 ? "s" : ""}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                                <span>
+                                  📍 {(bookings as any[])[0].location}
+                                </span>
+                                <span>📅 {(bookings as any[])[0].date}</span>
+                              </div>
+                            </div>
+
+                            {/* Individual Bookings - Collapsible */}
+                            {!collapsedGroups.has(`pending-${eventTitle}`) && (
+                              <div className="space-y-2">
+                                {(bookings as any[]).map((booking) => (
+                                  <div
+                                    key={booking.id}
+                                    className="bg-gray-800 border border-gray-700 hover:border-yellow-500 transition-all duration-200 p-3 rounded-lg cursor-pointer group ml-4"
+                                    onClick={() => openModal(booking)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative">
+                                        <img
+                                          src={booking.image}
+                                          alt={booking.title}
+                                          className="w-10 h-10 rounded-lg object-cover border border-yellow-400"
+                                        />
+                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                                      </div>
+
+                                      <div className="flex-grow min-w-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <h5 className="text-sm text-gray-300 truncate group-hover:text-yellow-300">
+                                            Booking #{booking.id.slice(-6)}
+                                          </h5>
+                                          <span className="bg-yellow-100 text-yellow-800 text-xs px-1.5 py-0.5 rounded-full ml-2">
+                                            ⏳
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                                            <span className="flex items-center gap-1">
+                                              <svg
+                                                className="w-3 h-3"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth="2"
+                                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                                />
+                                              </svg>
+                                              {booking.guests}
+                                            </span>
+                                            <span className="text-yellow-400 font-medium">
+                                              {booking.status}
+                                            </span>
+                                          </div>
+
+                                          {/* Compact Action Buttons */}
+                                          <div className="flex gap-1">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedBooking(booking);
+                                                handleAccept();
+                                              }}
+                                              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                                            >
+                                              ✓
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedBooking(booking);
+                                                handleDecline();
+                                              }}
+                                              className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                                            >
+                                              ✕
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
                   ) : (
-                    <p className="text-gray-400 text-center mt-4">
-                      No pending bookings.
-                    </p>
+                    <div className="bg-gray-800 border-2 border-dashed border-gray-600 p-4 rounded-lg text-center">
+                      <svg
+                        className="w-8 h-8 mx-auto mb-2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <p className="text-gray-400 text-sm">
+                        No pending bookings
+                      </p>
+                    </div>
                   )}
                 </div>
-                {/* Modal for Booking Details */}
+                {/* Enhanced Modal for Booking Details */}
                 <BaseModal
                   isOpen={selectedBooking !== null}
                   onClose={closeModal}
                   title="Booking Details"
                   icon={<FaInfoCircle />}
-                  maxWidth="md:max-w-md"
+                  maxWidth="md:max-w-2xl"
                 >
                   {selectedBooking && (
-                    <div className="space-y-4">
-                      <img
-                        src={selectedBooking.image}
-                        alt={selectedBooking.title}
-                        className="w-full rounded-lg mb-3"
-                      />
-                      <div className="space-y-2">
-                        <p className="text-gray-300">
-                          <strong>Title:</strong> {selectedBooking.title}
-                        </p>
-                        <p className="text-gray-300">
-                          <strong>Location:</strong> {selectedBooking.location}
-                        </p>
-                        <p className="text-gray-300">
-                          <strong>Date:</strong> {selectedBooking.date}
-                        </p>
-                        <p className="text-gray-300">
-                          <strong>Guests:</strong> {selectedBooking.guests}
-                        </p>
-                        <p className="text-gray-300">
-                          <strong>Status:</strong> {selectedBooking.status}
-                        </p>
+                    <div className="space-y-6">
+                      {/* Header with image and status */}
+                      <div className="relative">
+                        <img
+                          src={selectedBooking.image}
+                          alt={selectedBooking.title}
+                          className="w-full h-48 rounded-xl object-cover"
+                        />
+                        <div className="absolute top-4 right-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              selectedBooking.status === "Confirmed"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {selectedBooking.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-end gap-2 mt-4">
-                        <button
-                          onClick={handleDecline}
-                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                        >
-                          Decline
-                        </button>
-                        <button
-                          onClick={handleAccept}
-                          className="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600"
-                        >
-                          Accept
-                        </button>
+
+                      {/* Booking Information Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-800 p-4 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg
+                              className="w-5 h-5 text-blue-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h4z"
+                              />
+                            </svg>
+                            <h4 className="font-semibold text-white">
+                              Event Title
+                            </h4>
+                          </div>
+                          <p className="text-gray-300">
+                            {selectedBooking.title}
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-800 p-4 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg
+                              className="w-5 h-5 text-red-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            <h4 className="font-semibold text-white">
+                              Location
+                            </h4>
+                          </div>
+                          <p className="text-gray-300">
+                            {selectedBooking.location}
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-800 p-4 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg
+                              className="w-5 h-5 text-green-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <h4 className="font-semibold text-white">Date</h4>
+                          </div>
+                          <p className="text-gray-300">
+                            {selectedBooking.date}
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-800 p-4 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg
+                              className="w-5 h-5 text-purple-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                              />
+                            </svg>
+                            <h4 className="font-semibold text-white">
+                              Guests Info
+                            </h4>
+                          </div>
+                          <p className="text-gray-300">
+                            {selectedBooking.guests}
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Action Buttons */}
+                      {selectedBooking.status === "Pending" && (
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
+                          <button
+                            onClick={handleDecline}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-lg"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            Decline Booking
+                          </button>
+                          <button
+                            onClick={handleAccept}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-lg"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Accept Booking
+                          </button>
+                        </div>
+                      )}
+
+                      {selectedBooking.status === "Confirmed" && (
+                        <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
+                          <div className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-green-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span className="text-green-800 font-medium">
+                              This booking is confirmed and ready to go!
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </BaseModal>

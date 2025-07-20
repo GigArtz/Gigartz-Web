@@ -388,6 +388,7 @@ const Home: React.FC = () => {
           )}
         </div>
       )}
+
       {/* Bottom Navigation (Only visible on small screens) */}
       <div className="fixed px-2 bottom-0 w-full block md:hidden">
         <BottomNav onOpenNotifications={() => setNotificationsOpen(true)} />

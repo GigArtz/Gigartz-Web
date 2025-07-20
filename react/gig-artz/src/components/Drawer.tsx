@@ -32,6 +32,9 @@ function Drawer() {
   const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const { profile, loading } = useSelector((state: RootState) => state.profile);
+  const { notifications } = useSelector(
+    (state: RootState) => state.notification
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalCommentOpen, setIsCommentModalOpen] = useState(false);
@@ -39,6 +42,9 @@ function Drawer() {
 
   const [isMoreExpanded, setIsMoreExpanded] = useState(false);
   const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+
+  // Count unread notifications
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // Add this handler:
   const handleAddOption = (option: string) => {
@@ -79,10 +85,15 @@ function Drawer() {
   const closeModal = () => setIsModalOpen(false);
   const toggleDrawer = () => setIsDrawerOpen((open) => !open);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     dispatch({ type: "auth/logout" }); // Clear auth state
     dispatch({ type: "profile/logout" }); // Clear profile state
     localStorage.removeItem("authUser");
+
+    // Add notification for logout using the new simple API
+    const { notify } = await import("../helpers/notify");
+    notify("You have been logged out successfully.", "info");
+
     navigate("/", { replace: true });
   };
 
@@ -282,11 +293,14 @@ function Drawer() {
               <ul className="space-y-1">
                 {navItems.map((item, index) => {
                   const isActive = activeLink === item.link;
+                  const showNotificationBadge =
+                    item.label === "Notifications" && unreadCount > 0;
+
                   return (
                     <li key={index}>
                       <a
                         onClick={() => handleNavClick(item)}
-                        className={`flex items-center gap-3 p-2 rounded-xl text-base font-medium cursor-pointer transition
+                        className={`relative flex items-center gap-3 p-2 rounded-xl text-base font-medium cursor-pointer transition
                           ${
                             isActive
                               ? "bg-teal-700 text-white shadow"
@@ -295,8 +309,18 @@ function Drawer() {
                         tabIndex={0}
                         aria-current={isActive ? "page" : undefined}
                       >
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.label}</span>
+                        <div className="relative">
+                          <item.icon className="w-5 h-5" />
+                          {showNotificationBadge && (
+                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-r from-red-500 to-red-400 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-gray-800 animate-pulse shadow-lg">
+                              {unreadCount > 9 ? "9+" : unreadCount}
+                            </div>
+                          )}
+                        </div>
+                        <span className="flex-1">{item.label}</span>
+                        {showNotificationBadge && (
+                          <div className="w-2 h-2 bg-red-400 rounded-full animate-ping"></div>
+                        )}
                       </a>
                     </li>
                   );
