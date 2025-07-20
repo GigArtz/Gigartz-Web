@@ -192,11 +192,11 @@ const MyProfileTabs = memo(({ uid }) => {
                         <button
                           key={key}
                           onClick={() => setGigsFilter(key)}
-                          className={`group flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
-                            gigsFilter === key
-                              ? "bg-teal-600 text-white border-teal-500 shadow-md"
-                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
-                          }`}
+                          className={`group flex items-center gap-1.5 px-1 sm:px-3 py-1 sm:py-2 rounded-lg text-sm sm:font-medium transition-all duration-200 border ${
+                          gigsFilter === key
+                            ? "bg-teal-600 text-white border-teal-500 shadow-md"
+                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
+                        }`}
                         >
                           <span
                             className={`transition-colors ${
@@ -256,11 +256,11 @@ const MyProfileTabs = memo(({ uid }) => {
                         <button
                           key={key}
                           onClick={() => setReviewsFilter(key)}
-                          className={`group flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
-                            reviewsFilter === key
-                              ? "bg-teal-600 text-white border-teal-500 shadow-md"
-                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
-                          }`}
+                          className={`group flex items-center gap-1.5 px-1 sm:px-3 py-1 sm:py-2 rounded-lg text-sm sm:font-medium transition-all duration-200 border ${
+                          gigsFilter === key
+                            ? "bg-teal-600 text-white border-teal-500 shadow-md"
+                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
+                        }`}
                         >
                           <span
                             className={`transition-colors ${
@@ -330,11 +330,11 @@ const MyProfileTabs = memo(({ uid }) => {
                         <button
                           key={key}
                           onClick={() => setSavedFilter(key)}
-                          className={`group flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
-                            savedFilter === key
-                              ? "bg-teal-600 text-white border-teal-500 shadow-md"
-                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
-                          }`}
+                          className={`group flex items-center gap-1.5 px-1 sm:px-3 py-1 sm:py-2 rounded-lg text-sm sm:font-medium transition-all duration-200 border ${
+                          gigsFilter === key
+                            ? "bg-teal-600 text-white border-teal-500 shadow-md"
+                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
+                        }`}
                         >
                           <span
                             className={`transition-colors ${

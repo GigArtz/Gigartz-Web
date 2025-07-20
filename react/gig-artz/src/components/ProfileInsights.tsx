@@ -307,7 +307,7 @@ const AgeGenderBar = ({
 };
 
 const ProfileInsights: React.FC = () => (
-  <div className="p-2 min-h-screen text-gray-100">
+  <div className="p-2 h-screen overflow-y-auto text-gray-100">
     <h1 className="text-3xl font-bold mb-6 ">Profile Insights</h1>
 
     {/* Freelance Service Insights */}

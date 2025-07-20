@@ -218,7 +218,7 @@ function Drawer() {
       )}
 
       {/* Top bar for mobile */}
-      <div className="md:hidden fixed top-0 left-0 w-full bg-[#060512] shadow-lg z-40 p-3 flex justify-between items-center border-b border-gray-800">
+      <div className="md:hidden fixed top-0 left-0 w-full  mx-1 bg-[#060512] shadow-lg z-40 p-3 flex justify-between items-center border-b border-gray-800">
         <div className="flex items-center gap-4">
           <FaArrowLeft
             className="text-white text-xl cursor-pointer hover:text-teal-400 transition"

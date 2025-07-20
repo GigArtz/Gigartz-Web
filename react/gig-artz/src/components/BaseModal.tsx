@@ -42,8 +42,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
   className = "",
   showCloseButton = true,
   closeOnClickOutside = true,
-  maxWidth = "md:max-w-2xl",
-  minWidth = "min-w-96",
+  maxWidth = "max-w-full sm:max-w-lg md:max-w-2xl",
+  minWidth = "min-w-0 sm:min-w-96",
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -99,17 +99,17 @@ const BaseModal: React.FC<BaseModalProps> = ({
   // Use React Portal to render modal outside component tree
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]"
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999] px-2 sm:px-0"
       onClick={handleBackdropClick}
       style={{ isolation: "isolate" }}
     >
       <div
         ref={modalRef}
-        className={`p-4 ${minWidth} ${maxWidth} w-full mx-4 bg-dark rounded-lg shadow-lg relative animate-fadeIn ${className}`}
+        className={`p-1 sm:p-4 ${minWidth} ${maxWidth} w-full sm:mx-4 bg-dark rounded-lg shadow-lg relative animate-fadeIn ${className}`}
       >
         {/* Modal Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between mb-4 p-1 py-2 border-b border-gray-500">
+          <div className="flex  items-start sm:items-center justify-between mb-4 p-1 py-2 border-b border-gray-500 gap-2 sm:gap-0">
             <div className="flex items-center gap-3">
               {icon && (
                 <div className="p-2 bg-teal-600 rounded-full text-white">
@@ -118,19 +118,19 @@ const BaseModal: React.FC<BaseModalProps> = ({
               )}
               <div>
                 {title && (
-                  <h3 className="text-xl font-semibold text-teal-500">
+                  <h3 className="text-lg sm:text-xl font-semibold text-teal-500">
                     {title}
                   </h3>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-gray-400">{subtitle}</p>
+                  <p className="text-xs sm:text-sm text-gray-400">{subtitle}</p>
                 )}
               </div>
             </div>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition-colors"
+                className="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-4 h-4 flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white transition-colors"
                 aria-label="Close modal"
               >
                 <FaTimesCircle className="w-6 h-6 hover:text-red-500" />
@@ -140,7 +140,9 @@ const BaseModal: React.FC<BaseModalProps> = ({
         )}
 
         {/* Modal Content */}
-        <div className="modal-content">{children}</div>
+        <div className="modal-content max-h-[70vh] overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>,
     modalRoot // Render at document.body level using React Portal

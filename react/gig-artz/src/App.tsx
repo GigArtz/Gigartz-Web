@@ -90,22 +90,7 @@ function InnerApp({
       {/* Global Notifications System - displays notifications across all pages */}
       <GlobalNotification />
 
-      {/* Global Toast for all notifications and alerts */}
-      {toastState && toastState.message && (
-        <Toast
-          message={toastState.message}
-          type={toastState.type}
-          onClose={() => dispatch(clearToast())}
-          action={
-            toastState.action && {
-              label: toastState.action.label,
-              onClick: () => {
-                dispatch(clearToast());
-              },
-            }
-          }
-        />
-      )}
+    
       <ScrollToTop />
       <Routes>
         {/* Public Routes */}

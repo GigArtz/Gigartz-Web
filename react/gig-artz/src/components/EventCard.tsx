@@ -40,12 +40,13 @@ const EventCard: React.FC<EventCardProps> = memo(
       shallowEqual
     );
 
-    // Per-event loading/error from Redux if not passed as prop
+    // Use eventId for cached events in eventsSlice
+    const eventKey = event.eventId || event.id;
     const reduxLoading = useSelector(
-      (state: RootState) => state.events.loadingByEventId?.[event.id]
+      (state: RootState) => state.events.loadingByEventId?.[eventKey]
     );
     const reduxError = useSelector(
-      (state: RootState) => state.events.errorByEventId?.[event.id]
+      (state: RootState) => state.events.errorByEventId?.[eventKey]
     );
 
     // Clear errors when component ID changes (i.e., navigating to different event)

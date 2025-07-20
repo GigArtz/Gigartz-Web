@@ -7,7 +7,7 @@ const Preferences: React.FC = () => {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto text-white">
+    <div className="p-6 max-w-2xl mx-auto text-white overflow-auto h-full bg-gray-900 rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold mb-4">User Preferences</h1>
 
       {/* Interests */}

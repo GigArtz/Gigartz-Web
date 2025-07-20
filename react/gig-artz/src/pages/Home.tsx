@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import BottomNav from "../components/BottomNav";
 import { fetchAllEvents, fetchAllReviews } from "../../store/eventsSlice";
@@ -86,6 +87,19 @@ const Home: React.FC = () => {
   const [eventsPage, setEventsPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const navigate = useNavigate();
+  // See All navigation handlers
+  const handleSeeAllEvents = (
+    sectionType: "trending" | "location" | "interest" | "gigsNearYou",
+    options: { interest?: string; location?: string; title?: string } = {}
+  ) => {
+    const params = new URLSearchParams();
+    params.set("section", sectionType);
+    if (options.title) params.set("title", options.title);
+    if (options.interest) params.set("interest", options.interest);
+    if (options.location) params.set("location", options.location);
+    navigate(`/explore/see-all?${params.toString()}`);
+  };
   // Remove local toast state, use Redux
   const eventsPerPage = 10;
 
@@ -241,7 +255,17 @@ const Home: React.FC = () => {
 
           {/* Trending */}
           <div className="w-full p-2 rounded-xl">
-            <h2 className="text-white text-lg font-semibold mb-2">Trending</h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-white text-lg font-semibold">Trending</h2>
+              <button
+                onClick={() =>
+                  handleSeeAllEvents("trending", { title: "Trending Events" })
+                }
+                className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+              >
+                See All →
+              </button>
+            </div>
             <LgScrollableEventRow
               events={trendingEvents}
               loading={loading}
@@ -250,9 +274,19 @@ const Home: React.FC = () => {
           </div>
 
           <div className="w-full p-2 rounded-xl">
-            <h2 className="text-white text-lg font-semibold mb-2">
-              Gigs near you
-            </h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-white text-lg font-semibold">
+                Gigs near you
+              </h2>
+              <button
+                onClick={() =>
+                  handleSeeAllEvents("gigsNearYou", { title: "Gigs Near You" })
+                }
+                className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+              >
+                See All →
+              </button>
+            </div>
             <ScrollableEventRow
               events={gigsNearYou}
               loading={loading}
@@ -262,10 +296,17 @@ const Home: React.FC = () => {
 
           {/* Popular Professionals */}
           <div className="w-full p-2 rounded-xl">
-            <h2 className="text-white text-lg font-semibold mb-2">
-              Popular Professionals
-            </h2>
-
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-white text-lg font-semibold">
+                Popular Professionals
+              </h2>
+              <button
+                onClick={() => navigate("/explore?tab=people")}
+                className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+              >
+                See All →
+              </button>
+            </div>
             <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 pb-2">
               {profileLoading ? (
                 <div className="flex justify-center items-center py-4">
@@ -299,9 +340,22 @@ const Home: React.FC = () => {
           {/* Gigs near X (location) */}
           {userPreferences.locations.map((loc) => (
             <div className="w-full p-2 rounded-xl" key={loc}>
-              <h2 className="text-white text-lg font-semibold mb-2">
-                Gigs near {loc}
-              </h2>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-white text-lg font-semibold">
+                  Gigs near {loc}
+                </h2>
+                <button
+                  onClick={() =>
+                    handleSeeAllEvents("location", {
+                      location: loc,
+                      title: `Gigs near ${loc}`,
+                    })
+                  }
+                  className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                >
+                  See All →
+                </button>
+              </div>
               <ScrollableEventRow
                 events={gigsNearYou}
                 loading={loading}
@@ -313,9 +367,22 @@ const Home: React.FC = () => {
           {/* Because you went to X gig (interest) */}
           {userPreferences.interests.map((interest) => (
             <div className="w-full p-2 rounded-xl" key={interest}>
-              <h2 className="text-white text-lg font-semibold mb-2">
-                Because you liked a {interest} gig
-              </h2>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-white text-lg font-semibold">
+                  Because you liked a {interest} gig
+                </h2>
+                <button
+                  onClick={() =>
+                    handleSeeAllEvents("interest", {
+                      interest,
+                      title: `Because you liked a ${interest} gig`,
+                    })
+                  }
+                  className="text-teal-400 text-sm font-medium hover:text-teal-300 transition-colors"
+                >
+                  See All →
+                </button>
+              </div>
               <ScrollableEventRow
                 events={preferenceEvents}
                 loading={loading}
