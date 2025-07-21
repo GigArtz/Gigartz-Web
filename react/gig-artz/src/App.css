@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  background-color: #060512;
+  background: #060512;
   padding: 0.1rem;
 }
 
@@ -29,7 +29,7 @@ text {
   }
 
   .bg-dark {
-    @apply bg-[#060512];
+    @apply bg-[#060512] ;
   }
 
   .form-container {
@@ -37,13 +37,30 @@ text {
   }
 
   .main-content {
-    @apply lg:w-[45%] xl:w-[40%] sm:w-[100%] md:w-[70%] pb-20 relative lg:border-t-0 lg:left-[24%] md:left-[25%] xl:left-[27%] min-h-screen text-white md:p-2 mt-20 md:mt-1 md:px-1 lg:px-5;
-  }
+  @apply bg-[#060512] text-white min-h-screen relative pb-20 mt-20 md:mt-1 md:px-1 lg:px-5;
+
+  /* Width adjustments */
+  @apply sm:w-full md:w-[70%] lg:w-[45%] xl:w-[40%];
+
+  /* Position adjustments */
+  @apply lg:left-[24%] md:left-[25%] xl:left-[27%];
+
+  /* Padding */
+  @apply md:p-2;
+
+  /* Border adjustments */
+  @apply lg:border-t-0;
+}
+
 
   .tabs {
-    @apply text-sm font-medium text-center text-gray-500 border-b border-gray-700 
-           overflow-hidden sticky top-[8%] md:top-0 pt-2 bg-[#060512] z-10;
-  }
+  @apply text-sm font-medium text-center text-gray-500 border-b border-gray-700
+         overflow-hidden sticky top-[8%] md:top-0 pt-2 bg-[#060512] z-10;
+  
+  /* Optional: Add a box shadow to enhance visibility */
+  @apply shadow-md;
+}
+
 
   .modal {
     @apply relative p-4 w-full md:w-[50%] max-w-[80%] max-h-[80%] rounded-lg shadow-lg bg-dark transform transition-all duration-300 ease-in-out;

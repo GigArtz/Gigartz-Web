@@ -29,7 +29,7 @@ export default function SuggestedForYou() {
   return (
     <div>
       {/* WhatsHappening Section */}
-      <section className="bg-dark py-2 rounded-lg border border-gray-700">
+      <section className="bg-dark py-2 rounded-lg border border-gray-700 ">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto mb-2">
             <h2 className="text-lg font-bold text-gray-100">
@@ -44,7 +44,7 @@ export default function SuggestedForYou() {
             ) : (
               <div className="flex flex-col space-y-1 mt-4 fade">
                 {suggestedUsers?.map((user, index) => (
-                  <div key={index} className="mb-2">
+                  <div key={index} className="">
                     <UserCard user={user} />
                   </div>
                 ))}

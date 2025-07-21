@@ -53,46 +53,66 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
     navigate(`/people/${userData.id}`);
   }, [navigate, userData.id]);
 
+  // Follow/Unfollow toggle handler
+  const handleFollowToggle = () => {
+    // Dispatch follow/unfollow action or API call
+    console.log(isFollowingUser ? "Unfollow" : "Follow", userData.id);
+  };
+
   return (
     <div
-      className="flex items-center scroll-smooth delay-150 ease-in-out hover:-translate-y-1 hover:scale-95 w-full max-w-lg p-3 rounded-lg cursor-pointer transition duration-300 shadow-md hover:shadow-lg"
+      className="card-animate flex w-full items-start px-2 pt-3 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 shadow-lg rounded-3xl transition-colors duration-200 hover:shadow-xl group max-w-lg cursor-pointer sm:w-full md:max-w-md"
+      style={{ minHeight: 90 }}
       onClick={handleClick}
     >
-      {/* Profile Info + Button in a row with gap */}
-      <div className="flex items-center gap-4 justify-between w-full">
-        <div className="flex items-center gap-3 flex-nowrap sm:w-[40%] md:w-[55%] lg:w-[65%]">
-          <img
-            src={userData.profilePicUrl}
-            alt="Avatar"
-            className="w-9 h-9 min-w-9 min-h-9 max-w-9 max-h-9 rounded-full border-2 border-teal-400 object-cover"
-          />
-          <div className="flex flex-col gap-1 overflow-hidden">
-            <h3 className="md:text-lg font-semibold truncate w-full sm:min-w-12 text-white ">
-              {userData.name}
-            </h3>
-            <div className="flex flex-col ">
-              <p className="text-sm text-gray-400 truncate w-full sm:min-w-12">
+      <div className="mx-2 flex-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* User Avatar */}
+            <div className="relative">
+              <img
+                src={userData.profilePicUrl}
+                alt="User Avatar"
+                className="object-cover w-10 h-10 min-w-10 min-h-10 max-w-10 max-h-10 rounded-full border-2 border-teal-400 cursor-pointer transition-transform duration-200 group-hover:scale-105 group-hover:border-teal-300 shadow-md"
+                onError={(e) => {
+                  e.currentTarget.src = "/avatar.png";
+                }}
+              />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
+            </div>
+            <div className="cursor-pointer" onClick={handleClick}>
+              <h3 className="text-base font-bold text-white leading-tight hover:underline truncate w-full">
+                {userData.name}
+              </h3>
+              <p className="text-xs text-gray-400 truncate w-full">
                 @{userData.userName}
               </p>
-              <p className="text-xs text-gray-300 truncate w-full sm:min-w-12">
+              <p className="text-xs text-gray-300 truncate w-full">
                 {userData.bio}
               </p>
             </div>
           </div>
+          {/* Follow Button */}
+          <button
+            className={`border text-xs px-3 py-1 rounded-2xl font-semibold transition-colors duration-200 ${
+              isFollowingUser
+                ? "border-teal-400 bg-teal-400 text-black shadow-md hover:bg-teal-300"
+                : "border-teal-400 text-teal-400 bg-transparent hover:bg-teal-900 hover:text-white"
+            }`}
+            style={{ minWidth: 80 }}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click from triggering
+              handleFollowToggle();
+            }}
+          >
+            {isFollowingUser ? "Following" : "Follow"}
+          </button>
         </div>
-        {/* Follow Button */}
-        <button
-          className={`border text-xs px-2 flex-shrink-0 py-1 rounded-2xl ${
-            isFollowingUser
-              ? "border-teal-400 bg-teal-400 text-black "
-              : "border-teal-400 text-teal-400 ml-auto"
-          }`}
-        >
-          {isFollowingUser ? "Following" : "Follow"}
-        </button>
       </div>
     </div>
   );
+
+
 });
 
 UserCard.displayName = "UserCard";

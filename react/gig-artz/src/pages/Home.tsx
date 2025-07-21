@@ -308,6 +308,7 @@ const Home: React.FC = () => {
                 See All →
               </button>
             </div>
+
             <div className="flex flex-row overflow-x-auto custom-scrollbar scroll-smooth snap-x space-x-2 pb-4">
               {profileLoading ? (
                 <div className="flex justify-center items-center py-4">
@@ -320,7 +321,7 @@ const Home: React.FC = () => {
                 professionals.map((user) => (
                   <div
                     key={user.uid || user.id}
-                    className="mb-2 w-full min-w-[220px] max-w-xs"
+                    className="mb-2 w-full "
                   >
                     <UserCard user={user} />
                   </div>
@@ -336,6 +337,7 @@ const Home: React.FC = () => {
                 </div>
               )}
             </div>
+            
           </div>
 
           {/* Gigs near X (location) */}
@@ -359,8 +361,7 @@ const Home: React.FC = () => {
               </div>
               <ScrollableEventRow
                 events={gigsNearYou}
-                loading={loading}
-                error={error}
+                
               />
             </div>
           ))}
@@ -386,8 +387,6 @@ const Home: React.FC = () => {
               </div>
               <ScrollableEventRow
                 events={preferenceEvents}
-                loading={loading}
-                error={error}
               />
             </div>
           ))}

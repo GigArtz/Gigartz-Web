@@ -276,32 +276,17 @@ const EventCard: React.FC<EventCardProps> = memo(
           onClose={closeShare}
         />
 
-        {/* Toast Notification - simple implementation */}
-        {toast && toast.visible && (
-          <div className="animate-in slide-in-from-top-4 fade-in-0 duration-300 ease-out">
-            <Toast
-              key={`toast-${event.id}-${Date.now()}`} // Key prevents stale renders
-              message={toast.message}
-              type={toast.type}
-              action={toast.action}
-              onClose={() => {
-                // Just set toast to null
-                setToast(null);
-              }}
-              duration={3000}
-            />
-          </div>
-        )}
+      
 
         <div
-          className="w-full h-full flex flex-col min-w-0 rounded-xl border border-gray-800 bg-gray-900 
+          className="w-full h-full flex flex-col min-w-0 rounded-xl bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 shadow-lg border border-gray-800 bg-gray-900 
                        cursor-pointer overflow-hidden group relative
                        transform transition-all duration-300 ease-out 
                         hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/10
                        active:scale-[0.98] active:shadow-lg
                        animate-in fade-in-0 slide-in-from-bottom-4 
                        before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:to-transparent
-                       hover:before:from-teal-500/5 hover:before:to-transparent before:transition-all before:duration-300
+                       hover:before:from-gray-950/5 hover:before:to-transparent before:transition-all before:duration-300
                        after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/5 after:to-transparent after:opacity-0
                        hover:after:opacity-100 after:transition-all after:duration-300 after:pointer-events-none
                        focus-within:ring-2 focus-within:ring-teal-500/30 focus-within:border-teal-500/70"
