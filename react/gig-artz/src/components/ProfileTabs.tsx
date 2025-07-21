@@ -108,27 +108,29 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
     const isOwnProfile = uid === currentUserId && currentUserId !== null;
 
     // Use appropriate data source based on profile type
-    const activeProfileData = isOwnProfile ? {
-      userProfile: userProfile || null,
-      userEvents: userProfile?.userEvents || [],
-      userReviews: userProfile?.userReviews || [],
-      userGuestList: userGuestList || [],
-      userFollowers: userProfile?.userFollowers || [],
-      userFollowing: userProfile?.userFollowing || [],
-      userTickets: userProfile?.userTickets || [],
-      userSavedEvents: userProfile?.userSavedEvents || [],
-      userBookings: userProfile?.userBookings || [],
-    } : visitedProfile || {
-      userProfile: null,
-      userEvents: [],
-      userReviews: [],
-      userGuestList: [],
-      userFollowers: [],
-      userFollowing: [],
-      userTickets: [],
-      userSavedEvents: [],
-      userBookings: [],
-    };
+    const activeProfileData = isOwnProfile
+      ? {
+          userProfile: userProfile || null,
+          userEvents: userProfile?.userEvents || [],
+          userReviews: userProfile?.userReviews || [],
+          userGuestList: userGuestList || [],
+          userFollowers: userProfile?.userFollowers || [],
+          userFollowing: userProfile?.userFollowing || [],
+          userTickets: userProfile?.userTickets || [],
+          userSavedEvents: userProfile?.userSavedEvents || [],
+          userBookings: userProfile?.userBookings || [],
+        }
+      : visitedProfile || {
+          userProfile: null,
+          userEvents: [],
+          userReviews: [],
+          userGuestList: [],
+          userFollowers: [],
+          userFollowing: [],
+          userTickets: [],
+          userSavedEvents: [],
+          userBookings: [],
+        };
 
     return {
       profile,
@@ -192,8 +194,10 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
   // Dynamic tab configuration with counts
   const tabConfig = useMemo(() => {
     const eventsCount = profileData.activeProfileData?.userEvents?.length || 0;
-    const reviewsCount = profileData.activeProfileData?.userReviews?.length || 0;
-    const guestListsCount = profileData.activeProfileData?.userGuestList?.length || 0;
+    const reviewsCount =
+      profileData.activeProfileData?.userReviews?.length || 0;
+    const guestListsCount =
+      profileData.activeProfileData?.userGuestList?.length || 0;
 
     return [
       { key: "events", label: "Gigs", count: eventsCount },
@@ -225,27 +229,52 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
     if (gigsFilter === "all") return events;
     if (gigsFilter === "created") {
       // For own profile, show created by current user; for visited profile, show created by visited user
-      const targetUserId = profileData.isOwnProfile ? profileData.currentUserId : uid;
-      return events.filter((event) => event?.userId === targetUserId || event?.promoterId === targetUserId);
+      const targetUserId = profileData.isOwnProfile
+        ? profileData.currentUserId
+        : uid;
+      return events.filter(
+        (event) =>
+          event?.userId === targetUserId || event?.promoterId === targetUserId
+      );
     }
     if (gigsFilter === "liked") {
       // Show events liked by the current logged-in user
-      return events.filter((event) => event?.likedBy?.includes?.(profileData.currentUserId));
+      return events.filter((event) =>
+        event?.likedBy?.includes?.(profileData.currentUserId)
+      );
     }
     return events;
-  }, [profileData.activeProfileData?.userEvents, gigsFilter, uid, profileData.isOwnProfile, profileData.currentUserId]);
+  }, [
+    profileData.activeProfileData?.userEvents,
+    gigsFilter,
+    uid,
+    profileData.isOwnProfile,
+    profileData.currentUserId,
+  ]);
 
   // Get event counts for each filter
   const getEventFilterCounts = useCallback(() => {
     const events = profileData.activeProfileData?.userEvents || [];
-    const targetUserId = profileData.isOwnProfile ? profileData.currentUserId : uid;
-    
+    const targetUserId = profileData.isOwnProfile
+      ? profileData.currentUserId
+      : uid;
+
     return {
       all: events.length,
-      created: events.filter((event) => event?.userId === targetUserId || event?.promoterId === targetUserId).length,
-      liked: events.filter((event) => event?.likedBy?.includes?.(profileData.currentUserId)).length,
+      created: events.filter(
+        (event) =>
+          event?.userId === targetUserId || event?.promoterId === targetUserId
+      ).length,
+      liked: events.filter((event) =>
+        event?.likedBy?.includes?.(profileData.currentUserId)
+      ).length,
     };
-  }, [profileData.activeProfileData?.userEvents, uid, profileData.isOwnProfile, profileData.currentUserId]);
+  }, [
+    profileData.activeProfileData?.userEvents,
+    uid,
+    profileData.isOwnProfile,
+    profileData.currentUserId,
+  ]);
 
   // Get filtered reviews based on current filter
   const getFilteredReviews = useCallback(() => {
@@ -256,35 +285,59 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
       if (reviewsFilter === "all") return true;
       if (reviewsFilter === "created") {
         // For own profile, show created by current user; for visited profile, show created by visited user
-        const targetUserId = profileData.isOwnProfile ? profileData.currentUserId : uid;
-        return item?.userId === targetUserId || item?.createdBy === targetUserId || item?.data?.createdBy === targetUserId;
+        const targetUserId = profileData.isOwnProfile
+          ? profileData.currentUserId
+          : uid;
+        return (
+          item?.userId === targetUserId ||
+          item?.createdBy === targetUserId ||
+          item?.data?.createdBy === targetUserId
+        );
       }
       if (reviewsFilter === "liked") {
         // Show reviews liked by the current logged-in user
-        return item?.likedBy?.includes?.(profileData.currentUserId) || item?.data?.likedBy?.includes?.(profileData.currentUserId);
+        return (
+          item?.likedBy?.includes?.(profileData.currentUserId) ||
+          item?.data?.likedBy?.includes?.(profileData.currentUserId)
+        );
       }
       return true;
     });
-  }, [profileData.activeProfileData?.userReviews, reviewsFilter, uid, profileData.isOwnProfile, profileData.currentUserId]);
+  }, [
+    profileData.activeProfileData?.userReviews,
+    reviewsFilter,
+    uid,
+    profileData.isOwnProfile,
+    profileData.currentUserId,
+  ]);
 
   // Get review counts for each filter
   const getReviewFilterCounts = useCallback(() => {
     const reviews = profileData.activeProfileData?.userReviews || [];
-    const targetUserId = profileData.isOwnProfile ? profileData.currentUserId : uid;
-    
+    const targetUserId = profileData.isOwnProfile
+      ? profileData.currentUserId
+      : uid;
+
     return {
       all: reviews.length,
-      created: reviews.filter((item) => 
-        item?.userId === targetUserId || 
-        item?.createdBy === targetUserId || 
-        item?.data?.createdBy === targetUserId
+      created: reviews.filter(
+        (item) =>
+          item?.userId === targetUserId ||
+          item?.createdBy === targetUserId ||
+          item?.data?.createdBy === targetUserId
       ).length,
-      liked: reviews.filter((item) => 
-        item?.likedBy?.includes?.(profileData.currentUserId) || 
-        item?.data?.likedBy?.includes?.(profileData.currentUserId)
+      liked: reviews.filter(
+        (item) =>
+          item?.likedBy?.includes?.(profileData.currentUserId) ||
+          item?.data?.likedBy?.includes?.(profileData.currentUserId)
       ).length,
     };
-  }, [profileData.activeProfileData?.userReviews, uid, profileData.isOwnProfile, profileData.currentUserId]);
+  }, [
+    profileData.activeProfileData?.userReviews,
+    uid,
+    profileData.isOwnProfile,
+    profileData.currentUserId,
+  ]);
 
   // Handle persistent fetch errors to prevent infinite loops
   if (profileData.error && profileData.error.includes("fetch_error")) {
@@ -318,7 +371,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
     <div>
       {/* Tabs */}
       <div className="tabs">
-        <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+        <ul className="flex flex-nowrap justify-around overflow-x-auto custom-scrollbar gap-x-4 -mb-px px-4">
           {tabConfig.map(({ key, label, count }) => (
             <li key={key}>
               <button
@@ -410,10 +463,12 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                   </div>
                 ) : (
                   <p className="text-gray-400 text-center py-4">
-                    {profileData.isOwnProfile 
-                      ? "You haven't created any events yet" 
-                      : `No events found for ${profileData.activeProfileData?.userProfile?.name || 'this user'}`
-                    }
+                    {profileData.isOwnProfile
+                      ? "You haven't created any events yet"
+                      : `No events found for ${
+                          profileData.activeProfileData?.userProfile?.name ||
+                          "this user"
+                        }`}
                   </p>
                 )}
               </div>
@@ -469,21 +524,21 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
               <div className="pt-2">
                 {profileData.activeProfileData?.userReviews?.length > 0 ? (
                   <div className="space-y-4">
-                    {getFilteredReviews().map(
-                      (review: Review, idx: number) => (
-                        <ReviewCard
-                          key={review.data?.id ?? idx}
-                          review={review}
-                        />
-                      )
-                    )}
+                    {getFilteredReviews().map((review: Review, idx: number) => (
+                      <ReviewCard
+                        key={review.data?.id ?? idx}
+                        review={review}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <p className="text-gray-400 text-center py-4">
-                    {profileData.isOwnProfile 
-                      ? "You haven't received any reviews yet" 
-                      : `No reviews found for ${profileData.activeProfileData?.userProfile?.name || 'this user'}`
-                    }
+                    {profileData.isOwnProfile
+                      ? "You haven't received any reviews yet"
+                      : `No reviews found for ${
+                          profileData.activeProfileData?.userProfile?.name ||
+                          "this user"
+                        }`}
                   </p>
                 )}
               </div>
@@ -545,10 +600,12 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                   )
                 ) : (
                   <p className="text-gray-500 text-center mt-4">
-                    {profileData.isOwnProfile 
-                      ? "You haven't created any guest lists yet" 
-                      : `No guest lists available for ${profileData.activeProfileData?.userProfile?.name || 'this user'}`
-                    }
+                    {profileData.isOwnProfile
+                      ? "You haven't created any guest lists yet"
+                      : `No guest lists available for ${
+                          profileData.activeProfileData?.userProfile?.name ||
+                          "this user"
+                        }`}
                   </p>
                 )}
               </div>

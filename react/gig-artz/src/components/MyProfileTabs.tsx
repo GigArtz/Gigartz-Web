@@ -138,7 +138,7 @@ const MyProfileTabs = memo(({ uid }) => {
     <div>
       {/* Tabs */}
       <div className="tabs">
-        <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+        <ul className="flex flex-nowrap justify-around overflow-x-auto custom-scrollbar gap-x-4 -mb-px px-4">
           {tabConfig.map(({ key, label, count }) => (
             <li key={key}>
               <button
@@ -193,10 +193,10 @@ const MyProfileTabs = memo(({ uid }) => {
                           key={key}
                           onClick={() => setGigsFilter(key)}
                           className={`group flex items-center gap-1.5 px-1 sm:px-3 py-1 sm:py-2 rounded-lg text-sm sm:font-medium transition-all duration-200 border ${
-                          gigsFilter === key
-                            ? "bg-teal-600 text-white border-teal-500 shadow-md"
-                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
-                        }`}
+                            gigsFilter === key
+                              ? "bg-teal-600 text-white border-teal-500 shadow-md"
+                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
+                          }`}
                         >
                           <span
                             className={`transition-colors ${
@@ -257,10 +257,10 @@ const MyProfileTabs = memo(({ uid }) => {
                           key={key}
                           onClick={() => setReviewsFilter(key)}
                           className={`group flex items-center gap-1.5 px-1 sm:px-3 py-1 sm:py-2 rounded-lg text-sm sm:font-medium transition-all duration-200 border ${
-                          gigsFilter === key
-                            ? "bg-teal-600 text-white border-teal-500 shadow-md"
-                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
-                        }`}
+                            gigsFilter === key
+                              ? "bg-teal-600 text-white border-teal-500 shadow-md"
+                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
+                          }`}
                         >
                           <span
                             className={`transition-colors ${
@@ -331,10 +331,10 @@ const MyProfileTabs = memo(({ uid }) => {
                           key={key}
                           onClick={() => setSavedFilter(key)}
                           className={`group flex items-center gap-1.5 px-1 sm:px-3 py-1 sm:py-2 rounded-lg text-sm sm:font-medium transition-all duration-200 border ${
-                          gigsFilter === key
-                            ? "bg-teal-600 text-white border-teal-500 shadow-md"
-                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
-                        }`}
+                            gigsFilter === key
+                              ? "bg-teal-600 text-white border-teal-500 shadow-md"
+                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-teal-800 hover:border-teal-600 hover:text-white"
+                          }`}
                         >
                           <span
                             className={`transition-colors ${

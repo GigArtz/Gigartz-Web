@@ -410,7 +410,7 @@ function ExploreTabs() {
       </div>
 
       <div className="tabs">
-        <ul className="flex flex-nowrap justify-between overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+        <ul className="flex flex-nowrap justify-between overflow-x-auto custom-scrollbar gap-x-4 -mb-px px-4">
           {[
             { key: "top", label: "Top" },
             { key: "latest", label: "Latest" },

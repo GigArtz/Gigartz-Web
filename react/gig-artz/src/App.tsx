@@ -207,7 +207,9 @@ function InnerApp({
           path="/explore/see-all"
           element={
             <ProtectedRoute>
+              <Drawer />
               <SeeAllEventsPage />
+              <SideBar />
             </ProtectedRoute>
           }
         />

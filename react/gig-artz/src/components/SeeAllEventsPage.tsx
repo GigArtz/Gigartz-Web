@@ -12,6 +12,7 @@ import { fetchAllEvents } from "../../store/eventsSlice";
 import EventCard from "./EventCard";
 import AdCard from "./AdCard";
 import { FaSpinner, FaArrowLeft } from "react-icons/fa";
+import Header from "./Header";
 
 interface SeeAllEventsPageProps {
   sectionTitle?: string;
@@ -279,24 +280,8 @@ const SeeAllEventsPage: React.FC<SeeAllEventsPageProps> = ({
   return (
     <div className="main-content min-h-screen bg-gray-950 text-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800">
-        <div className="flex items-center gap-4 p-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition text-white"
-          >
-            <FaArrowLeft />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-white">
-              {finalSectionTitle}
-            </h1>
-            <p className="text-sm text-gray-400">
-              {filteredEvents.length} event
-              {filteredEvents.length !== 1 ? "s" : ""} found
-            </p>
-          </div>
-        </div>
+      <div className="sticky hidden sm:block top-0 z-10 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800">
+        <Header title={finalSectionTitle} />
       </div>
 
       {/* Content */}

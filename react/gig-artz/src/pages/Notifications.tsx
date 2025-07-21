@@ -42,6 +42,7 @@ function Notifications() {
         <Header
           title={`Notifications${unreadCount > 0 ? ` (${unreadCount})` : ""}`}
         />
+        
 
         {/* Action Bar with Enhanced Animations */}
         <div className="flex justify-between items-center mb-6 p-4 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-2xl backdrop-blur-sm border border-gray-600/30 animate-fade-in-up">

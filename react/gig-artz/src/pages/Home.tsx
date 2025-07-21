@@ -202,6 +202,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (error) {
+      
       dispatch(showToast({ message: error, type: "error" }));
     }
   }, [error, dispatch]);
@@ -216,7 +217,7 @@ const Home: React.FC = () => {
     <div className="main-content">
       {/* Tabs */}
       <div className="tabs">
-        <ul className="flex flex-nowrap justify-around overflow-x-auto hide-scrollbar gap-x-4 -mb-px px-4">
+        <ul className="flex flex-nowrap justify-around overflow-x-auto custom-scrollbar gap-x-4 -mb-px px-4">
           {[
             { key: "reviews", label: "Reviews" },
             { key: "events", label: "Gigs" },
@@ -307,7 +308,7 @@ const Home: React.FC = () => {
                 See All →
               </button>
             </div>
-            <div className="flex flex-row w-full gap-2 overflow-auto scroll-smooth space-x-2 pb-2">
+            <div className="flex flex-row overflow-x-auto custom-scrollbar scroll-smooth snap-x space-x-2 pb-4">
               {profileLoading ? (
                 <div className="flex justify-center items-center py-4">
                   <FaSpinner className="text-teal-500 text-2xl animate-spin" />

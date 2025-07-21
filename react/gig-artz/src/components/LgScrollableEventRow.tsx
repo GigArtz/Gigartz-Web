@@ -26,7 +26,7 @@ function LgScrollableEventRow({ events = [] }) {
   });
 
   return (
-    <div className="overflow-x-auto scrollbar-hide scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full">
+    <div className="overflow-x-auto custom-scrollbar scroll-smooth snap-x flex space-x-4 pb-4 rounded-xl w-full">
       {itemsWithAds.map((item, idx) => (
         <div
           key={item.type === "event" ? item.data.id : item.key}

@@ -4,7 +4,7 @@ import BookingsComponent from "../components/BookingsComponent";
 
 function Bookings() {
   return (
-    <div className="main-content h-screen">
+    <div className="main-content">
       <Header title="Bookings" />
       <div className="p-4 ">
         <BookingsComponent showStats={true} compact={true} />

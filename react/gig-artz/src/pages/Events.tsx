@@ -299,9 +299,8 @@ const EventDetails = () => {
       <hr className="border-teal-500/30 border-2 transition-all duration-500 hover:border-teal-400/60" />
       <div
         className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                     bg-gray-900 px-4 transition-all duration-300 hover:scale-110"
+                     bg-gray-900 px-4 transition-all duration-300 hover:scale-110 animate-pulse"
       >
-        <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse shadow-md shadow-teal-500/50"></div>
       </div>
     </div>
   );

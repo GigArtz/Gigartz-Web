@@ -25,7 +25,7 @@ function ScrollableEventRow({ events = [] }) {
   });
 
   return (
-    <div className="flex flex-row overflow-x-auto scrollbar-hide scroll-smooth snap-x space-x-2 pb-4">
+    <div className="flex flex-row overflow-x-auto custom-scrollbar scroll-smooth snap-x space-x-2 pb-4">
       {itemsWithAds.map((item, idx) => (
         <div
           key={item.type === "event" ? item.data.id : item.key}

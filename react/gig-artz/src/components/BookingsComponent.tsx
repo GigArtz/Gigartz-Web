@@ -248,9 +248,9 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
                               d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h4z"
                             />
                           </svg>
-                          <span className="animate-fade-in">{eventTitle}</span>
+                          <span className="animate-fade-in text">{eventTitle}</span>
                         </h4>
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full transform hover:scale-105 transition-transform duration-200 animate-bounce-in">
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 text-nowrap rounded-full transform hover:scale-105 transition-transform duration-200 animate-bounce-in">
                           {bookings.length} booking
                           {bookings.length !== 1 ? "s" : ""}
                         </span>
@@ -426,7 +426,7 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
                           </svg>
                           <span className="animate-fade-in">{eventTitle}</span>
                         </h4>
-                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full transform hover:scale-105 transition-transform duration-200 animate-bounce-in">
+                        <span className="bg-yellow-100 text-nowrap text-yellow-800 text-xs px-2 py-0.5 rounded-full transform hover:scale-105 transition-transform duration-200 animate-bounce-in">
                           {bookings.length} booking
                           {bookings.length !== 1 ? "s" : ""}
                         </span>

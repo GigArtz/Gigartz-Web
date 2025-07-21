@@ -405,7 +405,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                         {Array.isArray(displayProfile?.genre) &&
                           displayProfile.genre.length > 0 && (
                             <div className="flex items-center">
-                              <div className="flex gap-2 my-2 overflow-x-auto whitespace-nowrap px-1 hide-scrollbar md:max-w-96 max-w-56 pb-1">
+                              <div className="flex gap-2 my-2 overflow-x-auto whitespace-nowrap px-1 custom-scrollbar md:max-w-96 max-w-56 pb-1">
                                 {displayProfile.genre
                                   ?.slice(
                                     0,

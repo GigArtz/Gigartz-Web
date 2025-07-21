@@ -263,7 +263,8 @@ function GuestList() {
 
   return (
     <div className="main-content p-6 animate-fade-in-up">
-      <div className="relative flex justify-end h-20 mb-12 top-0">
+      
+      <div className="relative sm:flex hidden justify-end h-20 mb-12 top-0">
         <div className="absolute w-full left-0 animate-slide-in-left">
           <Header title="Guest List" />
         </div>

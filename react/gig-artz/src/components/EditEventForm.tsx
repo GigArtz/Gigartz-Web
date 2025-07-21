@@ -566,7 +566,7 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
 
       <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
         {/* Progress Header */}
-        <div className="rounded-lg p-4 mb-4">
+        <div className="rounded-lg p-4 mb-4 ">
           <div className="flex items-center justify-between">
             {Array.from({ length: 6 }, (_, i) => i + 1).map((stepNumber) => (
               <div key={stepNumber} className="flex items-center">
@@ -587,7 +587,7 @@ const EditEventForm: React.FC<{ event: any; closeModal: () => void }> = ({
                 </div>
                 {stepNumber < 6 && (
                   <div
-                    className={`h-1 w-14 ${
+                    className={`h-1 w-14 hidden md:block ${
                       completedSteps.has(stepNumber)
                         ? "bg-green-500"
                         : "bg-gray-600"

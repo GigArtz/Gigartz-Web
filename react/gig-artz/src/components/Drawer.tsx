@@ -218,7 +218,7 @@ function Drawer() {
       )}
 
       {/* Top bar for mobile */}
-      <div className="md:hidden fixed top-0 left-0 w-full  mx-1 bg-[#060512] shadow-lg z-40 p-3 flex justify-between items-center border-b border-gray-800">
+      <div className="md:hidden fixed top-0 left-0 w-full  mx-1 bg-[#060512] shadow-lg z-40 p-2 flex justify-between items-center border-b border-gray-800">
         <div className="flex items-center gap-4">
           <FaArrowLeft
             className="text-white text-xl cursor-pointer hover:text-teal-400 transition"
@@ -252,7 +252,7 @@ function Drawer() {
 
       {/* Drawer */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[80vw] max-w-xs md:w-[20vw] md:max-w-xs lg:w-[15vw] bg-[#060512] shadow-2xl transition-transform z-50 overflow-y-auto duration-300 ease-in-out
+        className={`fixed top-0 left-0 h-full w-[80vw] max-w-xs md:w-[20vw] md:max-w-xs lg:w-[15vw] bg-[#060512] shadow-2xl transition-transform z-50 overflow-y-auto hide-scrollbar duration-300 ease-in-out
         ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 border-r border-gray-800`}
@@ -292,7 +292,7 @@ function Drawer() {
         )}
 
         {/* Navigation */}
-        <nav className="py-4 px-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+        <nav className="py-4 px-4 max-h-[70vh] overflow-y-auto hide-scrollbar">
           {loading ? (
             <ul className="space-y-2 animate-pulse">
               {[...Array(5)].map((_, i) => (
