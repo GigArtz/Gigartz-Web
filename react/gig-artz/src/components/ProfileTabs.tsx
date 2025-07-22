@@ -193,9 +193,35 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
 
   // Dynamic tab configuration with counts
   const tabConfig = useMemo(() => {
-    const eventsCount = profileData.activeProfileData?.userEvents?.length || 0;
-    const reviewsCount =
-      profileData.activeProfileData?.userReviews?.length || 0;
+    // Gigs: all = created + liked (duplicates allowed)
+    const events = profileData.activeProfileData?.userEvents || [];
+    const targetUserId = profileData.isOwnProfile
+      ? profileData.currentUserId
+      : uid;
+    const createdEvents = events.filter(
+      (event) =>
+        event?.userId === targetUserId || event?.promoterId === targetUserId
+    );
+    const likedEvents = events.filter((event) =>
+      event?.likedBy?.includes?.(profileData.currentUserId)
+    );
+    const eventsCount = createdEvents.length + likedEvents.length;
+
+    // Reviews: all = created + liked (duplicates allowed)
+    const reviews = profileData.activeProfileData?.userReviews || [];
+    const createdReviews = reviews.filter(
+      (item) =>
+        item?.userId === targetUserId ||
+        item?.createdBy === targetUserId ||
+        item?.data?.createdBy === targetUserId
+    );
+    const likedReviews = reviews.filter(
+      (item) =>
+        item?.likedBy?.includes?.(profileData.currentUserId) ||
+        item?.data?.likedBy?.includes?.(profileData.currentUserId)
+    );
+    const reviewsCount = createdReviews.length + likedReviews.length;
+
     const guestListsCount =
       profileData.activeProfileData?.userGuestList?.length || 0;
 
@@ -205,9 +231,12 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
       { key: "guestList", label: "Guest Lists", count: guestListsCount },
     ];
   }, [
-    profileData.activeProfileData?.userEvents?.length,
-    profileData.activeProfileData?.userReviews?.length,
-    profileData.activeProfileData?.userGuestList?.length,
+    profileData.activeProfileData?.userEvents,
+    profileData.activeProfileData?.userReviews,
+    profileData.activeProfileData?.userGuestList,
+    profileData.isOwnProfile,
+    profileData.currentUserId,
+    uid,
   ]);
 
   const filterConfig = useMemo(
@@ -226,19 +255,27 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
   // Get filtered events based on current filter
   const getFilteredEvents = useCallback(() => {
     const events = profileData.activeProfileData?.userEvents || [];
-    if (gigsFilter === "all") return events;
+    const targetUserId = profileData.isOwnProfile
+      ? profileData.currentUserId
+      : uid;
+    if (gigsFilter === "all") {
+      // Show both created and liked events (duplicates allowed)
+      const createdEvents = events.filter(
+        (event) =>
+          event?.userId === targetUserId || event?.promoterId === targetUserId
+      );
+      const likedEvents = events.filter((event) =>
+        event?.likedBy?.includes?.(profileData.currentUserId)
+      );
+      return [...createdEvents, ...likedEvents];
+    }
     if (gigsFilter === "created") {
-      // For own profile, show created by current user; for visited profile, show created by visited user
-      const targetUserId = profileData.isOwnProfile
-        ? profileData.currentUserId
-        : uid;
       return events.filter(
         (event) =>
           event?.userId === targetUserId || event?.promoterId === targetUserId
       );
     }
     if (gigsFilter === "liked") {
-      // Show events liked by the current logged-in user
       return events.filter((event) =>
         event?.likedBy?.includes?.(profileData.currentUserId)
       );
@@ -259,15 +296,20 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
       ? profileData.currentUserId
       : uid;
 
+    // Created events
+    const createdEvents = events.filter(
+      (event) =>
+        event?.userId === targetUserId || event?.promoterId === targetUserId
+    );
+    // Liked events
+    const likedEvents = events.filter((event) =>
+      event?.likedBy?.includes?.(profileData.currentUserId)
+    );
+    // Sum of created and liked (duplicates allowed)
     return {
-      all: events.length,
-      created: events.filter(
-        (event) =>
-          event?.userId === targetUserId || event?.promoterId === targetUserId
-      ).length,
-      liked: events.filter((event) =>
-        event?.likedBy?.includes?.(profileData.currentUserId)
-      ).length,
+      all: createdEvents.length + likedEvents.length,
+      created: createdEvents.length,
+      liked: likedEvents.length,
     };
   }, [
     profileData.activeProfileData?.userEvents,
@@ -280,29 +322,40 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
   const getFilteredReviews = useCallback(() => {
     const reviews = profileData.activeProfileData?.userReviews || [];
     if (!reviews.length) return [];
-
-    return reviews.filter((item) => {
-      if (reviewsFilter === "all") return true;
-      if (reviewsFilter === "created") {
-        // For own profile, show created by current user; for visited profile, show created by visited user
-        const targetUserId = profileData.isOwnProfile
-          ? profileData.currentUserId
-          : uid;
-        return (
+    const targetUserId = profileData.isOwnProfile
+      ? profileData.currentUserId
+      : uid;
+    if (reviewsFilter === "all") {
+      // Sum of created and liked reviews (duplicates allowed)
+      const createdReviews = reviews.filter(
+        (item) =>
           item?.userId === targetUserId ||
           item?.createdBy === targetUserId ||
           item?.data?.createdBy === targetUserId
-        );
-      }
-      if (reviewsFilter === "liked") {
-        // Show reviews liked by the current logged-in user
-        return (
+      );
+      const likedReviews = reviews.filter(
+        (item) =>
           item?.likedBy?.includes?.(profileData.currentUserId) ||
           item?.data?.likedBy?.includes?.(profileData.currentUserId)
-        );
-      }
-      return true;
-    });
+      );
+      return [...createdReviews, ...likedReviews];
+    }
+    if (reviewsFilter === "created") {
+      return reviews.filter(
+        (item) =>
+          item?.userId === targetUserId ||
+          item?.createdBy === targetUserId ||
+          item?.data?.createdBy === targetUserId
+      );
+    }
+    if (reviewsFilter === "liked") {
+      return reviews.filter(
+        (item) =>
+          item?.likedBy?.includes?.(profileData.currentUserId) ||
+          item?.data?.likedBy?.includes?.(profileData.currentUserId)
+      );
+    }
+    return reviews;
   }, [
     profileData.activeProfileData?.userReviews,
     reviewsFilter,
@@ -318,19 +371,24 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
       ? profileData.currentUserId
       : uid;
 
+    // Created reviews
+    const createdReviews = reviews.filter(
+      (item) =>
+        item?.userId === targetUserId ||
+        item?.createdBy === targetUserId ||
+        item?.data?.createdBy === targetUserId
+    );
+    // Liked reviews
+    const likedReviews = reviews.filter(
+      (item) =>
+        item?.likedBy?.includes?.(profileData.currentUserId) ||
+        item?.data?.likedBy?.includes?.(profileData.currentUserId)
+    );
+    // Sum of created and liked (duplicates allowed)
     return {
-      all: reviews.length,
-      created: reviews.filter(
-        (item) =>
-          item?.userId === targetUserId ||
-          item?.createdBy === targetUserId ||
-          item?.data?.createdBy === targetUserId
-      ).length,
-      liked: reviews.filter(
-        (item) =>
-          item?.likedBy?.includes?.(profileData.currentUserId) ||
-          item?.data?.likedBy?.includes?.(profileData.currentUserId)
-      ).length,
+      all: createdReviews.length + likedReviews.length,
+      created: createdReviews.length,
+      liked: likedReviews.length,
     };
   }, [
     profileData.activeProfileData?.userReviews,
@@ -548,7 +606,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
           {/* Guest List Tab */}
           {activeTab === "guestList" && (
             <>
-              {/* Dynamic User's Guest Lists */}
+              {/* Dynamic User's Guest Lists - Card Style */}
               <div className="mb-8">
                 {profileData.activeProfileData?.userGuestList?.length > 0 ? (
                   profileData.activeProfileData?.userGuestList?.map(
@@ -556,45 +614,69 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                       <div
                         key={list.id}
                         onClick={() => handleListSelect(list)}
-                        className={`cursor-pointer p-5 flex justify-between items-center bg-slate-900 rounded-3xl mb-3 shadow-md transition-all duration-200 hover:scale-[1.025] hover:shadow-xl ${
+                        className={`card-animate flex w-full items-start px-2 pt-3 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 shadow-lg rounded-3xl transition-colors duration-200 hover:shadow-xl group cursor-pointer mb-4 border ${
                           selectedList?.id === list.id
                             ? "border-teal-400 ring-2 ring-teal-300"
                             : "border-teal-600 hover:border-teal-400"
                         }`}
+                        style={{ minHeight: 90 }}
                       >
-                        <div className="flex items-center gap-3">
-                          {/* List icon */}
-                          <div className="p-2 bg-gray-700 rounded-full text-white">
-                            <FaUsers className="w-5 h-5" />
+                        <div className="mx-2 flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              {/* Guest List Avatar/Icon */}
+                              <div className="relative">
+                                <div className="object-cover w-10 h-10 min-w-10 min-h-10 max-w-10 max-h-10 rounded-full border-2 border-teal-400 bg-gray-700 flex items-center justify-center transition-transform duration-200 group-hover:scale-105 group-hover:border-teal-300 shadow-md">
+                                  <FaUsers className="w-5 h-5 text-white" />
+                                </div>
+                              </div>
+                              <div
+                                className="cursor-pointer"
+                                onClick={() => handleListSelect(list)}
+                              >
+                                <h3 className="text-base font-bold text-white leading-tight hover:underline truncate w-full">
+                                  {list.guestListName || "Unnamed List"}
+                                </h3>
+                                <p className="text-xs text-gray-400 truncate w-full">
+                                  {list.description ||
+                                    "No description available"}
+                                </p>
+                                <p className="text-xs text-gray-300 truncate w-full">
+                                  {list.eventDate
+                                    ? `Event: ${list.eventDate}`
+                                    : "No event date"}
+                                </p>
+                              </div>
+                            </div>
+                            {/* Subscribe Button */}
+                            <button
+                              className={` text-xs px-3 py-1 rounded-2xl font-semibold transition-colors duration-200 flex items-center gap-2 ${
+                                subscribedLists.includes(list.id)
+                                  ? "border-teal-400 bg-teal-400 text-black shadow-md hover:bg-teal-300"
+                                  : "btn-primary-sm"
+                              }`}
+                              style={{ minWidth: 80 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!subscribedLists.includes(list.id)) {
+                                  handleSubscribe(list.id);
+                                }
+                              }}
+                              aria-label={`Subscribe to ${list.guestListName}`}
+                            >
+                              {subscribedLists.includes(list.id) ? (
+                                <>
+                                  <span className="text-emerald-300">✓</span>{" "}
+                                  Subscribed
+                                </>
+                              ) : (
+                                <>
+                                  <FaUserPlus className="w-4 h-4" /> Subscribe
+                                </>
+                              )}
+                            </button>
                           </div>
-
-                          {/* Guest List Name */}
-                          <span className="text-white font-semibold text-base tracking-wide">
-                            {list.guestListName || "Unnamed List"}
-                          </span>
                         </div>
-
-                        {subscribedLists.includes(list.id) ? (
-                          <div className="flex items-center gap-2 text-emerald-300 bg-gray-800 px-4 py-2 rounded-full">
-                            <span className="text-sm font-medium">
-                              ✓ Subscribed
-                            </span>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSubscribe(list.id);
-                            }}
-                            aria-label={`Subscribe to ${list.guestListName}`}
-                            className="flex items-center gap-2 btn-primary-sm px-4 py-2 rounded-full transition focus:outline-none focus:ring-2 focus:ring-teal-400"
-                          >
-                            <FaUserPlus className="w-4 h-4" />
-                            <span className="text-sm font-medium">
-                              Subscribe
-                            </span>
-                          </button>
-                        )}
                       </div>
                     )
                   )
@@ -622,7 +704,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
           title={selectedList.guestListName || "Guest List"}
           icon={<FaUsers />}
           maxWidth="md:max-w-lg"
-          className="bg-gray-900"
+          className="bg-dark"
         >
           <div className="px-2">
             <div className="mb-6">

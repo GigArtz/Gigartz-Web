@@ -87,8 +87,20 @@ const MyProfileTabs = memo(({ uid }) => {
 
   // Dynamic tab configuration with counts
   const tabConfig = useMemo(() => {
-    const eventsCount = userGigGuide?.length || 0;
-    const reviewsCount = userReviews?.length || 0;
+    // Gigs: all = created + liked (duplicates allowed)
+    const createdEvents = (userGigGuide || []).filter(
+      (event) => event?.createdBy === uid
+    );
+    const liked = likedEvents || [];
+    const eventsCount = createdEvents.length + liked.length;
+    // Reviews: all = created + liked (duplicates allowed)
+    const createdReviews = (userReviews || []).filter(
+      (item) => item?.data?.createdBy === uid
+    );
+    const likedReviews = (userReviews || []).filter((item) =>
+      item?.data?.likedBy?.includes?.(uid)
+    );
+    const reviewsCount = createdReviews.length + likedReviews.length;
     const savedCount =
       (userSavedEvents?.length || 0) + (userSavedReviews?.length || 0);
 
@@ -98,30 +110,39 @@ const MyProfileTabs = memo(({ uid }) => {
       { key: "saved", label: "Saved", count: savedCount },
     ];
   }, [
-    userGigGuide?.length,
-    userReviews?.length,
-    userSavedEvents?.length,
-    userSavedReviews?.length,
+    userGigGuide,
+    likedEvents,
+    userReviews,
+    userSavedEvents,
+    userSavedReviews,
+    uid,
   ]);
 
-  // Get event counts for each filter
+  // Get event counts for each filter (all = created + liked, duplicates allowed)
   const getEventFilterCounts = useCallback(() => {
     const events = userGigGuide || [];
+    const createdEvents = events.filter((event) => event?.createdBy === uid);
+    const liked = likedEvents || [];
     return {
-      all: events.length,
-      created: events.filter((event) => event?.createdBy === uid).length,
-      liked: likedEvents?.length || 0,
+      all: createdEvents.length + liked.length,
+      created: createdEvents.length,
+      liked: liked.length,
     };
-  }, [userGigGuide, uid, likedEvents?.length]);
+  }, [userGigGuide, uid, likedEvents]);
 
-  // Get review counts for each filter
+  // Get review counts for each filter (all = created + liked, duplicates allowed)
   const getReviewFilterCounts = useCallback(() => {
     const reviews = userReviews || [];
+    const createdReviews = reviews.filter(
+      (item) => item?.data?.createdBy === uid
+    );
+    const likedReviews = reviews.filter((item) =>
+      item?.data?.likedBy?.includes?.(uid)
+    );
     return {
-      all: reviews.length,
-      created: reviews.filter((item) => item?.data?.createdBy === uid).length,
-      liked: reviews.filter((item) => item?.data?.likedBy?.includes?.(uid))
-        .length,
+      all: createdReviews.length + likedReviews.length,
+      created: createdReviews.length,
+      liked: likedReviews.length,
     };
   }, [userReviews, uid]);
 
@@ -226,15 +247,24 @@ const MyProfileTabs = memo(({ uid }) => {
                 {/* Events Content */}
                 <div className="pt-2">
                   <ScrollableEventCol
-                    events={
-                      gigsFilter === "all"
-                        ? userGigGuide
-                        : gigsFilter === "created"
-                        ? userGigGuide.filter(
+                    events={(() => {
+                      if (gigsFilter === "all") {
+                        const createdEvents =
+                          userGigGuide?.filter(
                             (event) => event?.createdBy === uid
-                          )
-                        : likedEvents || []
-                    }
+                          ) || [];
+                        const liked = likedEvents || [];
+                        return [...createdEvents, ...liked];
+                      } else if (gigsFilter === "created") {
+                        return userGigGuide.filter(
+                          (event) => event?.createdBy === uid
+                        );
+                      } else if (gigsFilter === "liked") {
+                        return likedEvents || [];
+                      } else {
+                        return userGigGuide;
+                      }
+                    })()}
                     loading={loading}
                     error={error}
                   />
@@ -291,21 +321,34 @@ const MyProfileTabs = memo(({ uid }) => {
                 <div className="pt-2">
                   {userReviews?.length > 0 ? (
                     <div className="space-y-4">
-                      {userReviews
-                        .filter((item) => {
-                          if (reviewsFilter === "all") return true;
-                          if (reviewsFilter === "created")
-                            return item?.data?.createdBy === uid;
-                          if (reviewsFilter === "liked")
-                            return item?.data?.likedBy?.includes?.(uid);
-                          return true;
-                        })
-                        .map((item, idx) => (
+                      {(() => {
+                        let reviewsToShow: typeof userReviews = [];
+                        if (reviewsFilter === "all") {
+                          const createdReviews = userReviews.filter(
+                            (item) => item?.data?.createdBy === uid
+                          );
+                          const likedReviews = userReviews.filter((item) =>
+                            item?.data?.likedBy?.includes?.(uid)
+                          );
+                          reviewsToShow = [...createdReviews, ...likedReviews];
+                        } else if (reviewsFilter === "created") {
+                          reviewsToShow = userReviews.filter(
+                            (item) => item?.data?.createdBy === uid
+                          );
+                        } else if (reviewsFilter === "liked") {
+                          reviewsToShow = userReviews.filter((item) =>
+                            item?.data?.likedBy?.includes?.(uid)
+                          );
+                        } else {
+                          reviewsToShow = userReviews;
+                        }
+                        return reviewsToShow.map((item, idx) => (
                           <ReviewCard
                             key={item.data?.id ?? idx}
                             review={item}
                           />
-                        ))}
+                        ));
+                      })()}
                     </div>
                   ) : (
                     <p className="text-gray-400 text-center py-4">

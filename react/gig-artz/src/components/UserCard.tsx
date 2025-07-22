@@ -1,7 +1,8 @@
 import React, { memo, useMemo, useCallback } from "react";
-import { useSelector, shallowEqual } from "react-redux";
+import { useSelector, shallowEqual, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../store/store";
+import { followUser } from "../../store/profileSlice";
 import { useRenderLogger } from "../hooks/usePerformanceMonitor";
 
 interface User {
@@ -30,6 +31,14 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
     return userFollowing?.some((u) => u?.id === userId) || false;
   }, shallowEqual);
 
+  // Get the current user's id from profile slice
+  const currentUserId = useSelector(
+    (state: RootState) =>
+      state.profile.profile?.userId || state.profile.profile?.id
+  );
+
+  const dispatch = useDispatch();
+
   // Memoize user data to prevent prop drilling issues
   const userData = useMemo(
     () => ({
@@ -55,14 +64,22 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
 
   // Follow/Unfollow toggle handler
   const handleFollowToggle = () => {
-    // Dispatch follow/unfollow action or API call
-    console.log(isFollowingUser ? "Unfollow" : "Follow", userData.id);
+    if (!currentUserId || !userData.id) return;
+    // Only dispatch follow if not already following
+    if (!isFollowingUser) {
+      dispatch(followUser(currentUserId, userData.id));
+    } else {
+      // Optionally, dispatch unfollow action if implemented
+      // dispatch(unfollowUser(currentUserId, userData.id));
+      // For now, just log
+      console.log("Unfollow", userData.id);
+    }
   };
 
   return (
     <div
-      className="card-animate flex w-full items-start px-2 pt-3 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 shadow-lg rounded-3xl transition-colors duration-200 hover:shadow-xl group max-w-lg cursor-pointer sm:w-full md:max-w-md"
-      style={{ minHeight: 90 }}
+      className="card-animate flex w-full items-start px-2 pt-3 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 shadow-lg rounded-3xl transition-colors duration-200 hover:shadow-xl group cursor-pointer"
+      style={{ minHeight: 90, width: "100%" }}
       onClick={handleClick}
     >
       <div className="mx-2 flex-1">
@@ -111,8 +128,6 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
       </div>
     </div>
   );
-
-
 });
 
 UserCard.displayName = "UserCard";

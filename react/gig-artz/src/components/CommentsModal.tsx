@@ -167,16 +167,16 @@ const CommentsModal: React.FC<CommentsProps> = ({
 
         {/* Review Form */}
         {userCanComment ? (
-          // Show message for non-ticket holders
-          <div className="text-red-400 text-sm text-center">
-            You must have a ticket to comment on this event.
-          </div>
-        ) : (
           <CommentForm
             onSubmit={handleCommentSubmit}
             loading={loading}
             buttonText="Submit Review"
           />
+        ) : (
+          // Show message for non-ticket holders
+          <div className="text-red-400 text-sm text-center">
+            You must have a ticket to comment on this event.
+          </div>
         )}
       </div>
 

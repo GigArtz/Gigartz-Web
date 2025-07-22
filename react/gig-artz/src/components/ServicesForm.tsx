@@ -31,6 +31,7 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
 }) => {
   const [step, setStep] = useState(1);
   const [activeServiceIdx, setActiveServiceIdx] = useState(0);
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Helper to check if a service is complete
   const isServiceComplete = (srv: Service) =>
@@ -40,6 +41,17 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
     srv.baseFee.trim() !== "" &&
     srv.additionalCosts &&
     srv.additionalCosts.trim() !== "";
+
+  // Error message component (copied from EventForm)
+  const ErrorMessage = ({ error }) => {
+    if (!error) return null;
+    return (
+      <div className="flex items-center text-red-400 text-sm mt-1">
+        <span className="mr-1">⚠️</span>
+        {error}
+      </div>
+    );
+  };
 
   // Handle Input Changes for a service
   const handleServiceChange = (
@@ -171,233 +183,271 @@ const ServicesForm: React.FC<ServicesFormProps> = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center px-5 md:px-2  w-full h-full bg-black bg-opacity-60 backdrop-blur-sm transition-all duration-300 ease-in-out">
-      <div className="relative p-4 w-full md:w-[50%] max-w-lg rounded-lg shadow-lg bg-gray-900 transform transition-all duration-300 ease-in-out">
-        {/* Modal Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-white">
-            {step === 1 ? "Add Services" : "Manage Packages"}
-          </h1>
+    <div className="flex flex-col items-center justify-center w-full min-h-[60vh] p-0">
+      {/* Stepper */}
+      <div className="flex items-center justify-center gap-6 mb-10">
+        <button
+          className={`w-10 h-10 flex items-center justify-center rounded-full border-2 font-bold text-lg shadow-md transition-all duration-200
+            ${step === 1
+              ? 'bg-teal-500 text-white border-teal-500 scale-110'
+              : 'bg-gray-800 text-teal-400 border-teal-700 hover:bg-teal-700 hover:text-white'}
+          `}
+          onClick={() => setStep(1)}
+          type="button"
+        >
+          1
+        </button>
+        <div className="h-1 w-10 bg-teal-700 rounded-full" />
+        <button
+          className={`w-10 h-10 flex items-center justify-center rounded-full border-2 font-bold text-lg shadow-md transition-all duration-200
+            ${step === 2
+              ? 'bg-teal-500 text-white border-teal-500 scale-110'
+              : 'bg-gray-800 text-teal-400 border-teal-700 hover:bg-teal-700 hover:text-white'}
+          `}
+          onClick={() => isServiceComplete(services[activeServiceIdx]) && setStep(2)}
+          disabled={!isServiceComplete(services[activeServiceIdx])}
+          type="button"
+        >
+          2
+        </button>
+      </div>
 
-          {step > 1 ? (
-            <button
-              className="text-gray-400 hover:text-white flex items-center gap-2"
-              onClick={() => setStep(1)}
+      {/* Step 1: Add/Edit Services */}
+      {step === 1 && (
+        <>
+          {services.map((srv, index) => (
+            <div
+              key={index}
+              className={`mb-8 p-6 border border-gray-800 relative transition-all duration-200 group ${activeServiceIdx === index ? 'ring-2 ring-teal-400 bg-gray-950 rounded-2xl shadow-lg' : 'opacity-70 bg-gray-900 rounded-xl'} hover:ring-2 hover:ring-teal-300`}
+              onClick={() => setActiveServiceIdx(index)}
+              style={{ cursor: "pointer" }}
             >
-              <FaBackspace /> Back
-            </button>
-          ) : (
-            // Cancel Button
-            <button
-              className="btn-danger bg-gray-600 rounded-xl p-2 font-bold hover:bg-red-600 transition-colors"
-              onClick={onClose}
-            >
-              <FaTimesCircle className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Step 1: Add/Edit Services */}
-        {step === 1 && (
-          <div className="px-2 md:max-h-[70vh] max-h-[60vh] overflow-y-auto">
-            {services.map((srv, index) => (
-              <div
-                key={index}
-                className={`mb-4 p-3 bg-gray-900 rounded relative ${
-                  activeServiceIdx === index ? "" : "opacity-70"
-                }`}
-                onClick={() => setActiveServiceIdx(index)}
-                style={{ cursor: "pointer" }}
+              <button
+                className="absolute top-3 right-3 text-red-500 hover:text-red-700 bg-gray-800 rounded-full p-2 shadow transition-all duration-200 opacity-80 group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeService(index);
+                }}
+                title="Remove Service"
               >
-                <button
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeService(index);
-                  }}
-                >
-                  <FaRemoveFormat />
-                </button>
-                {/* Only show form fields for the active service */}
-                {activeServiceIdx === index ? (
-                  <>
-                    <label className="text-gray-300">Service Name</label>
+                <FaRemoveFormat />
+              </button>
+              {activeServiceIdx === index ? (
+                <>
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-teal-300 mb-2 tracking-wide">Service Name *</label>
                     <input
                       type="text"
                       name="name"
-                      className="input-field mb-2 mt-1"
                       value={srv.name}
-                      placeholder="Service Name"
                       onChange={(e) => handleServiceChange(index, e)}
+                      className="input-field focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                      placeholder="Enter service name"
                     />
-                    <label className="text-gray-300 mt-4">Description</label>
-                    <input
-                      type="text"
+                    <ErrorMessage error={validationErrors?.name} />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-teal-300 mb-2 tracking-wide">Description *</label>
+                    <textarea
                       name="description"
-                      className="input-field mb-2 mt-1"
                       value={srv.description}
-                      placeholder="Description"
                       onChange={(e) => handleServiceChange(index, e)}
+                      className="input-field focus:ring-2 focus:ring-teal-400 focus:border-teal-400 resize-none"
+                      placeholder="Describe your service"
+                      rows={3}
                     />
-
-                    <label className="text-gray-300 mt-4">Base Fee</label>
-                    <input
-                      type="text"
-                      name="baseFee"
-                      className="input-field mb-2 mt-1"
-                      value={srv.baseFee || ""}
-                      placeholder="Base Fee"
-                      onChange={(e) => handleServiceChange(index, e)}
-                    />
-                    <label className="text-gray-300 mt-4">
-                      Additional Costs
-                    </label>
-                    <input
-                      type="text"
-                      name="additionalCosts"
-                      className="input-field mb-2 mt-1"
-                      value={srv.additionalCosts || ""}
-                      placeholder="Additional Costs"
-                      onChange={(e) => handleServiceChange(index, e)}
-                    />
-                    {/* Only show Next if service is complete */}
-                    {isServiceComplete(srv) && (
-                      <button
-                        className="btn-primary mt-4 w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setStep(2);
-                        }}
-                      >
-                        Next: Manage Packages
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-gray-400">
+                    <ErrorMessage error={validationErrors?.description} />
+                  </div>
+                  <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <strong>Name:</strong>{" "}
-                      {srv.name || <span className="italic">(empty)</span>}
+                      <label className="block text-sm font-semibold text-teal-300 mb-2 tracking-wide">Base Fee *</label>
+                      <input
+                        type="text"
+                        name="baseFee"
+                        value={srv.baseFee || ""}
+                        onChange={(e) => handleServiceChange(index, e)}
+                        className="input-field focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                        placeholder="Base fee (e.g. 1000)"
+                      />
+                      <ErrorMessage error={validationErrors?.baseFee} />
                     </div>
                     <div>
-                      <strong>Description:</strong>{" "}
-                      {srv.description || (
-                        <span className="italic">(empty)</span>
-                      )}
+                      <label className="block text-sm font-semibold text-teal-300 mb-2 tracking-wide">Additional Costs *</label>
+                      <input
+                        type="text"
+                        name="additionalCosts"
+                        value={srv.additionalCosts || ""}
+                        onChange={(e) => handleServiceChange(index, e)}
+                        className="input-field focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                        placeholder="Additional costs (optional)"
+                      />
+                      <ErrorMessage error={validationErrors?.additionalCosts} />
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
-            <button className="mt-2 w-full btn-secondary" onClick={addService}>
-              + Add Service
+                  <div className="flex justify-end mt-6">
+                    <button
+                      className={`px-6 py-3 rounded-lg font-semibold bg-teal-500 text-white shadow hover:bg-teal-600 transition-all duration-200 text-base flex items-center gap-2 ${!isServiceComplete(srv) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isServiceComplete(srv)) setStep(2);
+                      }}
+                      disabled={!isServiceComplete(srv)}
+                      type="button"
+                    >
+                      Next: Manage Packages
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-gray-400">
+                  <div>
+                    <strong>Name:</strong> {srv.name || <span className="italic">(empty)</span>}
+                  </div>
+                  <div>
+                    <strong>Description:</strong> {srv.description || <span className="italic">(empty)</span>}
+                  </div>
+                </div>
+              )}
+              {index < services.length - 1 && <div className="border-t border-gray-800 mt-8 mb-2" />}
+            </div>
+          ))}
+          <button
+            className="mt-2 w-full px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-teal-500 to-teal-400 text-white shadow-lg hover:from-teal-600 hover:to-teal-500 transition-all duration-200 text-lg flex items-center justify-center gap-2"
+            onClick={addService}
+            type="button"
+          >
+            <span className="text-xl font-bold">+</span> Add Service
+          </button>
+        </>
+      )}
+
+      {/* Step 2: Manage Packages for selected service */}
+      {step === 2 && (
+        <div className="w-full max-w-lg bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-800">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-white mb-2">Service Packages</h2>
+            <button
+              className="px-4 py-2 rounded-lg bg-gray-700 text-teal-300 hover:bg-gray-800 hover:text-white font-medium transition-all duration-200"
+              onClick={() => setStep(1)}
+              type="button"
+            >
+              Back
             </button>
           </div>
-        )}
-
-        {/* Step 2: Manage Packages for selected service */}
-        {step === 2 && (
-          <div className="mt-4px-2 md:max-h-[70vh] max-h-[60vh] overflow-y-auto ">
-            <div className="mb-2 text-gray-300">
-              <strong>Service:</strong> {services[activeServiceIdx].name}
-            </div>
-            <form>
-              <div className="">
-                {(services[activeServiceIdx].packages || []).map(
-                  (pkg, pkgIdx) => (
-                    <div
-                      key={pkgIdx}
-                      className="bg-gray-900 p-2 rounded mb-2 flex flex-col gap-1"
-                    >
-                      <input
-                        type="text"
-                        placeholder="Package Name"
-                        className="input-field"
-                        value={pkg.name}
-                        onChange={(e) =>
-                          handlePackageChange(
-                            activeServiceIdx,
-                            pkgIdx,
-                            "name",
-                            e.target.value
-                          )
-                        }
-                      />
-
-                      <input
-                        type="text"
-                        placeholder="Additional Costs"
-                        className="input-field"
-                        value={pkg.additionalCosts || ""}
-                        onChange={(e) =>
-                          handlePackageChange(
-                            activeServiceIdx,
-                            pkgIdx,
-                            "additionalCosts",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        placeholder="Price"
-                        className="input-field"
-                        value={pkg.price}
-                        onChange={(e) =>
-                          handlePackageChange(
-                            activeServiceIdx,
-                            pkgIdx,
-                            "price",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        placeholder="Description"
-                        className="input-field"
-                        value={pkg.description}
-                        onChange={(e) =>
-                          handlePackageChange(
-                            activeServiceIdx,
-                            pkgIdx,
-                            "description",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="text-xs text-red-400 self-end mt-1"
-                        onClick={() => removePackage(activeServiceIdx, pkgIdx)}
-                      >
-                        Remove Package
-                      </button>
-                    </div>
-                  )
-                )}
-                <button
-                  type="button"
-                  className="btn-secondary mt-1"
-                  onClick={() => addPackage(activeServiceIdx)}
-                >
-                  + Add Package
-                </button>
-              </div>
-            </form>
+          <div className="mb-2 text-gray-300">
+            <strong>Service:</strong> {services[activeServiceIdx].name}
           </div>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="mt-6 flex justify-between gap-3">
-          {/* Only show Save on Step 2 */}
-          {step === 2 && (
-            <button className="btn-primary" onClick={handleSubmit}>
+          <form>
+            <div className="space-y-4">
+              {(services[activeServiceIdx].packages || []).map((pkg, pkgIdx) => (
+                <div
+                  key={pkgIdx}
+                  className="bg-gray-950 p-4 rounded-xl mb-3 flex flex-col gap-2 border border-gray-800"
+                >
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Package Name *</label>
+                    <input
+                      type="text"
+                      placeholder="Package Name"
+                      className="w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
+                      value={pkg.name}
+                      onChange={(e) =>
+                        handlePackageChange(
+                          activeServiceIdx,
+                          pkgIdx,
+                          "name",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Additional Costs</label>
+                    <input
+                      type="text"
+                      placeholder="Additional Costs"
+                      className="w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
+                      value={pkg.additionalCosts || ""}
+                      onChange={(e) =>
+                        handlePackageChange(
+                          activeServiceIdx,
+                          pkgIdx,
+                          "additionalCosts",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Price *</label>
+                    <input
+                      type="text"
+                      placeholder="Price"
+                      className="w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300"
+                      value={pkg.price}
+                      onChange={(e) =>
+                        handlePackageChange(
+                          activeServiceIdx,
+                          pkgIdx,
+                          "price",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Description *</label>
+                    <textarea
+                      placeholder="Description"
+                      className="w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 resize-none"
+                      value={pkg.description}
+                      onChange={(e) =>
+                        handlePackageChange(
+                          activeServiceIdx,
+                          pkgIdx,
+                          "description",
+                          e.target.value
+                        )
+                      }
+                      rows={2}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="text-xs text-red-400 self-end mt-1 hover:underline"
+                    onClick={() => removePackage(activeServiceIdx, pkgIdx)}
+                  >
+                    Remove Package
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="w-full px-4 py-3 rounded-lg font-semibold bg-teal-500 text-white shadow hover:bg-teal-600 transition-all duration-200 text-base flex items-center justify-center gap-2"
+                onClick={() => addPackage(activeServiceIdx)}
+              >
+                <span className="text-xl font-bold">+</span> Add Package
+              </button>
+            </div>
+          </form>
+          <div className="flex justify-between gap-3 mt-6">
+            <button
+              className="px-4 py-2 rounded-lg bg-gray-700 text-teal-300 hover:bg-gray-800 hover:text-white font-medium transition-all duration-200"
+              onClick={() => setStep(1)}
+              type="button"
+            >
+              Back
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 font-semibold transition-all duration-200"
+              onClick={handleSubmit}
+              type="button"
+            >
               Save
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

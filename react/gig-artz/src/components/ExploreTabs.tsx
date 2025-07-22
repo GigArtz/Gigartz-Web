@@ -440,7 +440,7 @@ function ExploreTabs() {
           </div>
         )}
 
-        {error && <p className="text-red-500">Error: {error}</p>}
+        
         {!loading && !error && (
           <>
             {activeTab === "top" && (
@@ -527,8 +527,7 @@ function ExploreTabs() {
                       </div>
                       <ScrollableEventRow
                         events={events}
-                        loading={loading}
-                        error={error}
+                      
                       />
                     </div>
                   ) : null
@@ -560,8 +559,7 @@ function ExploreTabs() {
                       </div>
                       <ScrollableEventRow
                         events={events}
-                        loading={loading}
-                        error={error}
+                       
                       />
                     </div>
                   ) : null
@@ -595,8 +593,7 @@ function ExploreTabs() {
                   </div>
                   <ScrollableEventRow
                     events={latestData.trendingEvents}
-                    loading={loading}
-                    error={error}
+                   
                   />
                 </div>
                 {/* For You */}
@@ -618,8 +615,7 @@ function ExploreTabs() {
                   </div>
                   <ScrollableEventRow
                     events={latestData.forYouEvents}
-                    loading={loading}
-                    error={error}
+                  
                   />
                 </div>
                 {/* Popular Professionals */}
@@ -665,8 +661,6 @@ function ExploreTabs() {
                       </div>
                       <ScrollableEventRow
                         events={events}
-                        loading={loading}
-                        error={error}
                       />
                     </div>
                   ) : null
@@ -698,8 +692,6 @@ function ExploreTabs() {
                       </div>
                       <ScrollableEventRow
                         events={events}
-                        loading={loading}
-                        error={error}
                       />
                     </div>
                   ) : null
@@ -719,7 +711,7 @@ function ExploreTabs() {
                   <h2 className="text-white text-lg font-semibold mb-2">
                     Popular Professionals
                   </h2>
-                  <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                  <div className="grid sm:grid-cols-2 gap-2">
                     {safePeopleList.map((user) => (
                       <div className="mb-2" key={user.id}>
                         <UserCard user={user} />
@@ -735,9 +727,9 @@ function ExploreTabs() {
                         {interest.charAt(0).toUpperCase() + interest.slice(1)}{" "}
                         Professionals
                       </h2>
-                      <div className="flex flex-col gap-2 md:grid md:grid-cols-1 overflow-auto">
+                      <div className="grid sm:grid-cols-2 gap-2">
                         {users.map((user) => (
-                          <div className="mb-2" key={user.id}>
+                          <div className=" mb-2" key={user.id}>
                             <UserCard user={user} />
                           </div>
                         ))}

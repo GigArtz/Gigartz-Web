@@ -18,10 +18,8 @@ function Wallet() {
   return (
     <div className='main-content p-2'>
         <div>
+         <Header title={"Wallet"} />
          
-          <div className="sticky hidden sm:block top-0 z-10 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800">
-                  <Header title={"Wallet"} />
-                </div>
           <WalletTabs uid={userProfile?.id}/>
         </div>
     </div>
