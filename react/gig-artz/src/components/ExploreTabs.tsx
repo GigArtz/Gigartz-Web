@@ -105,9 +105,12 @@ function ExploreTabs() {
     ? eventList.filter((event) => {
         const title = event?.title?.toLowerCase() || "";
         const description = event?.description?.toLowerCase() || "";
+        const category = event?.category?.toLowerCase() || "";
+        const search = searchTerm.toLowerCase();
         const matchesSearch =
-          title.includes(searchTerm.toLowerCase()) ||
-          description.includes(searchTerm.toLowerCase());
+          title.includes(search) ||
+          description.includes(search) ||
+          category.includes(search);
 
         const matchesCategory =
           selectedEventCategories.length === 0 ||
@@ -122,27 +125,29 @@ function ExploreTabs() {
     ? userList.filter((user) => {
         const name = user?.name?.toLowerCase() || "";
         const username = user?.userName?.toLowerCase() || "";
-        const matchesSearch =
-          name.includes(searchTerm.toLowerCase()) ||
-          username.includes(searchTerm.toLowerCase());
-
+        const search = searchTerm.toLowerCase();
         const userGenres = Array.isArray(user?.genre)
           ? user.genre.map((g) =>
               typeof g === "string"
-                ? g
+                ? g.toLowerCase()
                 : g && typeof g.name === "string"
-                ? g.name
+                ? g.name.toLowerCase()
                 : ""
             )
           : typeof user?.genre === "string"
-          ? [user.genre]
+          ? [user.genre.toLowerCase()]
           : [];
+
+        const matchesSearch =
+          name.includes(search) ||
+          username.includes(search) ||
+          userGenres.some((g) => g.includes(search));
 
         const matchesFreelancer =
           selectedFreelancers.length === 0 ||
           selectedFreelancers.some((f) =>
             user?.roles?.freelancer || user?.roles?.admin
-              ? userGenres.includes(f)
+              ? userGenres.includes(f.toLowerCase())
               : false
           );
 
@@ -372,7 +377,7 @@ function ExploreTabs() {
             <input
               type="text"
               className="w-full px-4 py-2 rounded-lg bg-[#060512] text-gray-900 dark:text-gray-100 focus:outline-none"
-              placeholder="Search..."
+              placeholder="Search... "
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -440,7 +445,6 @@ function ExploreTabs() {
           </div>
         )}
 
-        
         {!loading && !error && (
           <>
             {activeTab === "top" && (
@@ -525,10 +529,7 @@ function ExploreTabs() {
                           See All →
                         </button>
                       </div>
-                      <ScrollableEventRow
-                        events={events}
-                      
-                      />
+                      <ScrollableEventRow events={events} />
                     </div>
                   ) : null
                 )}
@@ -557,10 +558,7 @@ function ExploreTabs() {
                           See All →
                         </button>
                       </div>
-                      <ScrollableEventRow
-                        events={events}
-                       
-                      />
+                      <ScrollableEventRow events={events} />
                     </div>
                   ) : null
                 )}
@@ -591,10 +589,7 @@ function ExploreTabs() {
                       See All →
                     </button>
                   </div>
-                  <ScrollableEventRow
-                    events={latestData.trendingEvents}
-                   
-                  />
+                  <ScrollableEventRow events={latestData.trendingEvents} />
                 </div>
                 {/* For You */}
                 <div className="w-full p-2 rounded-xl">
@@ -613,10 +608,7 @@ function ExploreTabs() {
                       See All →
                     </button>
                   </div>
-                  <ScrollableEventRow
-                    events={latestData.forYouEvents}
-                  
-                  />
+                  <ScrollableEventRow events={latestData.forYouEvents} />
                 </div>
                 {/* Popular Professionals */}
                 <div className="w-full p-2 rounded-xl">
@@ -659,9 +651,7 @@ function ExploreTabs() {
                           See All →
                         </button>
                       </div>
-                      <ScrollableEventRow
-                        events={events}
-                      />
+                      <ScrollableEventRow events={events} />
                     </div>
                   ) : null
                 )}
@@ -690,9 +680,7 @@ function ExploreTabs() {
                           See All →
                         </button>
                       </div>
-                      <ScrollableEventRow
-                        events={events}
-                      />
+                      <ScrollableEventRow events={events} />
                     </div>
                   ) : null
                 )}

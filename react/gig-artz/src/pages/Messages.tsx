@@ -16,6 +16,7 @@ import Chat from "../components/Chat";
 import BaseModal from "../components/BaseModal";
 import { FaSearch, FaPlus, FaUsers } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 
 const Messages: React.FC = () => {
   const location = useLocation();
@@ -146,18 +147,17 @@ const Messages: React.FC = () => {
   }, [localConversations, searchTerm, getUsernameById]);
 
   return (
-    <div className="main-content flex h-screen bg-dark">
+    <div className="main-content animate-fade-in-up transition-all duration-500">
+     <div>
+        <Header title="Messages" />
+      </div>
+    <div className=" flex h-screen bg-dark">
+     
       {!activeConversation || window.innerWidth >= 768 ? (
         <div className="md:w-[30%] w-full md:border-r border-gray-700 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <FaUsers className="text-teal-400" />
-                Messages
-              </h2>
-            
-            </div>
+           
 
             {/* Search Bar */}
             <div className="relative">
@@ -175,8 +175,14 @@ const Messages: React.FC = () => {
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto">
             {loading && !conversations?.length ? (
-              <div className="p-4">
-                <Loader />
+              <div className="p-4 flex flex-col items-center justify-center h-full text-gray-400">
+                <div className="animate-pulse w-16 h-16 rounded-full bg-gradient-to-br from-teal-400 to-purple-500 mb-4"></div>
+                <h3 className="text-lg font-semibold mb-2">
+                  Loading conversations...
+                </h3>
+                <p className="text-sm">
+                  Please wait while we fetch your messages.
+                </p>
               </div>
             ) : (
               <div className="p-2">
@@ -258,9 +264,8 @@ const Messages: React.FC = () => {
                                 <h3 className="font-semibold text-sm truncate">
                                   {conversationData.displayName}
                                 </h3>
-                               
                               </div>
-                              
+
                               {lastMessage && (
                                 <p
                                   className={`text-xs truncate ${
@@ -305,10 +310,10 @@ const Messages: React.FC = () => {
           <div className="p-4">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 btn-primary transition-all transform hover:scale-105"
+              className="w-full flex items-center justify-center gap-2 py-3 btn-primary-sm transition-all transform hover:scale-105"
             >
               <FaPlus className="text-sm" />
-              New Message
+              Message
             </button>
           </div>
         </div>
@@ -343,11 +348,11 @@ const Messages: React.FC = () => {
             </p>
             <div className="flex justify-center">
               <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 btn-primary transition-all transform hover:scale-105"
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-3 btn-primary transition-all transform hover:scale-105"
               >
-              <FaPlus className="text-sm text-center" />
-              Start New Conversation
+                <FaPlus className="text-sm text-center" />
+                Start New Conversation
               </button>
             </div>
           </div>
@@ -414,6 +419,7 @@ const Messages: React.FC = () => {
           </button>
         </div>
       </BaseModal>
+    </div>
     </div>
   );
 };

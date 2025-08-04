@@ -1,5 +1,6 @@
 
-import { showToast, addNotification } from "../../store/notificationSlice";
+
+import { showToast, addNotification, clearToast, resetError } from "../../store/notificationSlice";
 import store from "../../store/store";
 
 /**
@@ -9,6 +10,10 @@ import store from "../../store/store";
  */
 export function notify(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info'): void {
     const dispatch = store.dispatch;
+
+    // Clear previous toast and errors before showing a new one
+    dispatch(clearToast());
+    dispatch(resetError());
 
     // Dispatch toast notification (temporary popup)
     dispatch(

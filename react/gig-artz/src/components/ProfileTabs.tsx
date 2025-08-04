@@ -715,19 +715,6 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                     "No description provided for this guest list."}
                 </p>
               </div>
-
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <h4 className="text-white font-medium mb-2">Event Details</h4>
-                <div className="flex items-center text-gray-300 text-sm mb-1">
-                  <FaCalendarAlt className="mr-2 text-gray-400" />
-                  <span>
-                    {selectedList.eventDate || "No event date specified"}
-                  </span>
-                </div>
-                <p className="text-gray-300 text-sm">
-                  {selectedList.eventDetails || "No additional event details."}
-                </p>
-              </div>
             </div>
 
             {/* Guest List Preview - Only shown if subscribed */}
@@ -743,25 +730,111 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
 
               {subscribedLists.includes(selectedList.id) ? (
                 <div className="bg-gray-800 rounded-lg p-3 max-h-40 overflow-y-auto">
-                  {selectedList.guests && selectedList.guests.length > 0 ? (
-                    <ul className="space-y-2">
-                      {selectedList.guests.map((guest, idx) => (
-                        <li
-                          key={idx}
-                          className="text-gray-300 text-sm flex justify-between"
-                        >
-                          <span>{guest.name || "Unnamed Guest"}</span>
-                          <span className="text-gray-400">
-                            {guest.email || "No email"}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 text-sm text-center">
-                      No guests in this list yet
-                    </p>
-                  )}
+                  {/* Broadcast Messages Section */}
+                  <div className="mb-6">
+                    <h5 className="text-teal-300 font-semibold mb-2">
+                      Broadcast Messages
+                    </h5>
+                    {selectedList.broadcastMessages &&
+                    selectedList.broadcastMessages.length > 0 ? (
+                      <ul className="space-y-2">
+                        {selectedList.broadcastMessages.map((msg, idx) => (
+                          <li
+                            key={idx}
+                            className="text-gray-200 text-xs bg-gray-700 rounded px-2 py-1"
+                          >
+                            {msg}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-400 text-xs text-center py-2">
+                        No messages yet
+                      </div>
+                    )}
+                  </div>
+                  {/* Guests Section */}
+                  <div>
+                    <h5 className="text-teal-300 font-semibold mb-2">
+                      Guest List
+                    </h5>
+                    {selectedList.guests && selectedList.guests.length > 0 ? (
+                      <ul className="space-y-2">
+                        {selectedList.guests.map((guest, idx) => {
+                          // Find user in userList by username, name, or id
+                          let userData = null;
+                          if (guest.username) {
+                            userData = profileData.profile?.userList?.find(
+                              (u) => u.username === guest.username
+                            );
+                          }
+                          if (!userData && guest.id) {
+                            userData = profileData.profile?.userList?.find(
+                              (u) => u.id === guest.id
+                            );
+                          }
+                          if (!userData && guest.name) {
+                            userData = profileData.profile?.userList?.find(
+                              (u) => u.name === guest.name
+                            );
+                          }
+                          // Fallback to global userList if not found in profile
+                          if (!userData && profileData.userList) {
+                            if (guest.username) {
+                              userData = profileData.userList.find(
+                                (u) => u.username === guest.username
+                              );
+                            }
+                            if (!userData && guest.id) {
+                              userData = profileData.userList.find(
+                                (u) => u.id === guest.id
+                              );
+                            }
+                            if (!userData && guest.name) {
+                              userData = profileData.userList.find(
+                                (u) => u.name === guest.name
+                              );
+                            }
+                          }
+                          return (
+                            <li
+                              key={idx}
+                              className="flex items-center gap-3 text-gray-300 text-sm"
+                            >
+                              {/* Profile Pic */}
+                              {userData?.profilePic ? (
+                                <img
+                                  src={userData.profilePic}
+                                  alt={
+                                    userData.username ||
+                                    userData.name ||
+                                    "Guest"
+                                  }
+                                  className="w-7 h-7 rounded-full object-cover border border-teal-400"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-gray-600 flex items-center justify-center border border-teal-400">
+                                  <FaUser className="text-gray-300 w-4 h-4" />
+                                </div>
+                              )}
+                              {/* Username */}
+                              <span className="font-medium truncate">
+                                {userData?.username ||
+                                  userData?.name ||
+                                  guest.username ||
+                                  guest.name ||
+                                  "Unnamed Guest"}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 text-sm text-center">
+                        No guests in this list yet
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center justify-center opacity-70">
@@ -785,7 +858,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                 Subscribe to Guest List
               </button>
             ) : (
-              <div className="w-full primary-btn py-3 font-medium flex items-center justify-center">
+              <div className="w-full btn-primary py-3 font-medium flex items-center justify-center">
                 <span className="text-emerald-300 mr-2">✓</span>
                 Subscribed
               </div>

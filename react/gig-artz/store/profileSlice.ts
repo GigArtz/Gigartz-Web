@@ -1,3 +1,17 @@
+// Login thunk example: dispatch this after successful authentication
+export const loginUser = (credentials: { email: string; password: string }) => async (dispatch: AppDispatch) => {
+  try {
+    // Example: Replace with your actual login API call
+    // const response = await axios.post('/login', credentials);
+    // dispatch(loginSuccess(response.data));
+    // For demonstration, assume login is always successful:
+    notify("Successfully Logged in", "success");
+    // Optionally, dispatch a login success action here
+  } catch (error) {
+    notify("Login failed. Please check your credentials.", "error");
+    // Optionally, dispatch a login failure action here
+  }
+};
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { db } from "../src/config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -761,7 +775,7 @@ const handleAxiosError = (
   }
 };
 
-// Fetch user profile from Firestore
+
 export const fetchDrawerUserProfile =
   (uid: string) => async (dispatch: AppDispatch) => {
     dispatch(profileSlice.actions.fetchProfileStart({ userId: uid }));
@@ -778,13 +792,7 @@ export const fetchDrawerUserProfile =
         )
       );
       // Send success notification
-      notify(dispatch, {
-        type: "profile_fetch",
-        data: {
-          message: "Profile loaded successfully!",
-          type: "success"
-        },
-      });
+      notify("Profile loaded successfully!", "success");
     } catch (error: unknown) {
       handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
     }
@@ -835,13 +843,7 @@ export const fetchUserProfile = (uid?: string, forceRefresh: boolean = false) =>
     // Only show notification if we actually fetched new data and it's a forced refresh
     // This reduces the notification spam
     if (forceRefresh) {
-      notify(dispatch, {
-        type: "profile_fetch",
-        data: {
-          message: "Profile data loaded successfully!",
-          type: "success"
-        },
-      });
+      notify("Profile data loaded successfully!", "success");
     }
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
@@ -937,13 +939,7 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
     // Only send notification for forced refreshes
     // This greatly reduces notification spam
     if (forceRefresh) {
-      notify(dispatch, {
-        type: "profile_fetch",
-        data: {
-          message: "User profile loaded successfully!",
-          type: "success"
-        },
-      });
+      notify("User profile loaded successfully!", "success");
     }
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchAProfileFailure);
@@ -1446,13 +1442,7 @@ export const updateUserProfile =
         // Fetch updated profile data
         await dispatch(fetchUserProfile(uid));
         // Send notification after successful update
-        notify(dispatch, {
-          type: "profile_update",
-          data: {
-            message: "Profile updated successfully!",
-            type: "success"
-          },
-        });
+        notify("Profile updated successfully!", "success");
         console.log(updateProfile);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -1468,13 +1458,7 @@ export const updateUserProfile =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "profile_update_error",
-              data: {
-                message: "Failed to update profile",
-                type: "error"
-              },
-            });
+            notify("Failed to update profile", "error");
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -1522,13 +1506,7 @@ export const switchUserProfile =
           profileSlice.actions.updateProfileSuccess(response.data.updatedProfile)
         );
         // Send profile switch notification
-        notify(dispatch, {
-          type: "profile_switch",
-          data: {
-            message: "Profile switched successfully!",
-            type: "success"
-          },
-        });
+        notify("Profile switched successfully!", "success");
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -1542,13 +1520,7 @@ export const switchUserProfile =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "profile_switch_error",
-              data: {
-                message: "Failed to switch profile",
-                type: "error"
-              },
-            });
+            notify("Failed to switch profile", "error");
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -1622,23 +1594,11 @@ export const createUser =
           dispatch(profileSlice.actions.updateProfile(userProfile));
           console.log("User profile created in Firestore");
           // Send success notification
-          notify(dispatch, {
-            type: "profile_create",
-            data: {
-              message: "Profile created successfully!",
-              type: "success"
-            },
-          });
+          notify("Profile created successfully!", "success");
         } else {
           console.log("User profile already exists");
           // Send info notification
-          notify(dispatch, {
-            type: "profile_exists",
-            data: {
-              message: "Welcome back!",
-              type: "info"
-            },
-          });
+          notify("Welcome back!", "info");
         }
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -1650,13 +1610,7 @@ export const createUser =
             )
           );
           // Send error notification
-          notify(dispatch, {
-            type: "profile_create_error",
-            data: {
-              message: "Failed to create profile",
-              type: "error"
-            },
-          });
+          notify("Failed to create profile", "error");
         } else {
           // Handle non-Axios errors and errors not related to Axios
           console.error("Error creating user profile:", error);
@@ -1700,13 +1654,7 @@ export const followUser =
           )
         );
         // Send follower notification
-        notify(dispatch, {
-          type: "follower",
-          data: {
-            message: "User followed successfully!",
-            type: "success"
-          },
-        });
+        notify("User followed successfully!", "success");
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -1721,13 +1669,7 @@ export const followUser =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "follow_error",
-              data: {
-                message: "Failed to follow user",
-                type: "error"
-              },
-            });
+            notify("Failed to follow user", "error");
           } else if (axiosError.request) {
             // The request was made, but no response was received
             console.error("Request error:", axiosError.request);
@@ -1783,13 +1725,7 @@ export const bookFreelancer =
           )
         );
         // Send booking notification
-        notify(dispatch, {
-          type: "booking",
-          data: {
-            message: "Freelancer booked successfully!",
-            type: "success"
-          },
-        });
+        notify("Freelancer booked successfully!", "success");
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -1803,13 +1739,7 @@ export const bookFreelancer =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "booking_error",
-              data: {
-                message: "Failed to book freelancer",
-                type: "error"
-              },
-            });
+            notify("Failed to book freelancer", "error");
           } else if (axiosError.request) {
             console.error("Request error:", axiosError.request);
             dispatch(
@@ -1818,13 +1748,7 @@ export const bookFreelancer =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "booking_error",
-              data: {
-                message: "Network error - please check your connection",
-                type: "error"
-              },
-            });
+            notify("Network error - please check your connection", "error");
           } else {
             console.error("Error setting up request:", axiosError.message);
             dispatch(
@@ -1833,13 +1757,7 @@ export const bookFreelancer =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "booking_error",
-              data: {
-                message: "Error booking freelancer",
-                type: "error"
-              },
-            });
+            notify("Error booking freelancer", "error");
           }
         } else {
           console.error("Unexpected error:", error);
@@ -1847,13 +1765,7 @@ export const bookFreelancer =
             profileSlice.actions.createBookingFailure("Unexpected error occurred")
           );
           // Send error notification
-          notify(dispatch, {
-            type: "booking_error",
-            data: {
-              message: "Unexpected error occurred",
-              type: "error"
-            },
-          });
+          notify("Unexpected error occurred", "error");
         }
       }
     };
@@ -1885,13 +1797,7 @@ export const updateBookingStatus =
         );
 
         // Send notification for status update
-        notify(dispatch, {
-          type: "booking_status_update",
-          data: {
-            message: `Booking ${bookingData.newStatus} successfully!`,
-            type: "success"
-          },
-        });
+        notify(`Booking ${bookingData.newStatus} successfully!`, "success");
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           const axiosError = error as AxiosError;
@@ -1904,13 +1810,7 @@ export const updateBookingStatus =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "booking_status_error",
-              data: {
-                message: "Failed to update booking status",
-                type: "error"
-              },
-            });
+            notify("Failed to update booking status", "error");
           } else if (axiosError.request) {
             console.error("Request error:", axiosError.request);
             dispatch(
@@ -1919,26 +1819,14 @@ export const updateBookingStatus =
               )
             );
             // Send error notification
-            notify(dispatch, {
-              type: "booking_status_error",
-              data: {
-                message: "Network error - please check your connection",
-                type: "error"
-              },
-            });
+            notify("Network error - please check your connection", "error");
           } else {
             console.error("Error:", axiosError.message);
             dispatch(
               profileSlice.actions.updateBookingStatusFailure(axiosError.message)
             );
             // Send error notification
-            notify(dispatch, {
-              type: "booking_status_error",
-              data: {
-                message: "Error updating booking status",
-                type: "error"
-              },
-            });
+            notify("Error updating booking status", "error");
           }
         } else {
           console.error("Unexpected error:", error);
@@ -2095,8 +1983,6 @@ export const getUserInfoByContactId = (contactId: string, userList: UserProfile[
   if (user) {
     return user;
   }
-
-
   return null;
 };
 

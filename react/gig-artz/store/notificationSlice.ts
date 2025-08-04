@@ -24,29 +24,26 @@ export const fetchNotifications = createAsyncThunk(
     }
 );
 
-// Async thunk to send notification to backend
-export const sendNotificationToBackend = createAsyncThunk(
-    "notification/sendNotificationToBackend",
+
+// Send notification to a single device
+export const sendNotificationToDevice = createAsyncThunk(
+    "notification/sendNotificationToDevice",
     async (
-        {
-            token,
-            body,
-            title,
-        }: { token: string; body: string; title: string },
+        { token, body, title, authToken }: { token: string; body: string; title: string; authToken?: string },
         thunkAPI
     ) => {
         try {
-            // Replace with your backend endpoint
-            const response = await fetch("/api/notifications/send", {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+            };
+            if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+            const response = await fetch("https://gigartz.onrender.com/device", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ body, title }),
+                headers,
+                body: JSON.stringify({ token, body, title }),
             });
             if (!response.ok) {
-                throw new Error("Failed to send notification");
+                throw new Error("Failed to send notification to device");
             }
             return await response.json();
         } catch (error) {
@@ -54,7 +51,115 @@ export const sendNotificationToBackend = createAsyncThunk(
         }
     }
 );
-// ...existing code...
+
+// Send notification to multiple devices
+export const sendNotificationToDevices = createAsyncThunk(
+    "notification/sendNotificationToDevices",
+    async (
+        { tokens, body, title, authToken }: { tokens: string[]; body: string; title: string; authToken?: string },
+        thunkAPI
+    ) => {
+        try {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+            };
+            if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+            const response = await fetch("https://gigartz.onrender.com/devices", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ tokens, body, title }),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to send notification to devices");
+            }
+            return await response.json();
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
+// Subscribe a device to a topic
+export const subscribeToTopic = createAsyncThunk(
+    "notification/subscribeToTopic",
+    async (
+        { token, topic, authToken }: { token: string; topic: string; authToken?: string },
+        thunkAPI
+    ) => {
+        try {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+            };
+            if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+            const response = await fetch("https://gigartz.onrender.com/subscribe", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ token, topic }),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to subscribe to topic");
+            }
+            return await response.json();
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
+// Unsubscribe a device from a topic
+export const unsubscribeFromTopic = createAsyncThunk(
+    "notification/unsubscribeFromTopic",
+    async (
+        { token, topic, authToken }: { token: string; topic: string; authToken?: string },
+        thunkAPI
+    ) => {
+        try {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+            };
+            if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+            const response = await fetch("https://gigartz.onrender.com/unsubscribe", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ token, topic }),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to unsubscribe from topic");
+            }
+            return await response.json();
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
+// Send notification to a topic
+export const sendNotificationToTopic = createAsyncThunk(
+    "notification/sendNotificationToTopic",
+    async (
+        { topic, body, title, authToken }: { topic: string; body: string; title: string; authToken?: string },
+        thunkAPI
+    ) => {
+        try {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+            };
+            if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+            const response = await fetch("https://gigartz.onrender.com/topic", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ topic, body, title }),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to send notification to topic");
+            }
+            return await response.json();
+        } catch (error) {
+            return thunkAPI.rejectWithValue((error as Error).message);
+        }
+    }
+);
+
 
 export interface Notification {
     id: string;
@@ -73,6 +178,7 @@ export interface NotificationState {
     } | null;
     token?: string | null;
     notifications: Notification[];
+    error?: string | null;
 }
 
 const NOTIFICATIONS_KEY = "gigartz_notifications";
@@ -80,7 +186,9 @@ const NOTIFICATIONS_KEY = "gigartz_notifications";
 function saveNotificationsToStorage(notifications: Notification[]) {
     try {
         localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
-    } catch { }
+    } catch {
+        // Ignore storage errors
+    }
 }
 
 function loadNotificationsFromStorage(): Notification[] {
@@ -122,20 +230,25 @@ const notificationSlice = createSlice({
                 action?: { label: string; onClick: string } | null;
             }>
         ) => {
+            // Clear previous error when showing a new toast
             state.toast = {
                 ...action.payload,
                 id: Date.now(),
             };
+            state.error = null;
         },
         clearToast: (state) => {
             state.toast = null;
+            state.error = null;
         },
         addNotification: (
             state,
             action: PayloadAction<Omit<Notification, "id" | "createdAt">>
         ) => {
+            // Clear previous error when adding a new notification
             const newNotification = createNotification(action.payload);
             state.notifications.unshift(newNotification);
+            state.error = null;
             saveNotificationsToStorage(state.notifications);
             // Note: Auto-removal is handled in the GlobalNotification component, not here
         },
@@ -157,11 +270,10 @@ const notificationSlice = createSlice({
             saveNotificationsToStorage(state.notifications);
         },
         setError: (state, action: PayloadAction<string>) => {
-            // You can add error handling logic here
+            state.error = action.payload;
         },
         resetError: (state) => {
-            // You can add error reset logic here
-            
+            state.error = null;
         },
         loadNotificationsFromLocalStorage: (state) => {
             state.notifications = loadNotificationsFromStorage();
@@ -183,6 +295,7 @@ export const {
     addNotification,
     markAsRead,
     clearNotifications,
-    removeNotification
+    removeNotification,
+    resetError
 } = notificationSlice.actions;
 export default notificationSlice.reducer;

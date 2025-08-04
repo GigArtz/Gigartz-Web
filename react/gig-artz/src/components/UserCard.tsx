@@ -84,7 +84,7 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
     >
       <div className="mx-2 flex-1">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {/* User Avatar */}
             <div className="relative">
               <img
@@ -97,7 +97,7 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
               />
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-gray-900 rounded-full"></span>
             </div>
-            <div className="cursor-pointer" onClick={handleClick}>
+            <div className="cursor-pointer text-truncate w-20 mr-1" onClick={handleClick}>
               <h3 className="text-base font-bold text-white leading-tight hover:underline truncate w-full">
                 {userData.name}
               </h3>

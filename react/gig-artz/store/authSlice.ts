@@ -10,6 +10,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { createUser, fetchUserProfile, UserProfile } from "./profileSlice";
+import { notify } from "../src/helpers/notify";
 import { AppDispatch } from "./store";
 
 // User Interface
@@ -141,14 +142,7 @@ export const registerUser = (formData: RegistrationData) => async (dispatch: App
     dispatch(authSlice.actions.registerSuccess({ user: response.data.user, uid: response.data.user.uid }));
 
     // Add notification for successful registration
-    const { notify } = await import("../src/helpers/notify");
-    notify(dispatch, {
-      type: "general",
-      data: {
-        message: `Welcome to GigArtz, ${response.data.user.userName || 'user'}! Your account has been created successfully.`,
-        type: "success"
-      }
-    });
+    notify(`Welcome to GigArtz, ${response.data.user.userName || 'user'}! Your account has been created successfully.`, "success");
 
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -156,14 +150,7 @@ export const registerUser = (formData: RegistrationData) => async (dispatch: App
       dispatch(authSlice.actions.registerFailure(error.response?.data.error || "An error occurred"));
 
       // Add notification for registration failure
-      const { notify } = await import("../src/helpers/notify");
-      notify(dispatch, {
-        type: "general",
-        data: {
-          message: error.response?.data.error || "Registration failed. Please try again.",
-          type: "error"
-        }
-      });
+      notify(error.response?.data.error || "Registration failed. Please try again.", "error");
 
     } else if (error instanceof Error) {
       console.error("Error during registration:", error.message);
@@ -234,17 +221,7 @@ export const loginUser = (email: string, password: string, rememberMe?: boolean)
       }));
 
       // --- LOGIN NOTIFICATION ---
-      // Use notify utility to dispatch a login notification
-      // Import notify at the top if not already
-      // Notification type: 'login', data: { username, date }
-      const { notify } = await import("../src/helpers/notify");
-      notify(dispatch, {
-        type: "login",
-        data: {
-          username: response.data.user.userName || response.data.user.userProfile?.emailAddress,
-          date: new Date().toISOString(),
-        },
-      });
+      notify("Successfully Logged in", "success");
 
       console.log("Login Successful!");
     }
@@ -304,14 +281,7 @@ export const socialLogin = (provider: "facebook" | "google" | "twitter") => asyn
     dispatch(authSlice.actions.loginSuccess({ user: customUser, uid: user.uid }));
 
     // --- LOGIN NOTIFICATION (SOCIAL) ---
-    const { notify } = await import("../src/helpers/notify");
-    notify(dispatch, {
-      type: "login",
-      data: {
-        username: customUser.userName || customUser.emailAddress,
-        date: new Date().toISOString(),
-      },
-    });
+    notify("Successfully Logged in", "success");
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error during social login:", error.message);
@@ -356,15 +326,7 @@ export const suspendUserAccount = (userId: string, suspend: boolean) => async (d
     console.log(`User ${suspend ? "suspended" : "unsuspended"} successfully:`, response.data);
 
     // Optional: Fetch fresh profile or notify
-    const { notify } = await import("../src/helpers/notify");
-    notify(dispatch, {
-      type: "account_status_change",
-      data: {
-        userId,
-        status: suspend ? "Suspended" : "Active",
-        date: new Date().toISOString(),
-      },
-    });
+    notify(`Account status changed: ${suspend ? "Suspended" : "Active"}`, "info");
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       console.error("Suspend account error:", error.response?.data?.error || error.message);
