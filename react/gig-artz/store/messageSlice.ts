@@ -261,4 +261,40 @@ export const {
   addMessageToConversation,
 } = messageSlice.actions;
 
+// Thunk to send a broadcast message to a guest list
+export const sendBroadcastMessage =
+  (broadcastData: {
+    userId: string;
+    guestListId: string;
+    title: string;
+    body: string;
+  }) => async (dispatch: AppDispatch) => {
+    dispatch(messageSlice.actions.sendMessageStart());
+
+    try {
+      const response = await axios.post(
+        "http://gigartz.onrender.com/guest-list/broadcast-message",
+        broadcastData
+      );
+      console.log("Broadcast message sent successfully:", response.data);
+
+      // Optionally, you can dispatch a success action or notification
+      notify(dispatch, {
+        type: "general",
+        data: {
+          message: response.data.message || "Broadcast sent successfully!",
+          type: "success",
+        },
+      });
+    } catch (error: unknown) {
+      handleAxiosError(error, dispatch, messageSlice.actions.sendMessageFailure);
+      notify(dispatch, {
+        type: "general",
+        data: {
+          message: "Failed to send broadcast message. Please try again.",
+          type: "error",
+        },
+      });
+    }
+  };
 export default messageSlice.reducer;

@@ -2,26 +2,38 @@ import React, { useState } from "react";
 import { FaMoneyBillAlt } from "react-icons/fa";
 import Payment from "./Payment";
 import BaseModal from "./BaseModal";
+import { useDispatch } from "react-redux";
+import { sendTip } from "../../store/profileSlice";
 
 interface TippingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit?: (amount: number) => void;
+  artistId: string;
+  customerUid: string;
 }
 
 const TippingModal: React.FC<TippingModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  artistId,
+  customerUid,
 }) => {
   const [selectedAmount, setSelectedAmount] = useState<number | "">(100);
   const [showPayment, setShowPayment] = useState(false);
+  const dispatch = useDispatch();
 
   const handlePaymentSuccess = () => {
     setShowPayment(false);
     if (onSubmit && selectedAmount) {
       onSubmit(Number(selectedAmount));
     }
+    // Use artistId and customerUid from props
+    const tipMessage = "Thank you for your work!";
+    dispatch(
+      sendTip(artistId, customerUid, Number(selectedAmount), tipMessage)
+    );
     // Optionally show a success message
   };
 

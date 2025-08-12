@@ -401,47 +401,56 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                           Followers
                         </p>
                       </div>
-                      <div className="flex flex-col">
-  {Array.isArray(displayProfile?.genre) && displayProfile.genre.length > 0 && (
-    <div className="flex items-start flex-wrap">
-      <div className="flex gap-2 my-2 overflow-x-auto whitespace-nowrap px-1 custom-scrollbar max-w-full md:max-w-96 max-w-56 pb-1">
-        {displayProfile.genre
-          .slice(
-            0,
-            showAllTags ? displayProfile.genre.length : defaultTagCount
-          )
-          .map((genre, index) => (
-            <span
-              key={index}
-              className="text-xs px-3 py-1 border border-teal-400 rounded-full font-medium text-teal-500 shrink-0"
-            >
-              {typeof genre === "string" ? genre : genre.name}
-            </span>
-          ))}
-      </div>
+                      <div className="flex flex-row mb-1 max-w-[85%] justify-between w-full text-wrap">
+                        {Array.isArray(displayProfile?.genre) &&
+                          displayProfile.genre.length > 0 && (
+                            <div className="flex items-start flex-wrap">
+                              <div className="flex gap-2 my-2 pb-2 overflow-x-auto whitespace-nowrap px-1 custom-scrollbar max-w-[65%] md:max-w-[80%]">
+                                {displayProfile.genre
+                                  .slice(
+                                    0,
+                                    showAllTags
+                                      ? displayProfile.genre.length
+                                      : defaultTagCount
+                                  )
+                                  .map((genre, index) => (
+                                    <span
+                                      key={index}
+                                      className="text-xs px-3 py-1 border border-teal-400 rounded-full font-medium text-teal-500 shrink-0"
+                                    >
+                                      {typeof genre === "string"
+                                        ? genre
+                                        : genre.name}
+                                    </span>
+                                  ))}
+                              </div>
 
-      {displayProfile.genre.length > defaultTagCount && (
-        <button
-          className="ml-2 mt-2 text-xs text-gray-500 hover:text-teal-500 transition-colors duration-200 flex items-center focus:outline-none"
-          onClick={() => setShowAllTags((prev) => !prev)}
-          aria-expanded={showAllTags}
-        >
-          {showAllTags ? (
-            <>
-              See less <span className="ml-1">▲</span>
-            </>
-          ) : (
-            <>
-              +{displayProfile.genre.length - defaultTagCount} more{" "}
-              <span className="ml-1">▼</span>
-            </>
-          )}
-        </button>
-      )}
-    </div>
-  )}
-</div>
-
+                              {displayProfile.genre.length >
+                                defaultTagCount && (
+                                <button
+                                  className="ml-2 mt-2 text-xs text-gray-500 hover:text-teal-500 transition-colors duration-200 flex items-center focus:outline-none"
+                                  onClick={() =>
+                                    setShowAllTags((prev) => !prev)
+                                  }
+                                  aria-expanded={showAllTags}
+                                >
+                                  {showAllTags ? (
+                                    <>
+                                      See less <span className="ml-1">▲</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      +
+                                      {displayProfile.genre.length -
+                                        defaultTagCount}{" "}
+                                      more <span className="ml-1">▼</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -459,6 +468,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           isOpen={isTippingModalOpen}
           onClose={() => setIsTippingModalOpen(false)}
           onSubmit={onTip}
+          artistId={uid || ""}
+          customerUid={currentUserId || ""}
         />
         <BookingModal
           services={displayProfile?.services}

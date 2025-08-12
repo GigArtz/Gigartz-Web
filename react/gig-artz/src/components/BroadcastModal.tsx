@@ -6,8 +6,9 @@ import {
   FaTimesCircle,
   FaSearchLocation,
 } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store/store";
+import { sendBroadcastMessage } from "../../store/messageSlice";
 import BaseModal from "./BaseModal";
 
 interface BroadcastModalProps {
@@ -18,16 +19,12 @@ interface BroadcastModalProps {
     guestListName: string;
     guests: Array<{ name: string; userName?: string; emailAddress?: string }>;
   } | null;
-  onSend: (message: string, attachments?: File[]) => void;
-  loading?: boolean;
 }
 
 const BroadcastModal: React.FC<BroadcastModalProps> = ({
   isOpen,
   onClose,
   guestList,
-  onSend,
-  loading = false,
 }) => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -36,11 +33,14 @@ const BroadcastModal: React.FC<BroadcastModalProps> = ({
   const [dropdownIndex, setDropdownIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  // Import userList from Redux store
+  const dispatch = useDispatch();
   const userList = useSelector(
     (state: RootState) => state.profile.userList
   ) as { userName: string }[];
+  const userId = useSelector(
+    (state: RootState) => state.profile.user?.id || ""
+  );
+  const loading = useSelector((state: RootState) => state.messages.loading);
 
   const handleFileSelection = () => {
     if (fileInputRef.current) {
@@ -61,12 +61,17 @@ const BroadcastModal: React.FC<BroadcastModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!message.trim()) {
+    if (!message.trim() || !guestList || !userId) {
       return;
     }
-
-    onSend(message, attachments);
+    dispatch(
+      sendBroadcastMessage({
+        userId,
+        guestListId: guestList.id,
+        title: "Broadcast",
+        body: message,
+      })
+    );
     setMessage("");
     setAttachments([]);
     onClose();

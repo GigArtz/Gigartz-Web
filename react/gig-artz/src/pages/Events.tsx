@@ -19,6 +19,8 @@ import Payment from "../components/Payment";
 import EventGallery from "../components/EventGallery";
 import Header from "../components/Header";
 
+import ResaleTicketModal from "../components/ResaleTicketModal";
+
 interface ResaleTicket {
   ticketType: string;
   createdAt: {
@@ -62,12 +64,26 @@ const EventDetails = () => {
   const [resaleTicketQuantities, setResaleTicketQuantities] = useState<
     Record<string, number>
   >({});
+  // Resale Ticket Modal state
+  const [isResaleModalOpen, setIsResaleModalOpen] = useState(false);
+  const [selectedResaleId, setSelectedResaleId] = useState<string | null>(null);
   const eventData: Event[] = useSelector(
     (state: RootState) => state.events.events
   );
   const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.auth);
   const { profile } = useSelector((state: RootState) => state.profile);
+
+  // Helper to get seller info from event profile (if available)
+  const getSellerInfo = (sellerId: string) => {
+    // Try to find seller in eventData (if user info is available)
+    // This is a placeholder; adapt as needed for your user data source
+    if (sellerId === profile?.id) {
+      return { name: profile.name, email: profile.emailAddress };
+    }
+    // Could add more logic to look up seller in a user list if available
+    return undefined;
+  };
 
   // Reviews Modal
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
@@ -204,6 +220,20 @@ const EventDetails = () => {
     setIsShareVisible(true);
   };
 
+  // Show Resale Ticket Modal
+  const showResaleTicketModal = () => {
+    setIsResaleModalOpen(true);
+  };
+
+  // Handle selecting a resale ticket in the modal
+  const handleSelectResaleTicket = (resaleId: string) => {
+    setSelectedResaleId(resaleId);
+    setResaleTicketQuantities((prev) => ({
+      ...Object.fromEntries(Object.keys(prev).map((id) => [id, 0])),
+      [resaleId]: 1,
+    }));
+  };
+
   if (!event) {
     return (
       <div className="text-white flex justify-center items-center h-screen">
@@ -300,8 +330,7 @@ const EventDetails = () => {
       <div
         className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
                      bg-gray-900 px-4 transition-all duration-300 hover:scale-110 animate-pulse"
-      >
-      </div>
+      ></div>
     </div>
   );
 
@@ -521,11 +550,11 @@ const EventDetails = () => {
               </p>
               <p className="text-white font-medium transition-all duration-300 group-hover:tracking-wide">
                 {new Date(event.date).toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
+                  weekday: "short",
+                  month: "short",
                   day: "numeric",
                   year: "numeric",
-                })}
+                }) || "01/01/00"}
               </p>
             </div>
           </div>
@@ -570,7 +599,7 @@ const EventDetails = () => {
                 Time
               </p>
               <p className="text-white font-medium transition-all duration-300 group-hover:tracking-wide">
-                {event.time}
+                {event.time || "00:00"}
               </p>
             </div>
           </div>
@@ -675,92 +704,31 @@ const EventDetails = () => {
           </div>
         ))}
 
-        {/* Resale Tickets */}
+        {/* Resale Tickets Section */}
         {event.resaleTickets && event.resaleTickets.length > 0 && (
-          <>
-            <h3
-              className="text-lg font-bold mt-6 mb-2 transition-all 
-                          hover:tracking-wide hover:text-orange-300
-                          animate-in fade-in-0 slide-in-from-right-4 delay-1000"
-              style={{
-                animationDuration: "0.5s",
-                animationFillMode: "both",
-                transitionDuration: "0.3s",
-              }}
+          <div className="mt-8 flex flex-col gap-4">
+            <button
+              onClick={showResaleTicketModal}
+              className="bg-orange-500 rounded-2xl px-4 py-2 mb-4 transform transition-all duration-300 
+                      hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              Resale Tickets
-            </h3>
-            {event.resaleTickets.map((resaleTicket, index) => (
-              <div
-                key={resaleTicket.resaleId}
-                className="bg-gray-900 border border-orange-500 p-4 rounded-lg flex flex-row justify-between items-center mt-2
-                          group hover:bg-gray-800 hover:border-orange-400 hover:shadow-lg hover:shadow-orange-500/10
-                          transition-all hover:scale-[1.01] hover:translate-x-1
-                          animate-in fade-in-0 slide-in-from-right-4"
-                style={{
-                  animationDelay: `${1100 + index * 100}ms`,
-                  animationDuration: "0.5s",
-                  animationFillMode: "both",
-                  transitionDuration: "0.3s",
-                }}
-              >
-                <div className="text-left transform transition-all duration-300 group-hover:translate-x-2">
-                  <p
-                    className="text-lg font-bold capitalize transition-all duration-300 
-                              group-hover:text-orange-100 group-hover:tracking-wide"
-                  >
-                    {resaleTicket.ticketType} Ticket
-                  </p>
-                  <p className="text-gray-300 transition-all duration-300 group-hover:text-gray-200">
-                    R {resaleTicket.price}
-                  </p>
-                  <p
-                    className="text-xs text-orange-400 transition-all duration-300 
-                              group-hover:text-orange-300 group-hover:font-medium"
-                  >
-                    Resale • {resaleTicket.daysUntilEvent} days until event
-                  </p>
-                </div>
-                <div className="flex items-center mt-2 sm:mt-0 space-x-2">
-                  <button
-                    className="bg-orange-500 px-3 py-1 rounded-lg transition-all duration-200
-                              hover:bg-orange-400 hover:scale-110 active:scale-95 
-                              disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100
-                              shadow-md hover:shadow-lg"
-                    onClick={() =>
-                      handleResaleQuantityChange(resaleTicket.resaleId, -1)
-                    }
-                    disabled={
-                      resaleTicketQuantities[resaleTicket.resaleId] <= 0
-                    }
-                  >
-                    <span className="font-bold">-</span>
-                  </button>
-                  <p
-                    className="px-4 font-medium text-white min-w-[2rem] text-center
-                              transition-all duration-300 group-hover:scale-110 group-hover:text-orange-100"
-                  >
-                    {resaleTicketQuantities[resaleTicket.resaleId] || 0}
-                  </p>
-                  <button
-                    className="bg-orange-500 px-3 py-1 rounded-lg transition-all duration-200
-                              hover:bg-orange-400 hover:scale-110 active:scale-95 
-                              disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100
-                              shadow-md hover:shadow-lg"
-                    onClick={() =>
-                      handleResaleQuantityChange(resaleTicket.resaleId, 1)
-                    }
-                    disabled={
-                      resaleTicketQuantities[resaleTicket.resaleId] >= 1
-                    }
-                  >
-                    <span className="font-bold">+</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </>
+              View Resale Tickets{" "}
+              <span className="text-xs bg-teal-500/80 text-white px-2 py-0.5 rounded-full">
+                {event.resaleTickets.length}
+              </span>
+            </button>
+          </div>
         )}
+
+        {/* Resale Ticket Modal */}
+        <ResaleTicketModal
+          isOpen={isResaleModalOpen}
+          onClose={() => setIsResaleModalOpen(false)}
+          tickets={event.resaleTickets || []}
+          getSellerInfo={getSellerInfo}
+          onSelect={handleSelectResaleTicket}
+          selectedResaleId={selectedResaleId || undefined}
+        />
 
         {(totalTicketPrice > 0 || totalResaleTicketPrice > 0) && (
           <div

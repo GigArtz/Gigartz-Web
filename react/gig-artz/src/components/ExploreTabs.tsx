@@ -361,7 +361,7 @@ function ExploreTabs() {
   return (
     <div className="px-2">
       <div className="my-2">
-        <div className="relative rounded-lg border border-gray-700 bg-[#060512] dark:bg-gray-700">
+        <div className="relative rounded-lg bg-[#060512]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -376,8 +376,8 @@ function ExploreTabs() {
           >
             <input
               type="text"
-              className="w-full px-4 py-2 rounded-lg bg-[#060512] text-gray-900 dark:text-gray-100 focus:outline-none"
-              placeholder="Search... "
+              className="w-full px-4 py-2 input-field"
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

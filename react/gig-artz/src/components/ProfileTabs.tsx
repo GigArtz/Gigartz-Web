@@ -1,5 +1,5 @@
 import React, { useMemo, useState, memo, useCallback, useRef } from "react";
-import { useSelector, shallowEqual } from "react-redux";
+import { useSelector, shallowEqual, useDispatch } from "react-redux";
 import {
   FaSpinner,
   FaUserPlus,
@@ -14,7 +14,9 @@ import {
 import ScrollableEventCol from "./ScrollableEventCol";
 import ReviewCard from "./ReviewCard";
 import BaseModal from "./BaseModal";
+import { subscribeToGuestList } from "../../store/profileSlice";
 import type { RootState } from "../../store/store";
+import ProfileSectionUI from "./ProfileSectionUI";
 
 interface ProfileTabsProps {
   uid: string;
@@ -153,13 +155,20 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
     };
   }, shallowEqual);
 
+  const dispatch = useDispatch();
+
   // Handlers
-  const handleSubscribe = useCallback((guestListId: string) => {
-    console.log(`Subscribed to guest list with id: ${guestListId}`);
-    // Add to subscribed lists
-    setSubscribedLists((prev) => [...prev, guestListId]);
-    // Keep modal open to show the newly accessible guest list
-  }, []);
+  const handleSubscribe = useCallback(
+    (guestListId: string) => {
+      // Dispatch the subscribeToGuestList thunk
+      const userId = profileData.currentUserId || uid;
+      dispatch(subscribeToGuestList(userId, guestListId, true));
+      // Add to subscribed lists locally for immediate UI feedback
+      setSubscribedLists((prev) => [...prev, guestListId]);
+      // Keep modal open to show the newly accessible guest list
+    },
+    [dispatch, profileData.currentUserId, uid]
+  );
 
   const handleCloseModal = useCallback(() => {
     setIsGuestListModalOpen(false);
@@ -417,11 +426,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
   // Early return during loading to prevent unnecessary renders
   if (profileData.loading) {
     return (
-      <div className="p-4">
-        <div className="flex justify-center">
-          <FaSpinner className="text-teal-500 text-4xl animate-spin" />
-        </div>
-      </div>
+      <ProfileSectionUI />
     );
   }
 
@@ -459,10 +464,7 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
       </div>
 
       <div className="p-4">
-        {profileData.error && (
-          <p className="text-red-500">Error: {profileData.error}</p>
-        )}
-
+        
         <>
           {/* Events Tab */}
           {activeTab === "events" && (
@@ -515,8 +517,6 @@ const ProfileTabs = memo(({ uid }: ProfileTabsProps) => {
                   <div>
                     <ScrollableEventCol
                       events={getFilteredEvents()}
-                      loading={false}
-                      error={null}
                     />
                   </div>
                 ) : (

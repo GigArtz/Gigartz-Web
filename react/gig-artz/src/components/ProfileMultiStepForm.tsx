@@ -18,14 +18,11 @@ const initialState = {
   website: "",
   tiktok: "",
   city: "",
-  rating: 0,
   twitter: "",
-  acceptBookings: false,
   bio: "",
   emailAddress: "",
   linkedin: "",
   instagram: "",
-  fcmToken: "",
   name: "",
   country: "",
   userName: "",
@@ -418,49 +415,6 @@ const ProfileMultiStepForm: React.FC<ProfileMultiStepFormProps> = ({
         <ErrorMessage error={validationErrors.bio} />
       </div>
 
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="acceptBookings"
-            checked={formData.acceptBookings}
-            onChange={handleChange}
-          />
-          <span className="text-sm font-medium text-gray-300">
-            Accept Bookings
-          </span>
-        </label>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          FCM Token
-        </label>
-        <input
-          name="fcmToken"
-          value={formData.fcmToken}
-          onChange={handleChange}
-          placeholder="Firebase Cloud Messaging Token"
-          className="input-field"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Rating
-        </label>
-        <input
-          name="rating"
-          type="number"
-          min="0"
-          max="5"
-          step="0.1"
-          value={formData.rating}
-          onChange={handleChange}
-          placeholder="Your rating (0-5)"
-          className="input-field"
-        />
-      </div>
     </div>
   );
 

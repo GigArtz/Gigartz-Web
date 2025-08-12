@@ -731,6 +731,22 @@ const profileSlice = createSlice({
     logout(state) {
       Object.assign(state, initialState);
     },
+    // Guest List Subscription actions
+    subscribeGuestListStart(state) {
+      state.loading = true;
+      state.error = null;
+      state.success = null;
+    },
+    subscribeGuestListSuccess(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    subscribeGuestListFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+      state.success = null;
+    },
   },
 });
 
@@ -791,8 +807,7 @@ export const fetchDrawerUserProfile =
           response.data.userProfile
         )
       );
-      // Send success notification
-      notify("Profile loaded successfully!", "success");
+      // No notification for regular profile load
     } catch (error: unknown) {
       handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
     }
@@ -840,11 +855,7 @@ export const fetchUserProfile = (uid?: string, forceRefresh: boolean = false) =>
       userId: userId
     }));
 
-    // Only show notification if we actually fetched new data and it's a forced refresh
-    // This reduces the notification spam
-    if (forceRefresh) {
-      notify("Profile data loaded successfully!", "success");
-    }
+    // No notification for regular profile load
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
   } finally {
@@ -936,11 +947,7 @@ export const fetchAUserProfile = (uid?: string, forceRefresh: boolean = false) =
       userId: userId // Pass the userId to the action
     }));
 
-    // Only send notification for forced refreshes
-    // This greatly reduces notification spam
-    if (forceRefresh) {
-      notify("User profile loaded successfully!", "success");
-    }
+    // No notification for regular profile load
   } catch (error: unknown) {
     handleAxiosError(error, dispatch, profileSlice.actions.fetchAProfileFailure);
   } finally {
@@ -1320,17 +1327,7 @@ export const fetchVisitedUserProfile = (uid: string, forceRefresh: boolean = fal
 
     dispatch(profileSlice.actions.fetchVisitedProfileSuccess(preparedData));
 
-    // Only send a notification if this is a new visited profile
-    // If we're viewing the same profile multiple times, don't notify each time
-    if (!state.visitedProfile?.userProfile || state.visitedProfile.userProfile.id !== uid) {
-      notify(dispatch, {
-        type: "profile_fetch",
-        data: {
-          message: "Profile loaded successfully!",
-          type: "success"
-        },
-      });
-    }
+    // No notification for regular visited profile load
   } catch (error: unknown) {
     // Provide more detailed error logging
     if (process.env.NODE_ENV === 'development') {
@@ -2024,3 +2021,52 @@ export const getConversationUserData = (contactId: string, userList: UserProfile
 };
 
 export default profileSlice.reducer;
+
+// Subscribe to guest list (POST /guest-list/subscribe)
+export const subscribeToGuestList = (
+  userId: string,
+  guestListId: string,
+  subscribe: boolean = true
+) => async (dispatch: AppDispatch) => {
+  dispatch(profileSlice.actions.subscribeGuestListStart());
+  try {
+    const response = await axios.post('https://gigartz.onrender.com/guest-list/subscribe', {
+      userId,
+      guestListId,
+      subscribe,
+    });
+    dispatch(profileSlice.actions.subscribeGuestListSuccess(response.data.message || 'Subscribed successfully.'));
+    // Optionally notify user
+    console.log('Subscription response:', response.data);
+    if (response.data.success) {
+      notify(response.data.message || 'Subscribed successfully!', 'success');
+    }
+    notify(response.data.message || 'Subscribed successfully!', 'success');
+  } catch (error) {
+    handleAxiosError(error, dispatch, profileSlice.actions.subscribeGuestListFailure);
+  }
+};
+
+// Tip an artist (POST /tip)
+export const sendTip = (
+  artistId: string,
+  customerUid: string,
+  amount: number,
+  message: string
+) => async (dispatch: AppDispatch) => {
+  dispatch(profileSlice.actions.tipReceivedSuccess({ amount, from: customerUid }));
+  try {
+    const response = await axios.post('https://gigartz.onrender.com/tip', {
+      artistId,
+      customerUid,
+      amount,
+      message,
+    });
+    // Optionally notify user
+    notify(response.data.message || 'Tip sent successfully!', 'success');
+    // You may want to dispatch a success action with tipId if needed
+    console.log('Tip response:', response.data);
+  } catch (error) {
+    handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
+  }
+};

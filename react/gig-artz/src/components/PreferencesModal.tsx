@@ -109,7 +109,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
     idPrefix: string
   ) => (
     <div
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"
       role="list"
     >
       {Object.entries(categories).map(([category, options]) => (
@@ -126,7 +126,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
             className="w-full flex justify-between items-center text-white hover:text-teal-300 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400 rounded-lg p-2"
           >
             <div className="flex items-center gap-3">
-              <span className="font-medium text-base">{category}</span>
+              <span className="font-sm text-nowrap text-base">{category}</span>
               <span className="text-xs bg-teal-600 text-white px-2 py-1 rounded-full">
                 {
                   (options as string[]).filter((opt) =>
@@ -188,52 +188,50 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      maxWidth="max-w-[60%]"
-      minWidth="min-w-[80%]"
-      className="max-h-[90vh] overflow-hidden animate-fadeInModal"
+      maxWidth="max-w-[55%]"
+      minWidth="min-w-[50%]"
+      className="max-h-[80vh] overflow-hidden animate-fadeInModal"
     >
-      <div className="flex flex-col h-full max-h-[75vh]">
+      <div className="flex flex-col h-full max-h-[70vh]">
         {/* Search and Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 p-2 rounded-lg animate-fadeInUp">
+        <div className="flex flex-col sm:flex-row gap-2 mb-2 p-1 rounded animate-fadeInUp">
           <div className="flex-1">
             <input
               type="text"
               placeholder="Search categories and interests..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all duration-300 focus:scale-105"
+              className="input-field text-sm py-1 px-2"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <button
               onClick={expandAll}
-              className="px-4 py-2 text-sm bg-gray-700 hover:bg-teal-500 hover:scale-105 text-white rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 shadow-md"
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-teal-500 hover:scale-105 text-white rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 shadow"
             >
               <span className="inline-block animate-bounceX">⤵️</span> Expand
-              All
             </button>
             <button
               onClick={collapseAll}
-              className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 hover:scale-105 text-white rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 shadow-md"
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 hover:scale-105 text-white rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 shadow"
             >
               <span className="inline-block animate-bounceX">⤴️</span> Collapse
-              All
             </button>
           </div>
         </div>
 
         {/* Selected Items Summary */}
         {(selectedInterests.length > 0 || selectedLocations.length > 0) && (
-          <div className="mb-6 p-3 bg-teal-900/20 border border-teal-500/30 rounded-lg animate-fadeInUp">
-            <h4 className="text-teal-400 font-medium mb-2">
+          <div className="mb-2 p-2 bg-teal-900/20 border border-teal-500/30 rounded animate-fadeInUp">
+            <h4 className="text-teal-400 font-medium mb-1 text-sm">
               Selected ({selectedInterests.length + selectedLocations.length}{" "}
               items)
             </h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               {selectedLocations.map((loc) => (
                 <span
                   key={loc}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full shadow-md animate-popIn"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full shadow animate-popIn"
                 >
                   {loc}
                   <button
@@ -248,7 +246,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
               {selectedInterests.map((interest) => (
                 <span
                   key={interest}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-teal-600 text-white text-sm rounded-full shadow-md animate-popIn"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-600 text-white text-xs rounded-full shadow animate-popIn"
                 >
                   {interest}
                   <button
@@ -264,18 +262,18 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto space-y-8 pr-2 scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-gray-700 animate-fadeInUp">
+        <main className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-hidden animate-fadeInUp">
           {/* Location Selection */}
           <section>
-            <h3 className="text-teal-400 font-semibold mb-4 text-lg">
+            <h3 className="text-teal-400 font-semibold mb-2 text-base">
               Locations
             </h3>
-            <div className="rounded-lg p-2 animate-fadeInUp">
+            <div className="rounded p-1 animate-fadeInUp">
               <Autocomplete
                 apiKey={import.meta.env.VITE_MAPS_API_KEY}
                 onPlaceSelected={addLocation}
                 placeholder="Search for a city, venue, or location..."
-                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all duration-300 focus:scale-105"
+                className="input-field text-sm py-1 px-2"
               />
             </div>
           </section>
@@ -283,7 +281,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
           {/* Event Categories */}
           {Object.keys(filteredEventCategories).length > 0 && (
             <section>
-              <h3 className="text-teal-400 font-semibold mb-4 text-lg">
+              <h3 className="text-teal-400 font-semibold mb-2 text-base">
                 Event Categories
               </h3>
               {renderCategorySection(filteredEventCategories, "Event", "event")}
@@ -293,7 +291,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
           {/* Freelancer Categories */}
           {Object.keys(filteredFreelancerCategories).length > 0 && (
             <section>
-              <h3 className="text-teal-400 font-semibold mb-4 text-lg">
+              <h3 className="text-teal-400 font-semibold mb-2 text-base">
                 Professional Categories
               </h3>
               {renderCategorySection(
@@ -326,20 +324,20 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
         </main>
 
         {/* Footer with buttons */}
-        <footer className="flex-shrink-0 flex justify-between items-center gap-4 pt-6 border-t border-gray-700 bg-dark animate-fadeInUp">
-          <div className="text-sm text-gray-400 animate-fadeIn">
+        <footer className="flex-shrink-0 flex justify-between items-center mb-2 gap-2 pt-3 border-t border-gray-700 bg-dark animate-fadeInUp">
+          <div className="text-xs text-gray-400 animate-fadeIn">
             {selectedInterests.length + selectedLocations.length} items selected
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={clearAll}
-              className="px-6 py-3 border border-gray-500 hover:bg-red-600 hover:scale-105 rounded-lg text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 shadow-md"
+              className="px-3 py-2 border border-gray-500 hover:bg-red-600 hover:scale-105 rounded text-white text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 shadow"
             >
               <span className="inline-block animate-shake">🧹</span> Clear All
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-teal-500 hover:bg-teal-600 hover:scale-105 rounded-lg text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 shadow-md"
+              className="px-3 py-2 bg-teal-500 hover:bg-teal-600 hover:scale-105 rounded text-white text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 shadow"
             >
               <span className="inline-block animate-popIn">✅</span> Apply
               Filters
