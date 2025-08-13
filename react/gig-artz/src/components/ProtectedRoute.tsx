@@ -2,7 +2,7 @@ import React, { memo, useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { UserRole, Permission } from "../constants/authTypes";
-import Loader from "./Loader";
+//import Loader from "./Loader";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -72,14 +72,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     hasPermission,
   ]);
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-dark">
-        <Loader />
-      </div>
-    );
-  }
+  // Allow child components to handle their own loading states
+  // Pass isLoading as a prop if needed, or render children regardless
+  // Remove global loader override
 
   // Check authentication requirement
   if (authChecks.needsAuth) {

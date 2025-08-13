@@ -31,7 +31,7 @@ function Drawer() {
   const location = useLocation();
   const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { profile, loading } = useSelector((state: RootState) => state.profile);
+  const { profile, loadingProfile } = useSelector((state: RootState) => state.profile);
   const { notifications } = useSelector(
     (state: RootState) => state.notification
   );
@@ -80,7 +80,7 @@ function Drawer() {
     let userId = user?.uid;
 
     // If no active user, try to get from local storage
-    if (!userId && !loading) {
+    if (!userId && !loadingProfile) {
       const persistedUser = localStorage.getItem("authUser");
       if (persistedUser) {
         try {
@@ -95,10 +95,10 @@ function Drawer() {
     // Only fetch if we have a userId and either:
     // 1. We don't have a profile yet, or
     // 2. The profile we have doesn't match the current user
-    if (userId && (!profile || profile.id !== userId) && !loading) {
+    if (userId && (!profile || profile.id !== userId) && !loadingProfile) {
       dispatch(fetchUserProfile(userId));
     }
-  }, [user?.uid, dispatch, loading, profile]);
+  }, [user?.uid, dispatch, loadingProfile, profile]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -189,7 +189,7 @@ function Drawer() {
             >
               <FaTimesCircle className="w-6 h-6" />
             </button>
-            {loading ? (
+            {loadingProfile ? (
               <div className="animate-pulse space-y-4">
                 <div className="h-6 w-32 bg-gray-700 rounded mb-4"></div>
                 <div className="h-24 bg-gray-700 rounded mb-4"></div>
@@ -206,7 +206,7 @@ function Drawer() {
             ) : (
               <CommentForm
                 buttonText="Submit"
-                loading={loading}
+                loading={loadingProfile}
                 onSubmit={(review, rating) => {
                   handleCommentSubmit(review, rating);
                   setIsCommentModalOpen(false);
@@ -225,7 +225,7 @@ function Drawer() {
             onClick={goBack}
             aria-label="Go back"
           />
-          {loading ? (
+          {loadingProfile ? (
             <div className="h-6 w-20 bg-gray-700 rounded animate-pulse"></div>
           ) : (
             <span className="text-white text-lg font-semibold capitalize truncate max-w-[120px]">
@@ -235,7 +235,7 @@ function Drawer() {
             </span>
           )}
         </div>
-        {loading ? (
+        {loadingProfile ? (
           <div className="w-10 h-10 rounded-full border-2 border-gray-800 bg-gray-700 animate-pulse"></div>
         ) : (
           <img
@@ -259,7 +259,7 @@ function Drawer() {
         aria-label="Sidebar navigation"
       >
         {/* Profile */}
-        {loading ? (
+        {loadingProfile ? (
           <div className="p-6 border-b border-gray-700 text-center animate-pulse">
             <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full bg-gray-700 mb-2" />
             <div className="h-5 w-24 mx-auto bg-gray-700 rounded mb-1" />
@@ -293,7 +293,7 @@ function Drawer() {
 
         {/* Navigation */}
         <nav className="py-4 px-4 max-h-[70vh] overflow-y-auto hide-scrollbar">
-          {loading ? (
+          {loadingProfile ? (
             <ul className="space-y-2 animate-pulse">
               {[...Array(5)].map((_, i) => (
                 <li key={i}>
@@ -388,7 +388,7 @@ function Drawer() {
         </nav>
 
         {/* Create Button */}
-        {loading ? (
+        {loadingProfile ? (
           <div className="flex flex-row font-medium px-2 py-2 mt-4 justify-center relative">
             <div className="w-full h-11 rounded-full bg-gray-700 animate-pulse"></div>
           </div>

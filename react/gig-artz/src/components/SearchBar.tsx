@@ -16,7 +16,7 @@ export default function SearchBar() {
   
   return (
     <div>
-      <div className="relative rounded-lg border-gray-700 bg-[#060512] dark:bg-gray-700">
+      <div className="relative rounded-lg border-gray-700">
         <form onSubmit={(event) => handleSearch(event)}>
           <input
             type="text"

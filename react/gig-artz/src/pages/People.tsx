@@ -51,11 +51,8 @@ const People: React.FC = () => {
   const { uid } = useParams<{ uid: string }>(); // Extract UID from URL
   const navigate = useNavigate(); // Initialize useNavigate
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    uid: user_id,
-    loading: authLoading,
-    error,
-  } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.profile);
+  const { uid: user_id, error } = useSelector((state: RootState) => state.auth);
   //const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
@@ -69,9 +66,6 @@ const People: React.FC = () => {
   }, [dispatch]); // Removed uid from dependencies as it is not directly related to fetching all profiles
 
   const userList = useSelector((state: RootState) => state.profile);
-  const { loading: profileLoading } = useSelector(
-    (state: RootState) => state.profile
-  );
 
   const { visitedProfile } = useSelector((state: RootState) => state.profile);
 
@@ -140,10 +134,17 @@ const People: React.FC = () => {
     console.log(visitedProfile?.userProfile);
   }, [visitedProfile]);
 
-  if (authLoading || profileLoading) {
+  if (loading) {
     return <ProfileSectionUI />;
   }
-
+  
+  if (error) {
+    return (
+      <div className="main-content">
+        <p className="text-red-500 text-center">Error: {error}</p>
+      </div>
+    );
+  }
   return (
     <div className="main-content">
       <ProfileSection
