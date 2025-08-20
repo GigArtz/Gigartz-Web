@@ -149,7 +149,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         {/* Step 1: Service Selection */}
         {step === 1 && (
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-teal-500 text-sm font-medium mb-1">
               Select a Service
             </label>
             <div className="flex flex-col gap-2">
@@ -217,7 +217,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         {/* Step 2: Package Selection */}
         {step === 2 && selectedService && (
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-teal-500 text-sm font-medium mb-1">
               Select a Package
             </label>
 
@@ -277,7 +277,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="btn-primary w-44 text-sm"
+                className="btn-primary w-32  text-sm"
               >
                 ← Back
               </button>
@@ -285,7 +285,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 type="button"
                 disabled={!selectedPackage}
                 onClick={() => setStep(3)}
-                className="btn-primary w-44 text-sm disabled:opacity-50"
+                className="btn-primary w-32 text-sm disabled:opacity-50"
               >
                 Continue →
               </button>

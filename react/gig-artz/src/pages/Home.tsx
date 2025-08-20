@@ -13,7 +13,11 @@ import { FaSpinner } from "react-icons/fa";
 import LgScrollableEventRow from "../components/LgScrollableEventRow";
 import UserCard from "../components/UserCard";
 import { showToast } from "../../store/notificationSlice";
-import { fetchAllProfiles } from "../../store/profileSlice";
+import {
+  fetchAllProfiles,
+  reviewUser,
+  fetchUserReviews,
+} from "../../store/profileSlice";
 
 // Define types for Event fields
 interface TicketPrice {
@@ -88,6 +92,7 @@ const Home: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
+
   // See All navigation handlers
   const handleSeeAllEvents = (
     sectionType: "trending" | "location" | "interest" | "gigsNearYou",
@@ -202,7 +207,6 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      
       dispatch(showToast({ message: error, type: "error" }));
     }
   }, [error, dispatch]);
@@ -319,10 +323,7 @@ const Home: React.FC = () => {
                 </div>
               ) : professionals.length > 0 ? (
                 professionals.map((user) => (
-                  <div
-                    key={user.uid || user.id}
-                    className="mb-2 w-full "
-                  >
+                  <div key={user.uid || user.id} className="mb-2 w-full ">
                     <UserCard user={user} />
                   </div>
                 ))
@@ -337,7 +338,6 @@ const Home: React.FC = () => {
                 </div>
               )}
             </div>
-            
           </div>
 
           {/* Gigs near X (location) */}
@@ -359,10 +359,7 @@ const Home: React.FC = () => {
                   See All →
                 </button>
               </div>
-              <ScrollableEventRow
-                events={gigsNearYou}
-                
-              />
+              <ScrollableEventRow events={gigsNearYou} />
             </div>
           ))}
 
@@ -385,9 +382,7 @@ const Home: React.FC = () => {
                   See All →
                 </button>
               </div>
-              <ScrollableEventRow
-                events={preferenceEvents}
-              />
+              <ScrollableEventRow events={preferenceEvents} />
             </div>
           ))}
 
@@ -415,44 +410,77 @@ const Home: React.FC = () => {
           <CommentForm
             placeholder="Share your experience..."
             buttonText="Post Review"
-            onSubmit={(review) => {
-              console.log("Review submitted:", review);
-              // TODO: Hook into API/state update
+            onSubmit={(review, rating, taggedUserName) => {
+              console.log("Review submitted:", review, rating, taggedUserName);
+              let reviewedUserId: string | undefined;
+              if (taggedUserName && Array.isArray(userList)) {
+                const taggedUser = userList.find(
+                  (u) => u.userName === taggedUserName
+                );
+                if (taggedUser && taggedUser.userId) {
+                  reviewedUserId = taggedUser.userId;
+                }
+              }
+              // Fallback to current user if no tagged user
+              if (!reviewedUserId && authState?.uid) {
+                reviewedUserId = authState.uid;
+              }
+              if (reviewedUserId && authState?.uid) {
+                dispatch(
+                  reviewUser(
+                    authState.uid, // reviewerId
+                    reviewedUserId, // reviewedUserId (userId, not name)
+                    rating,
+                    review,
+                    "", // title
+                    [] // tags
+                  )
+                );
+              }
             }}
           />
 
           {/* Reviews with Ads injected */}
-          {reviews?.length > 0 ? (
-            reviews
-              .reduce((acc, review, index) => {
-                acc.push({ type: "review", data: review });
-
-                // Inject an ad after every 3 reviews (but not at the end)
-                if ((index + 1) % 3 === 0 && index + 1 < reviews?.length) {
-                  acc.push({ type: "ad", key: `ad-${index}` });
-                }
-
-                return acc;
-              }, [])
-              .map((item, idx) =>
-                item.type === "review" ? (
-                  <ReviewCard key={item.data.id} review={item.data} />
-                ) : (
-                  <AdCard
-                    key={item.key}
-                    title="Boost Your Business"
-                    description="Place your ad here to reach local audiences."
-                    ctaLabel="Advertise Now"
-                    ctaLink="/advertise"
-                    image="https://picsum.photos/seed/reviewad/400/200"
-                    badge="Sponsored"
-                    size="sm"
-                  />
-                )
-              )
-          ) : (
-            <p className="text-gray-400 italic">No reviews yet.</p>
-          )}
+          {/* Combine reviews from eventsState and profileState */}
+          {(() => {
+            const combinedReviews = [
+              ...(Array.isArray(reviews) ? reviews : []),
+              ...(Array.isArray(profileState.userReviews)
+                ? profileState.userReviews
+                : []),
+            ];
+            if (combinedReviews.length > 0) {
+              return combinedReviews
+                .reduce((acc, review, index) => {
+                  acc.push({ type: "review", data: review });
+                  if (
+                    (index + 1) % 3 === 0 &&
+                    index + 1 < combinedReviews.length
+                  ) {
+                    acc.push({ type: "ad", key: `ad-${index}` });
+                  }
+                  return acc;
+                }, [])
+                .map((item) =>
+                  item.type === "review" ? (
+                    <ReviewCard key={item.data.id} review={item.data} />
+                  ) : (
+                    <AdCard
+                      key={item.key}
+                      title="Boost Your Business"
+                      description="Place your ad here to reach local audiences."
+                      ctaLabel="Advertise Now"
+                      ctaLink="/advertise"
+                      image="https://picsum.photos/seed/reviewad/400/200"
+                      badge="Sponsored"
+                      size="sm"
+                    />
+                  )
+                );
+            } else {
+              return <p className="text-gray-400 italic">No reviews yet.</p>;
+            }
+          })()}
         </div>
       )}
 

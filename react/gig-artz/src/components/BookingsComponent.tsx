@@ -29,7 +29,7 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
   compact = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { userBookings, userBookingsRequests } = useSelector(
+  const { userBookings, userBookingsRequests, profile } = useSelector(
     (state: RootState) => state.profile
   );
 
@@ -149,15 +149,26 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
   const closeModal = () => setSelectedBooking(null);
   const handleAccept = () => {
     if (selectedBooking) {
-      // TODO: Add accept logic here
-      console.log(`Accepted booking: ${selectedBooking.title}`);
+      dispatch(
+        updateBookingStatus({
+          freelancerId: selectedBooking?.freelancerId,
+          bookingId: selectedBooking.id,
+          status: "Confirmed",
+        })
+      );
       closeModal();
     }
   };
+
   const handleDecline = () => {
     if (selectedBooking) {
-      // TODO: Add decline logic here
-      console.log(`Declined booking: ${selectedBooking.title}`);
+      dispatch(
+        updateBookingStatus({
+          freelancerId: selectedBooking.freelancerId,
+          bookingId: selectedBooking.id,
+          status: "Declined", // Or "Declined" if supported
+        })
+      );
       closeModal();
     }
   };
@@ -248,7 +259,9 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
                               d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h4z"
                             />
                           </svg>
-                          <span className="animate-fade-in text">{eventTitle}</span>
+                          <span className="animate-fade-in text">
+                            {eventTitle}
+                          </span>
                         </h4>
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 text-nowrap rounded-full transform hover:scale-105 transition-transform duration-200 animate-bounce-in">
                           {bookings.length} booking

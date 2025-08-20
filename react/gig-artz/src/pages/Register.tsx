@@ -101,12 +101,19 @@ const Register = () => {
     dispatch(
       // @ts-expect-error: Redux thunk type mismatch workaround
       registerUser({
-        email: emailAddress,
-        password,
-        userName,
+        confirmPassword: confirmPassword,
+        emailAddress: emailAddress,
+        password: password,
+        userName: userName,
+        name: name,
+        city: city,
+        fcmToken: "",
         phoneNumber: "", // Provide a value or connect to a field if needed
+        
       })
     );
+
+   
   };
 
   useEffect(() => {

@@ -1,23 +1,10 @@
-// Login thunk example: dispatch this after successful authentication
-export const loginUser = (credentials: { email: string; password: string }) => async (dispatch: AppDispatch) => {
-  try {
-    // Example: Replace with your actual login API call
-    // const response = await axios.post('/login', credentials);
-    // dispatch(loginSuccess(response.data));
-    // For demonstration, assume login is always successful:
-    notify("Successfully Logged in", "success");
-    // Optionally, dispatch a login success action here
-  } catch (error) {
-    notify("Login failed. Please check your credentials.", "error");
-    // Optionally, dispatch a login failure action here
-  }
-};
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { db } from "../src/config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import axios, { AxiosError } from "axios";
 import { AppDispatch, RootState } from "./store";
-import { notify } from "../src/helpers/notify";
+import { notify } from "../src/helpers/notify"; // Adjust the path if notify is located elsewhere
 
 /**
  * CACHE SYSTEM DOCUMENTATION
@@ -743,6 +730,22 @@ const profileSlice = createSlice({
       state.error = null;
     },
     subscribeGuestListFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+      state.success = null;
+    },
+    // Review user reducers
+    createReviewUserStart(state) {
+      state.loading = true;
+      state.error = null;
+      state.success = null;
+    },
+    createReviewUserSuccess(state, action) {
+      state.loading = false;
+      state.success = action.payload;
+      state.error = null;
+    },
+    createReviewUserFailure(state, action) {
       state.loading = false;
       state.error = action.payload;
       state.success = null;
@@ -1841,6 +1844,75 @@ export const updateBookingStatus =
         }
       }
     };
+
+// Review user thunk
+export const reviewUser = (
+  reviewerId,
+  reviewedUserId,
+  rating,
+  reviewText,
+  title,
+  tags
+) => async (dispatch) => {
+  dispatch(profileSlice.actions.createReviewUserStart());
+  try {
+    const response = await axios.post(
+      `https://gigartz.onrender.com/reviewUser/${reviewedUserId}`,
+      { reviewerId, rating, reviewText, title, tags }
+    );
+    const message = response.data?.message || "Review submitted successfully.";
+    console.log("Comment response:", message);
+    dispatch(profileSlice.actions.createReviewUserSuccess(message));
+    notify(message, "success");
+  } catch (error) {
+    let errorMessage = "Unexpected error occurred";
+    if (axios.isAxiosError(error)) {
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.request) {
+        errorMessage = "No response received from server";
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    console.error("Review submission error:", errorMessage);
+    dispatch(profileSlice.actions.createReviewUserFailure(errorMessage));
+    notify(errorMessage, "error");
+  }
+};
+
+// Fetch user reviews from backend (GET /usersReviews)
+export const fetchUserReviews = (forceRefresh = false) => async (dispatch, getState) => {
+  const state = getState().profile;
+  const cacheKey = 'userReviews';
+  const cacheTimestamp = state.userCacheTimestamps[cacheKey];
+  // Use 5 min cache duration for reviews
+  const CACHE_DURATION = 5 * 60 * 1000;
+
+  // Prevent duplicate fetches and use cache if valid
+  if (!forceRefresh && state.loading) return;
+  if (!forceRefresh && state.userReviews && state.userReviews.length > 0 && (typeof isCacheValid === 'function' ? isCacheValid(cacheTimestamp, CACHE_DURATION) : false)) return;
+
+  dispatch(profileSlice.actions.fetchProfileStart({ userId: cacheKey }));
+
+  try {
+    const response = await fetch('http://gigartz.onrender.com/usersReviews');
+    if (!response.ok) throw new Error('Failed to fetch user reviews');
+    const data = await response.json();
+    // Store reviews in state and update cache timestamp
+    dispatch({
+      type: 'profile/fetchProfileSuccess',
+      payload: {
+        userReviews: data.reviews,
+        userId: cacheKey,
+      },
+    });
+    // Update cache timestamp
+    state.userCacheTimestamps[cacheKey] = Date.now();
+  } catch (error) {
+    dispatch(profileSlice.actions.fetchProfileFailure(error.message || 'Failed to fetch user reviews'));
+  }
+};
 
 // Export actions
 export const {

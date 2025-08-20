@@ -59,8 +59,8 @@ const TippingModal: React.FC<TippingModalProps> = ({
     >
       <form onSubmit={handleTipClick} className="p-4">
         <div className="mb-4">
-          <p className="text-sm font-medium mb-2">Select an amount:</p>
-          <div className="flex gap-2 flex-wrap">
+          <p className="text-sm text-teal-500 font-medium mb-2">Select an amount:</p>
+          <div className="flex text-gray-50 gap-2 flex-wrap">
             {[10, 20, 50, 100, 200].map((amount) => (
               <button
                 key={amount}

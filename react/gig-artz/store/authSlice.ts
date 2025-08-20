@@ -12,6 +12,7 @@ import {
 import { createUser, fetchUserProfile, UserProfile } from "./profileSlice";
 import { notify } from "../src/helpers/notify";
 import { AppDispatch } from "./store";
+import { useNavigate } from "react-router-dom";
 
 // User Interface
 export interface User {
@@ -131,6 +132,9 @@ const authSlice = createSlice({
 
 // Action creators for async operations
 export const registerUser = (formData: RegistrationData) => async (dispatch: AppDispatch) => {
+  // Navigate
+  const navigate = useNavigate();
+
   dispatch(authSlice.actions.registerStart());
   try {
     console.log("Sending registration request with data:", formData);
@@ -138,11 +142,25 @@ export const registerUser = (formData: RegistrationData) => async (dispatch: App
       "https://gigartz.onrender.com/register",
       formData
     );
-    console.log("Registration response:", response.data);
-    dispatch(authSlice.actions.registerSuccess({ user: response.data.user, uid: response.data.user.uid }));
+
+    // dispatch(authSlice.actions.registerSuccess({ user: response.data.user, uid: response.data.user.uid }));
+
+
+
+    // Verification alert
+    if (response) {
+      console.log(response)
+
+      notify(`Registration successful! Please verify your email`, "success")
+
+      // Redirect
+      navigate("/");
+    }
+
 
     // Add notification for successful registration
-    notify(`Welcome to GigArtz, ${response.data.user.userName || 'user'}! Your account has been created successfully.`, "success");
+
+    //notify(`Welcome to GigArtz, ${response.data.user.userName || 'user'}! Your account has been created successfully.`, "success");
 
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

@@ -46,7 +46,9 @@ import AuthRedirect from "./components/AuthRedirect";
 import NotFound from "./components/NotFound";
 import Unauthorized from "./components/Unauthorized";
 import ScrollToTop from "./components/ScrollToTop";
-import { UserRole, Permission } from "./constants/authTypes";
+import { Permission } from "./constants/authTypes";
+import { fetchAllEvents } from "../store/eventsSlice";
+import { fetchAllProfiles } from "../store/profileSlice";
 
 // App must only use Provider, BrowserRouter, and render InnerApp as a child of BrowserRouter
 function App() {
@@ -74,13 +76,17 @@ function InnerApp({
   setNotificationsOpen: (open: boolean) => void;
 }) {
   const location = useLocation();
-  const toastState = useSelector(
-    (state: RootState) => state.notification.toast
-  );
+ 
   const dispatch = useDispatch();
+  
   useEffect(() => {
     setNotificationsOpen(false);
   }, [location, setNotificationsOpen]);
+
+    useEffect(() => {
+    dispatch(fetchAllEvents());
+    dispatch(fetchAllProfiles());
+  }, [dispatch]);
 
   return (
     <>

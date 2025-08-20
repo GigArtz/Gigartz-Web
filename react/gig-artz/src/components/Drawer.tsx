@@ -23,7 +23,7 @@ import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import Modal from "./EventFormModal";
-import { fetchUserProfile } from "../../store/profileSlice";
+import { fetchUserProfile, reviewUser } from "../../store/profileSlice";
 import CommentForm from "./CommentForm";
 
 function Drawer() {
@@ -31,10 +31,13 @@ function Drawer() {
   const location = useLocation();
   const dispatch: AppDispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { profile, loadingProfile } = useSelector((state: RootState) => state.profile);
+  const { profile, loadingProfile } = useSelector(
+    (state: RootState) => state.profile
+  );
   const { notifications } = useSelector(
     (state: RootState) => state.notification
   );
+  const userList = useSelector((state: RootState) => state.profile.userList);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalCommentOpen, setIsCommentModalOpen] = useState(false);
@@ -164,12 +167,47 @@ function Drawer() {
     setIsDrawerOpen(false);
   };
 
-  function handleCommentSubmit(review: string, rating: number) {
-    // Placeholder: You can dispatch an action or call an API here
-    // For now, just log the review and rating
-    console.log("Submitted review:", review, "Rating:", rating);
-    // Optionally, show a toast or notification to the user
-    // Example: toast.success("Review submitted!");
+  function handleCommentSubmit(
+    review: string,
+    rating: number,
+    taggedUserName?: string
+  ) {
+    console.log("handleCommentSubmit called", {
+      review,
+      rating,
+      taggedUserName,
+    });
+    if (!user?.uid) {
+      console.error("Missing user info for review submission.");
+      return;
+    }
+    let reviewedUserId: string | undefined = profile?.userId;
+    if (taggedUserName) {
+      const taggedUser = userList.find((u) => u.userName === taggedUserName);
+      if (taggedUser && taggedUser.userId) {
+        reviewedUserId = taggedUser.userId;
+      }
+    }
+    if (!reviewedUserId) {
+      console.error("Missing reviewed user ID for review submission.");
+      return;
+    }
+    console.log("Dispatching reviewUser", {
+      reviewerId: user.uid,
+      reviewedUserId,
+      rating,
+      review,
+    });
+    dispatch(
+      reviewUser(
+        user.uid, // reviewerId
+        reviewedUserId, // reviewedUserId (userId, not name)
+        rating,
+        review,
+        "", // title
+        [] // tags
+      )
+    );
   }
 
   // Responsive Drawer: improved overlay, transitions, and accessibility
@@ -207,8 +245,8 @@ function Drawer() {
               <CommentForm
                 buttonText="Submit"
                 loading={loadingProfile}
-                onSubmit={(review, rating) => {
-                  handleCommentSubmit(review, rating);
+                onSubmit={(review, rating, taggedUserName) => {
+                  handleCommentSubmit(review, rating, taggedUserName);
                   setIsCommentModalOpen(false);
                 }}
               />

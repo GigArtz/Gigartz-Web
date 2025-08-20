@@ -15,7 +15,11 @@ import Toast from "./Toast";
 interface CommentFormProps {
   placeholder?: string;
   buttonText: string;
-  onSubmit: (review: string, rating: number) => void;
+  onSubmit: (
+    review: string,
+    rating: number,
+    taggedUser?: string | null
+  ) => void;
   loading?: boolean;
 }
 
@@ -40,18 +44,14 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
     }
   };
 
- 
-  
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-     // Handle form validation
+    // Handle form validation
     if (!review.trim()) {
-      return; 
+      return;
     }
     if (rating < 1 || rating > 5) {
-      
       <Toast
         message="Please select a rating between 1 and 5."
         type="error"
@@ -61,9 +61,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, loading }) => {
 
       return;
     }
-
-    if (!review.trim()) return;
-    onSubmit(review, rating);
+    onSubmit(review, rating, taggedUser);
     setComment("");
     setRating(0);
     setTaggedUser(null);

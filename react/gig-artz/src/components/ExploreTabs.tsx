@@ -106,11 +106,13 @@ function ExploreTabs() {
         const title = event?.title?.toLowerCase() || "";
         const description = event?.description?.toLowerCase() || "";
         const category = event?.category?.toLowerCase() || "";
+        const venue = event?.venue?.toLowerCase() || "";
         const search = searchTerm.toLowerCase();
         const matchesSearch =
           title.includes(search) ||
           description.includes(search) ||
-          category.includes(search);
+          category.includes(search) ||
+          venue.includes(search);
 
         const matchesCategory =
           selectedEventCategories.length === 0 ||

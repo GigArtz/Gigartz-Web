@@ -74,6 +74,9 @@ const EventDetails = () => {
   const { uid } = useSelector((state: RootState) => state.auth);
   const { profile } = useSelector((state: RootState) => state.profile);
 
+  // Show performers dropdown state
+  const [showPerformers, setShowPerformers] = useState(false);
+
   // Helper to get seller info from event profile (if available)
   const getSellerInfo = (sellerId: string) => {
     // Try to find seller in eventData (if user info is available)
@@ -504,27 +507,90 @@ const EventDetails = () => {
               {event.title}
             </span>
           </h1>
+        </div>
+
+        <div className="flex justify-between items-center w-full">
           <button
             onClick={viewHostProfile}
-            className="group text-gray-400 flex items-center transition-all duration-300 
-                      hover:text-teal-300 hover:translate-x-1 active:scale-95"
+            className="group text-gray-400 flex items-center transition-all duration-300
+                        hover:text-teal-300 hover:translate-x-1 active:scale-95"
           >
             <FaUserAlt
-              className="w-4 h-4 text-teal-400 mr-2 transition-all duration-300 
-                                group-hover:scale-110 group-hover:rotate-3 group-hover:text-teal-300"
+              className="w-4 h-4 text-teal-400 mr-2 transition-all duration-300
+                                  group-hover:scale-110 group-hover:rotate-3 group-hover:text-teal-300"
             />
             <span className="font-medium transition-all duration-300 group-hover:tracking-wide">
               {event.hostName}
             </span>
           </button>
+
+          {/* Performers Dropdown Modal */}
+          <div className="relative inline-block">
+            <button
+              className="flex items-center gap-1 text-teal-400 hover:text-teal-300 font-medium px-2 py-0.5 rounded transition-all duration-200 text-xs border border-teal-500/30 bg-gray-900 hover:bg-gray-800"
+              onClick={() => setShowPerformers((prev) => !prev)}
+              type="button"
+              aria-haspopup="true"
+              aria-expanded={showPerformers}
+            >
+              <span>Line Up</span>
+              <span className="text-xs">&#9660;</span>
+            </button>
+            {showPerformers && (
+              <div
+                className="absolute right-0 z-10 mt-1 min-w-[8rem] bg-teal-400/40 border border-teal-500/20 rounded shadow animate-in fade-in-0 slide-in-from-top-4 duration-200"
+                style={{ animationFillMode: "both" }}
+              >
+                <ul className="py-1">
+                  {event.artistLineUp.length === 0 ? (
+                    <li className="px-3 py-1 text-gray-400 text-xs">
+                      No performers
+                    </li>
+                  ) : (
+                    event.artistLineUp.map((artist, idx) => (
+                      <li
+                        key={artist + idx}
+                        className="px-3 py-1 text-white text-xs hover:bg-teal-700/20 transition-all duration-150 cursor-pointer"
+                      >
+                        {artist}
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
+
         <div className="flex-1 transform transition-all duration-300 hover:translate-x-1">
-          <p
-            className="text-lg leading-relaxed text-gray-300 transition-all duration-300 
-                       hover:text-gray-200 hover:leading-loose"
+          <div
+            className="text leading-relaxed text-gray-300 transition-all duration-300 
+                 hover:text-gray-200 hover:leading-loose"
           >
-            {event.description}
-          </p>
+            {event.description
+              .split(/\n/)
+              .filter((line) => line.trim() !== "")
+              .map((line, idx) => {
+                const isBullet =
+                  line.trim().startsWith("*") ||
+                  line.trim().startsWith("•") ||
+                  line.trim().startsWith("-");
+                return (
+                  <div key={idx} className="mb-2">
+                    {isBullet ? (
+                      <li className="ml-4 list-disc">
+                        {line.trim().replace(/^(\*|•|-)\s*/, "")}
+                      </li>
+                    ) : (
+                      <span>
+                        {line}
+                        <br />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
         </div>
       </div>
 
@@ -618,7 +684,10 @@ const EventDetails = () => {
               <p className="text-sm text-gray-400 transition-colors duration-300 group-hover:text-gray-300">
                 Category
               </p>
-              <p className="text-white font-medium transition-all duration-300 group-hover:tracking-wide">
+              <p
+                className="text-white font-medium transition-all duration-300 group-hover:tracking-wide line-clamp-1"
+                title={event.category}
+              >
                 {event.category}
               </p>
             </div>
