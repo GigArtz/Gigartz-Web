@@ -99,7 +99,13 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             </div>
             <span className="text-xs hidden sm:block text-gray-400 px-2 py-1 rounded bg-gray-800/60">
               {review?.createdAt || review?.date
-                ? new Date(review?.createdAt || review?.date).toLocaleString()
+                ? new Date(
+                    review?.createdAt || review?.date
+                  ).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                    year: "2-digit",
+                  })
                 : ""}
             </span>
           </div>
@@ -123,7 +129,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
                 ★
               </span>
             ))}
-           
           </div>
 
           {/* Review Text */}
@@ -153,8 +158,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
               )}
             </div>
           )}
-
-          
 
           {/* Review Actions - Like, Comment, Share, etc. */}
           <div className="flex flex-row items-center gap-3 mt-4">
@@ -203,11 +206,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
       )}
     </div>
   );
-}
+};
 
 // Card animation styles
-if (typeof document !== 'undefined' && !document.head.querySelector('style[data-card-animate]')) {
-  const style = document.createElement('style');
+if (
+  typeof document !== "undefined" &&
+  !document.head.querySelector("style[data-card-animate]")
+) {
+  const style = document.createElement("style");
   style.innerHTML = `
     .card-animate {
       opacity: 0;
@@ -225,7 +231,7 @@ if (typeof document !== 'undefined' && !document.head.querySelector('style[data-
       box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
     }
   `;
-  style.setAttribute('data-card-animate', 'true');
+  style.setAttribute("data-card-animate", "true");
   document.head.appendChild(style);
 }
 
