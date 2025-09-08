@@ -1,3 +1,4 @@
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { db } from "../src/config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -757,7 +758,7 @@ const profileSlice = createSlice({
     },
     createFetchReviewUserSuccess(state, action) {
       state.loading = false;
-      state.userReviews = [...(action.payload.reviews || [])]; // Ensure a new array is created
+      state.userReviews = action.payload.reviews || [];
       state.error = null;
     },
     createFetchReviewUserFailure(state, action) {
