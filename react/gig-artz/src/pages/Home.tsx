@@ -162,6 +162,13 @@ const Home: React.FC = () => {
     }
   }, [dispatch, currentUid, events.length, reviews.length, userList]);
 
+  // Ensure user profiles are fetched when the component mounts
+  useEffect(() => {
+    if (!userList || userList.length === 0) {
+      dispatch(fetchAllProfiles());
+    }
+  }, [dispatch, userList]);
+
   // Infinite scroll for events tab
   useEffect(() => {
     if (selectedTab !== "events") return;
@@ -220,6 +227,10 @@ const Home: React.FC = () => {
       dispatch(showToast({ message: success, type: "success" }));
     }
   }, [success, dispatch]);
+
+  useEffect(() => {
+    console.log("SuggestedForYou component rendered");
+  }, []);
 
   return (
     <div className="main-content">

@@ -20,7 +20,25 @@ export default function SuggestedForYou() {
   const isLoading = loading === "pending";
   const isError = error !== null;
   const isEmpty = cachedUserList?.length === 0;
-  const isSuccess = !isLoading && !isError && !isEmpty;
+  const isSuccess = !isLoading && !isEmpty; // Allow rendering even if there is an error
+
+  useEffect(() => {
+    console.log("Redux userList:", userList);
+    console.log(
+      "isSuccess:",
+      isSuccess,
+      "isLoading:",
+      isLoading,
+      "isError:",
+      isError
+    );
+  }, [userList, isSuccess, isLoading, isError]);
+
+  useEffect(() => {
+    console.log("Cached User List:", cachedUserList);
+    console.log("Suggested Users:", suggestedUsers);
+    console.log("isSuccess State:", isSuccess);
+  }, [cachedUserList, suggestedUsers, isSuccess]);
 
   if (!isSuccess) {
     return null; // or some fallback UI
