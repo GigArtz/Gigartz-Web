@@ -5,9 +5,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProfiles } from "../../store/profileSlice";
 import { RootState, AppDispatch } from "../../store/store";
 import ReviewActions from "./ReviewActions";
+import { FaAt, FaLocationArrow, FaMapMarked } from "react-icons/fa";
 
+// Update User interface to include uid and userId
 interface User {
   uid?: string;
+  userId?: string;
   name?: string;
   userName?: string;
   profilePicUrl?: string;
@@ -24,6 +27,15 @@ export interface Review {
   imageUrls?: string[]; // Multiple images
   videoUrl?: string; // Single video
   userId?: string; // Add userId for compatibility
+  // Additional fields for compatibility with different API responses
+  reviewerId?: string;
+  reviewedUserId?: string;
+  image?: string; // Single image field
+  video?: string; // Alternative video field
+  title?: string;
+  tags?: string[];
+  taggedUsers?: string[]; // Array of user IDs for tagged users
+  eventId?: string; // ID of the reviewed event
 }
 
 interface ReviewCardProps {
@@ -44,24 +56,39 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   useEffect(() => {
     // Only fetch once and avoid during errors to prevent infinite loops
     if (!hasFetchedRef.current && !error?.includes("fetch_error")) {
-      // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
       dispatch(fetchAllProfiles());
       hasFetchedRef.current = true;
     }
   }, [dispatch, error]);
 
   const handleUserClick = () => {
-    if (review.user.uid) {
-      navigate(`/people/${review.user.uid}`);
+    if (review.user?.uid || review.userId || review.reviewerId) {
+      navigate(
+        `/people/${review.user?.uid || review.userId || review.reviewerId}`
+      );
     }
   };
 
-  // Find user reviewing
-  const findUser = (uid: string) => {
-    return userList?.find((user) => user?.id === uid);
+  // Refactor findUser to avoid using 'any' and ensure compatibility with UserProfile
+  const findUser = (uid: string): User | null => {
+    if (!uid) return null;
+    return (
+      userList?.find((user: User) => {
+        return user.uid === uid || user.userId === uid || user.id === uid; // Added user.id for matching
+      }) || null
+    );
   };
 
-  const user = findUser(review?.user?.uid || review?.userId);
+  // Look up user using various possible IDs from the review
+  const author = findUser(
+    review?.user?.uid || review?.userId || review?.reviewerId
+  );
+
+  // Add tagged users and reviewed user display
+  const taggedUsers = Array.isArray(review?.taggedUsers)
+    ? review.taggedUsers.map((taggedUserId) => findUser(taggedUserId))
+    : [];
+  const reviewedUser = findUser(review.reviewedUserId);
 
   return (
     <div
@@ -78,7 +105,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
               {/* User Avatar */}
               <div className="relative">
                 <img
-                  src={user?.profilePicUrl || "/avatar.png"}
+                  src={author?.profilePicUrl || "/avatar.png"}
                   alt="User Avatar"
                   className="object-cover w-10 h-10 min:w-10 min:h-10 max:w-10 max:h-10 rounded-full border-2 border-teal-400 cursor-pointer transition-transform duration-200 group-hover:scale-105 group-hover:border-teal-300 shadow-md"
                   onClick={handleUserClick}
@@ -90,11 +117,26 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
               </div>
               <div className="cursor-pointer" onClick={handleUserClick}>
                 <h3 className="text-base font-bold text-white leading-tight hover:underline">
-                  {user?.name || "Unknown User"}
+                  {author?.name || "Unknown User"}
                 </h3>
                 <p className="text-xs text-gray-400">
-                  {user?.userName ? `@${user.userName}` : "username"}
+                  {author?.userName ? `@${author.userName}` : "username"}
                 </p>
+
+                {/* Link to reviewed event */}
+                {review.eventId && (
+                  <div className="items-center mt-1">
+                    <span
+                      className="text-xs text-teal-400 bg-gray-800 px-2 py-1 rounded-full cursor-pointer hover:underline"
+                      onClick={() =>
+                        navigate(`/events/?eventId=${review.eventId}`)
+                      }
+                    >
+                      <FaMapMarked className="inline mr-1 mb-0.5" />
+                      View Event
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <span className="text-xs hidden sm:block text-gray-400 px-2 py-1 rounded bg-gray-800/60">
@@ -111,7 +153,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
           </div>
 
           {/* Star Rating */}
-          <div className="flex items-center mt-1 gap-1" aria-label="Rating">
+          <div className="flex items-center mt-2 gap-1" aria-label="Rating">
             {Array.from({ length: 5 }, (_, index) => (
               <span
                 key={index}
@@ -131,39 +173,121 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             ))}
           </div>
 
-          {/* Review Text */}
-          <p className="text-[15px] text-gray-200 mt-2 leading-relaxed">
-            {review?.text || review?.reviewText || ""}
-          </p>
+          <div>
+            {/* Review Text */}
+            <p className="text-[15px] text-gray-200 mt-2 leading-relaxed">
+              {review?.text || review?.reviewText || ""}
+            </p>
+          </div>
 
           {/* Images and/or Video Section */}
-          {(review.imageUrls?.length || review?.videoUrl) && (
-            <div className="mt-4 w-full flex flex-col gap-2">
-              {/* Show all images using EventGallery if images exist */}
-              {review.imageUrls?.length > 0 && (
-                <div className="rounded-lg overflow-hidden border border-gray-800 shadow-sm">
-                  <EventGallery images={review?.imageUrls} />
-                </div>
-              )}
-              {/* Show video if present */}
-              {review?.videoUrl && (
-                <div className="rounded-lg overflow-hidden border border-gray-800 shadow-sm">
-                  <video
-                    src={review?.videoUrl}
-                    controls
-                    className="w-full max-h-64 object-cover rounded-md duration-200 delay-150 ease-in-out hover:-translate-y-1 hover:scale-95"
-                    style={{ aspectRatio: "16/9" }}
-                  />
-                </div>
-              )}
+          {(review.imageUrls?.length > 0 ||
+            review.image ||
+            review.videoUrl) && (
+            <div className="mt-4 w-full">
+              {(() => {
+                const images =
+                  review.imageUrls?.length > 0
+                    ? review.imageUrls
+                    : review.image
+                    ? [review.image]
+                    : [];
+
+                const hasVideo = !!review.videoUrl;
+                const totalMedia = images.length + (hasVideo ? 1 : 0);
+
+                // === Single media item: fullscreen layout ===
+                if (totalMedia === 1) {
+                  return (
+                    <div className="rounded-lg overflow-hidden shadow-sm">
+                      {images.length === 1 ? (
+                        <div style={{ height: "300px" }}>
+                          <EventGallery images={images} />
+                        </div>
+                      ) : (
+                        <video
+                          src={review.videoUrl}
+                          controls
+                          className="w-full object-cover rounded-md duration-200 delay-150 ease-in-out hover:-translate-y-1 hover:scale-95"
+                          style={{ aspectRatio: "16/9", height: "300px" }}
+                        />
+                      )}
+                    </div>
+                  );
+                }
+
+                // === Multiple media items: grid layout ===
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg overflow-hidden">
+                    {/* Images via EventGallery */}
+                    <div
+                      className="w-full object-cover rounded-md duration-200 delay-150 ease-in-out hover:-translate-y-1 hover:scale-95"
+                      style={{ height: "300px" }}
+                    >
+                      <EventGallery images={images} />
+                    </div>
+
+                    {/* Video section */}
+                    {hasVideo && (
+                      <div className="w-full rounded-lg overflow-hidden shadow-sm">
+                        <video
+                          src={review.videoUrl}
+                          controls
+                          className="w-full object-cover rounded-md duration-200 delay-150 ease-in-out hover:-translate-y-1 hover:scale-95"
+                          style={{ aspectRatio: "16/9", height: "300px" }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+          {/* Display reviewed user */}
+          {reviewedUser && (
+            <div className="flex items-center mt-1">
+              <p
+                className="text-xs text-teal-400 bg-gray-800 px-2 py-1 rounded-full cursor-pointer hover:underline"
+                onClick={() =>
+                  navigate(
+                    `/people/${reviewedUser?.uid || reviewedUser?.userId}`
+                  )
+                }
+              >
+                <FaAt className="inline mr-1 mb-0.5" />
+                {reviewedUser?.name || reviewedUser?.userName || "Unknown User"}
+              </p>
+            </div>
+          )}
+
+          {/* Display tagged users */}
+          {taggedUsers?.length > 0 && (
+            <div className="mt-4">
+              <div className="flex flex-wrap gap-2 mt-1">
+                <p className="text-sm text-gray-400">with:</p>
+                {taggedUsers.map((user, index) => (
+                  <span
+                    key={index}
+                    className="text-xs text-teal-400 bg-gray-800 px-2 py-1 rounded-full cursor-pointer hover:underline"
+                    onClick={() =>
+                      navigate(`/people/${user?.uid || user?.userId}`)
+                    }
+                  >
+                    <FaAt className="inline mr-1 mb-0.5" />
+                    {user?.name || user?.userName || "Unknown User"}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Review Actions - Like, Comment, Share, etc. */}
-          <div className="flex flex-row items-center gap-3 mt-4">
+          <div className="flex flex-row items-center gap-3 mt-1.5">
             <ReviewActions
-              reviewId={review.id}
-              userId={review.user?.uid || review.userId || ""}
+              review={review} // Pass the entire review object
+              author={author} // Pass the author details
+              taggedUsers={taggedUsers} // Pass tagged users
+              reviewedUser={reviewedUser} // Pass reviewed user
             />
           </div>
         </div>
@@ -197,11 +321,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
             <div className="h-36 bg-gray-800/50 rounded-lg w-full border border-gray-700"></div>
           </div>
 
-          <div className="flex flex-row items-center gap-4 mt-6">
-            <div className="h-7 w-14 bg-gray-700 rounded-md"></div>
-            <div className="h-7 w-14 bg-gray-700 rounded-md"></div>
-            <div className="h-7 w-14 bg-gray-700 rounded-md"></div>
-          </div>
+          <ReviewActions
+            review={review} // Pass the entire review object
+            author={author} // Pass the author details
+            taggedUsers={taggedUsers} // Pass tagged users
+            reviewedUser={reviewedUser} // Pass reviewed user
+          />
         </div>
       )}
     </div>

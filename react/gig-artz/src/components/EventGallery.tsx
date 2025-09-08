@@ -10,6 +10,7 @@ import {
 
 interface EventGalleryProps {
   images: string[];
+  videoUrl?: string; // Add video support
 }
 
 // Portal Modal Component for better DOM isolation
@@ -84,7 +85,7 @@ const GalleryModal: React.FC<{
   );
 };
 
-const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
+const EventGallery: React.FC<EventGalleryProps> = ({ images, videoUrl }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -205,7 +206,7 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
   }, []);
 
   const getGridClass = () => {
-    const count = images.length;
+    const count = images.length + (videoUrl ? 1 : 0);
     if (count === 1) return "grid-cols-1";
     if (count === 2) return "grid-cols-1 md:grid-cols-2";
     if (count === 3) return "grid-cols-1 md:grid-cols-3";
@@ -214,7 +215,7 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
   };
 
   return (
-    <div className="mt-6">
+    <div className="">
       {/* Enhanced Gallery Grid */}
       <div className={`grid ${getGridClass()} gap-4 auto-rows-fr`}>
         {images.map((img, index) => (
@@ -301,6 +302,16 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
             </div>
           </div>
         ))}
+
+        {videoUrl && (
+          <div className="group relative overflow-hidden rounded-xl cursor-pointer transform transition-all ease-out hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/20 active:scale-[0.98] animate-in fade-in-0 slide-in-from-bottom-2">
+            <video
+              src={videoUrl}
+              controls
+              className="w-full h-64 md:h-80 object-cover rounded-xl transition-all duration-500 ease-out group-hover:scale-110 group-hover:brightness-110"
+            />
+          </div>
+        )}
       </div>
 
       {/* Enhanced Modal/Lightbox using React Portal */}
@@ -397,8 +408,9 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
           <button
             className={`text-white hover:text-teal-400 rounded-full transition-all duration-200
                         hover:bg-white/10 hover:scale-110 active:scale-95 z-10
-                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-                        ${isFullscreen ? "p-4 hover:shadow-lg" : "p-3"}`}
+                        disabled:opacity-50 disabled:cursor-not-allowed ${
+                          isFullscreen ? "p-4 hover:shadow-lg" : "p-3"
+                        }`}
             onClick={showNext}
             disabled={images.length <= 1}
             aria-label="Next image"
@@ -407,39 +419,37 @@ const EventGallery: React.FC<EventGalleryProps> = ({ images }) => {
           </button>
         </div>
 
-        {/* Thumbnail Strip */}
-        {images.length > 1 && (
-          <div
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent
+        {/* Bottom Thumbnail Bar */}
+        <div
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent
                          transition-all duration-300
                          ${isFullscreen ? "p-2 md:p-4" : "p-4 md:p-6"}`}
-          >
-            <div className="flex justify-center space-x-2 overflow-x-auto pb-2">
-              {images.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentIndex(index);
-                  }}
-                  className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden
+        >
+          <div className="flex justify-center space-x-2 overflow-x-auto pb-2">
+            {images.map((img, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden
                                border-2 transition-all duration-200 hover:scale-105
                                ${
                                  index === currentIndex
                                    ? "border-teal-400 shadow-lg shadow-teal-400/50"
                                    : "border-white/30 hover:border-white/60"
                                }`}
-                >
-                  <img
-                    src={img}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+              >
+                <img
+                  src={img}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </GalleryModal>
     </div>
   );

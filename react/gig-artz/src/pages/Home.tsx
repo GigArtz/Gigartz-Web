@@ -152,6 +152,10 @@ const Home: React.FC = () => {
     if (currentUid && reviews.length === 0) {
       dispatch(fetchAllReviews(currentUid));
     }
+    // Fetch user reviews
+    if (currentUid) {
+      dispatch(fetchUserReviews());
+    }
     // Fetch all profiles for Popular Professionals section
     if (currentUid && (!userList || userList.length === 0)) {
       dispatch(fetchAllProfiles());
@@ -406,56 +410,71 @@ const Home: React.FC = () => {
       )}
       {selectedTab === "reviews" && (
         <div className="flex flex-col gap-4 p-4">
-          {/* Review Form */}
-          <CommentForm
-            placeholder="Share your experience..."
-            buttonText="Post Review"
-            onSubmit={(review, rating, taggedUserName) => {
-              console.log("Review submitted:", review, rating, taggedUserName);
-              let reviewedUserId: string | undefined;
-              if (taggedUserName && Array.isArray(userList)) {
-                const taggedUser = userList.find(
-                  (u) => u.userName === taggedUserName
-                );
-                if (taggedUser && taggedUser.userId) {
-                  reviewedUserId = taggedUser.userId;
-                }
-              }
-              // Fallback to current user if no tagged user
-              if (!reviewedUserId && authState?.uid) {
-                reviewedUserId = authState.uid;
-              }
-              if (reviewedUserId && authState?.uid) {
-                dispatch(
-                  reviewUser(
-                    authState.uid, // reviewerId
-                    reviewedUserId, // reviewedUserId (userId, not name)
-                    rating,
-                    review,
-                    "", // title
-                    [] // tags
-                  )
-                );
-              }
-            }}
-          />
-
           {/* Reviews with Ads injected */}
           {/* Combine reviews from eventsState and profileState */}
           {(() => {
+            // Make sure both arrays exist and combine them
+            const eventReviews = Array.isArray(reviews) ? reviews : [];
+            const userReviews = Array.isArray(profileState.userReviews)
+              ? profileState.userReviews
+              : [];
+
+            // Transform reviews to a consistent format for ReviewCard
+            const transformReview = (review) => {
+              // Create a normalized review object with all possible fields
+              return {
+                id: review.id || review.reviewId || `review-${Math.random()}`,
+                text: review.reviewText || review.review || review.text || "",
+                reviewText:
+                  review.reviewText || review.review || review.text || "",
+                createdAt: review.date || new Date().toISOString(),
+                date: review.date || new Date().toISOString(),
+                user: {
+                  uid: review.reviewerId || review.userId || "",
+                  name: review.reviewerName || "",
+                  userName: review.reviewerUserName || "",
+                  profilePicUrl: review.reviewerProfilePic || "",
+                },
+                rating: review.rating || 0,
+                imageUrls: review.imageUrls || [],
+                image: review.image || null,
+                videoUrl: review.videoUrl || review.video || null,
+                video: review.video || null,
+                userId: review.reviewerId || review.userId || "",
+                reviewerId: review.reviewerId || review.userId || "",
+                reviewedUserId: review.reviewedUserId || "",
+                title: review.title || "",
+                tags: review.tags || [],
+                comments: review.comments || [],
+                likedBy: review.likedBy || [], // Add likedBy field
+                // Preserve original fields
+                ...review,
+              };
+            };
+
+            const transformedEventReviews = eventReviews.map(transformReview);
+            const transformedUserReviews = userReviews.map(transformReview);
+
             const combinedReviews = [
-              ...(Array.isArray(reviews) ? reviews : []),
-              ...(Array.isArray(profileState.userReviews)
-                ? profileState.userReviews
-                : []),
+              ...transformedEventReviews,
+              ...transformedUserReviews,
             ];
+
             if (combinedReviews.length > 0) {
-              return combinedReviews
+              // Sort reviews by timestamp (newest first) if they have timestamps
+              const sortedReviews = [...combinedReviews].sort((a, b) => {
+                const timeA = a.timestamp?.seconds || 0;
+                const timeB = b.timestamp?.seconds || 0;
+                return timeB - timeA;
+              });
+
+              return sortedReviews
                 .reduce((acc, review, index) => {
                   acc.push({ type: "review", data: review });
+                  // Insert an ad after every 3 reviews
                   if (
                     (index + 1) % 3 === 0 &&
-                    index + 1 < combinedReviews.length
+                    index + 1 < sortedReviews.length
                   ) {
                     acc.push({ type: "ad", key: `ad-${index}` });
                   }
@@ -463,7 +482,10 @@ const Home: React.FC = () => {
                 }, [])
                 .map((item) =>
                   item.type === "review" ? (
-                    <ReviewCard key={item.data.id} review={item.data} />
+                    <ReviewCard
+                      key={item.data.id || `review-${Math.random()}`}
+                      review={item.data}
+                    />
                   ) : (
                     <AdCard
                       key={item.key}
@@ -477,6 +499,13 @@ const Home: React.FC = () => {
                     />
                   )
                 );
+            } else if (loading || profileState.loading) {
+              return (
+                <div className="flex justify-center items-center py-4">
+                  <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+                  <span className="text-gray-400 ml-2">Loading reviews...</span>
+                </div>
+              );
             } else {
               return <p className="text-gray-400 italic">No reviews yet.</p>;
             }

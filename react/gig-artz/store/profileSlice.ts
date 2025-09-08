@@ -1,4 +1,3 @@
-
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { db } from "../src/config/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -746,6 +745,22 @@ const profileSlice = createSlice({
       state.error = null;
     },
     createReviewUserFailure(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+      state.success = null;
+    },
+    // Fetch user reviews reducers
+    createFetchReviewUserStart(state) {
+      state.loading = true;
+      state.error = null;
+      state.success = null;
+    },
+    createFetchReviewUserSuccess(state, action) {
+      state.loading = false;
+      state.userReviews = [...(action.payload.reviews || [])]; // Ensure a new array is created
+      state.error = null;
+    },
+    createFetchReviewUserFailure(state, action) {
       state.loading = false;
       state.error = action.payload;
       state.success = null;
@@ -1852,17 +1867,23 @@ export const reviewUser = (
   rating,
   reviewText,
   title,
-  tags
+  tags,
+  image = "",
+  video = ""
 ) => async (dispatch) => {
   dispatch(profileSlice.actions.createReviewUserStart());
   try {
     const response = await axios.post(
       `https://gigartz.onrender.com/reviewUser/${reviewedUserId}`,
-      { reviewerId, rating, reviewText, title, tags }
+      { reviewerId, rating, reviewText, title, tags, image, video }
     );
     const message = response.data?.message || "Review submitted successfully.";
-    console.log("Comment response:", message);
+    console.log("Review response:", message);
     dispatch(profileSlice.actions.createReviewUserSuccess(message));
+
+    // Refresh the user reviews list after creating a new review
+    dispatch(fetchUserReviews(true));
+
     notify(message, "success");
   } catch (error) {
     let errorMessage = "Unexpected error occurred";
@@ -1893,24 +1914,60 @@ export const fetchUserReviews = (forceRefresh = false) => async (dispatch, getSt
   if (!forceRefresh && state.loading) return;
   if (!forceRefresh && state.userReviews && state.userReviews.length > 0 && (typeof isCacheValid === 'function' ? isCacheValid(cacheTimestamp, CACHE_DURATION) : false)) return;
 
-  dispatch(profileSlice.actions.fetchProfileStart({ userId: cacheKey }));
+  dispatch(profileSlice.actions.createFetchReviewUserStart());
 
   try {
-    const response = await fetch('http://gigartz.onrender.com/usersReviews');
-    if (!response.ok) throw new Error('Failed to fetch user reviews');
-    const data = await response.json();
-    // Store reviews in state and update cache timestamp
-    dispatch({
-      type: 'profile/fetchProfileSuccess',
-      payload: {
-        userReviews: data.reviews,
-        userId: cacheKey,
-      },
-    });
+    console.log("Fetching user reviews");
+    const response = await axios.get(`https://gigartz.onrender.com/usersReviews`);
+    console.log("User reviews response:", response.data);
+
+    dispatch(profileSlice.actions.createFetchReviewUserSuccess(response.data));
+
     // Update cache timestamp
-    state.userCacheTimestamps[cacheKey] = Date.now();
+    if (getState) {
+      const newState = getState().profile;
+      if (newState.userCacheTimestamps) {
+        newState.userCacheTimestamps[cacheKey] = Date.now();
+      }
+    }
   } catch (error) {
-    dispatch(profileSlice.actions.fetchProfileFailure(error.message || 'Failed to fetch user reviews'));
+    const errorMessage = "Failed to fetch user reviews";
+    console.error("Error fetching user reviews:", error);
+
+    if (axios.isAxiosError(error)) {
+      const axiosError = error;
+      if (axiosError.response) {
+        // The request was made and the server responded with an error
+        console.error("Response error:", axiosError.response.data);
+        dispatch(
+          profileSlice.actions.createFetchReviewUserFailure(
+            typeof axiosError.response.data === 'object' &&
+              axiosError.response.data !== null &&
+              'error' in axiosError.response.data
+              ? String(axiosError.response.data.error)
+              : errorMessage
+          )
+        );
+      } else if (axiosError.request) {
+        // The request was made, but no response was received
+        console.error("Request error:", axiosError.request);
+        dispatch(
+          profileSlice.actions.createFetchReviewUserFailure(
+            "No response received from server"
+          )
+        );
+      } else {
+        // Something else happened during the setup of the request
+        console.error("Error setting up request:", axiosError.message);
+        dispatch(profileSlice.actions.createFetchReviewUserFailure(axiosError.message));
+      }
+    } else {
+      // Handle non-Axios errors
+      console.error("Unexpected error fetching user reviews:", error);
+      dispatch(
+        profileSlice.actions.createFetchReviewUserFailure("Unexpected error occurred")
+      );
+    }
   }
 };
 
@@ -1929,6 +1986,12 @@ export const {
   updateBookingStatusFailure,
   startFetchingUser,
   stopFetchingUser,
+  createReviewUserStart,
+  createReviewUserSuccess,
+  createReviewUserFailure,
+  createFetchReviewUserStart,
+  createFetchReviewUserSuccess,
+  createFetchReviewUserFailure,
 } = profileSlice.actions;
 
 // Helper function to check if visited profile arrays are inconsistent

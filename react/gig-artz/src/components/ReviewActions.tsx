@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch } from "../../store/store";
 import {
   likeReview,
@@ -20,29 +20,41 @@ import {
 import ReportModal from "./ReportModal";
 
 interface ReviewActionsProps {
-  reviewId: string;
-  userId: string;
+  review: Review; // Full review object
+  author: User | null; // Author details
+  taggedUsers: User[]; // Tagged users
+  reviewedUser: User | null; // Reviewed user
 }
 
-const ReviewActions: React.FC<ReviewActionsProps> = ({ reviewId, userId }) => {
+const ReviewActions: React.FC<ReviewActionsProps> = ({
+  review,
+  author,
+  taggedUsers,
+  reviewedUser,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
+  const uid = useSelector((state: RootState) => state.auth.uid); // Get current user's uid
   const [comment, setComment] = useState("");
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  const isLikedByUser = review.likedBy?.includes(uid);
+
   const handleLike = () => {
-    dispatch(likeReview(reviewId, userId));
+    dispatch(likeReview(review.id, author?.uid || ""));
   };
   const handleRepost = () => {
-    dispatch(repostReview(reviewId, userId));
+    dispatch(repostReview(review.id, author?.uid || ""));
   };
   const handleSave = () => {
-    dispatch(saveReview(reviewId, userId));
+    dispatch(saveReview(review.id, author?.uid || ""));
   };
   const handleComment = () => {
     if (comment.trim()) {
-      dispatch(commentOnReview(reviewId, { userId, comment }));
+      dispatch(
+        commentOnReview(review.id, { userId: author?.uid || "", comment })
+      );
       setComment("");
       setShowCommentBox(false);
     }
@@ -69,7 +81,13 @@ const ReviewActions: React.FC<ReviewActionsProps> = ({ reviewId, userId }) => {
   ) => {
     setIsReportModalOpen(false);
     // Dispatch reportReview action
-    dispatch(reportReview(reviewId, { userId, reason, additionalDetails }));
+    dispatch(
+      reportReview(review.id, {
+        userId: author?.uid || "",
+        reason,
+        additionalDetails,
+      })
+    );
   };
 
   return (
@@ -82,14 +100,19 @@ const ReviewActions: React.FC<ReviewActionsProps> = ({ reviewId, userId }) => {
           title="Comment"
         >
           <FaComment className="mr-1 w-3 h-3 md:w-4 md:h-4" />
+          <span>{review?.commentCount || 0}</span>
         </button>
+
         {/* Like Button */}
         <button
           onClick={handleLike}
-          className="flex items-center text-gray-500 hover:text-red-400 transition-colors"
+          className={`flex items-center text-gray-500 hover:text-red-400 transition-colors ${
+            isLikedByUser ? "text-red-400" : ""
+          }`}
           title="Like"
         >
           <FaHeart className="mr-1 w-3 h-3 md:w-4 md:h-4" />
+          <span>{review.likeCount || 0}</span>
         </button>
         {/* Repost Button */}
         <button
@@ -98,6 +121,7 @@ const ReviewActions: React.FC<ReviewActionsProps> = ({ reviewId, userId }) => {
           title="Repost"
         >
           <FaRetweet className="mr-1 w-4 h-4 md:w-5 md:h-5" />
+          <span>{review.repostCount || 0}</span>
         </button>
         {/* Share Button */}
         <button
@@ -156,32 +180,53 @@ const ReviewActions: React.FC<ReviewActionsProps> = ({ reviewId, userId }) => {
       <div className="flex flex-col gap-2 mt-2">
         {/* Comment Box */}
         {showCommentBox && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleComment();
-            }}
-            className="w-full py-2"
-          >
-            <div className="flex flex-col input-field border border-gray-800 bg-dark rounded-lg shadow-md p-4">
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="w-full bg-dark text-white rounded resize-none focus:outline-none"
-                rows={2}
-                required
-              />
-              <div className="flex justify-end items-center mt-2 border-t pt-2 border-gray-600">
-                <button
-                  type="submit"
-                  className="btn-primary rounded-3xl transition w-20 flex items-center justify-center font-bold"
-                >
-                  Post
-                </button>
+          <>
+            {/* Display Existing comments here if needed */}
+
+            {review?.comments.length === 0 && (
+              <p className="text-sm text-gray-500">No comments yet.</p>
+            )}
+
+            {review?.comments.length > 0 && (
+              <div className="flex flex-col space-y-2">
+                {review.comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="border-b border-gray-600 pb-2"
+                  >
+                    <p className="text-sm text-gray-300">{comment.text}</p>
+                  </div>
+                ))}
               </div>
-            </div>
-          </form>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleComment();
+              }}
+              className="w-full py-2"
+            >
+              <div className="flex flex-col input-field border border-gray-800 bg-dark rounded-lg shadow-md p-4">
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="w-full bg-dark text-white rounded resize-none focus:outline-none"
+                  rows={2}
+                  required
+                />
+                <div className="flex justify-end items-center mt-2 border-t pt-2 border-gray-600">
+                  <button
+                    type="submit"
+                    className="btn-primary rounded-3xl transition w-20 flex items-center justify-center font-bold"
+                  >
+                    Post
+                  </button>
+                </div>
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>

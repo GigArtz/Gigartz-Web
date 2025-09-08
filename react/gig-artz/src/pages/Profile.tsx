@@ -79,13 +79,7 @@ export default function Profile() {
     // setLoading(false);
   };
 
-  if (!profile) {
-    return (
-      <div className="main-content">
-        <p className="text-center">Please Login</p>
-      </div>
-    );
-  }
+  
   return (
     <div className="main-content">
       <div className="">

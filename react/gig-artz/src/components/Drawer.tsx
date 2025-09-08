@@ -434,7 +434,7 @@ function Drawer() {
           <div className="flex flex-row font-medium px-2 py-2 mt-4 justify-center relative">
             <button
               id="create-btn"
-              onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
+               onClick={() => handleAddOption("event")}
               type="button"
               className={`inline-flex items-center text-white text-lg gap-1 justify-center w-48 h-11 btn-primary-sm rounded-full shadow-lg transition-all duration-200 focus:outline-none ${
                 isAddDropdownOpen
@@ -449,36 +449,7 @@ function Drawer() {
               <FaPlus className="w-4 h-4 mt-1" /> Post
             </button>
 
-            {/* Dropdown: only visible when isAddDropdownOpen */}
-            {isAddDropdownOpen && (
-              <div
-                id="create-dropdown"
-                className="absolute left-1/2 -translate-x-1/2 -top-14 text-center rounded-xl shadow-2xl z-50 transition-all duration-200 animate-fade-in"
-                style={{
-                  minWidth: "8rem",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
-                }}
-                role="menu"
-                aria-label="Create options"
-              >
-                <button
-                  className="inline-flex items-center justify-center w-32 h-10 text-white text-base font-semibold btn-primary rounded-full mb-2 hover:bg-teal-700 focus:bg-teal-800 focus:outline-none transition-all duration-150 shadow-md"
-                  onClick={() => handleAddOption("event")}
-                  role="menuitem"
-                  tabIndex={0}
-                >
-                  Gig
-                </button>
-                <button
-                  className="inline-flex items-center justify-center w-32 h-10 text-white text-base font-semibold btn-primary rounded-full hover:bg-teal-700 focus:bg-teal-800 focus:outline-none transition-all duration-150 shadow-md"
-                  onClick={() => handleAddOption("review")}
-                  role="menuitem"
-                  tabIndex={0}
-                >
-                  Review
-                </button>
-              </div>
-            )}
+            
           </div>
         )}
       </aside>

@@ -5,20 +5,48 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-/**
- * ProfileSection Component
- *
- * This component now supports displaying profiles for both:
- * 1. Current user (using userProfile from Redux store)
- * 2. Visited users (using visitedProfile from Redux store)
- *
- * The component automatically determines which data to use based on:
- * - isOwnProfile: true if the current user is viewing their own profile
- * - displayProfile: the profile data to display (either from userProfile or visitedProfile)
- *
- * Parent components should dispatch fetchVisitedUserProfile(uid) when navigating to people/userId routes
- * and continue using fetchUserProfile() for the current user's profile.
- */
+const handleCommentSubmit = (
+  review: string,
+  rating: number,
+  taggedUserName?: string
+) => {
+  if (!user?.uid) {
+    console.error("Missing user info for review submission.");
+    return;
+  }
+
+  // When reviewing a specific user, use their ID directly
+  const reviewedUserId = uid || "";
+
+  if (!reviewedUserId) {
+    console.error("Missing reviewed user ID for review submission.");
+    return;
+  }
+
+  console.log("Dispatching reviewUser", {
+    reviewerId: user.uid,
+    reviewedUserId,
+    rating,
+    review,
+  });
+
+  dispatch(
+    reviewUser(
+      user.uid, // reviewerId
+      reviewedUserId, // reviewedUserId (userId, not name)
+      rating,
+      review,
+      "", // title
+      [] // tags
+    )
+  );
+
+  // Close the modal after submission
+  setIsCommentModalOpen(false);
+};
+
+// Use visitedProfile for other users, userProfile for current user
+const authUser = localStorage.getItem("authUser");
 import {
   FaCalendarPlus,
   FaEnvelope,
@@ -35,18 +63,22 @@ import {
   FaFacebook,
   FaTiktok,
   FaStar,
+  FaPen,
+  FaTimesCircle,
 } from "react-icons/fa";
 import TippingModal from "./TippingModal";
 import BookingModal from "./BookingModal";
 import avatar from "/avatar.png";
 import cover from "../../src/assets/blue.jpg";
 import Tooltip from "./Tooltip";
-import { useSelector, shallowEqual } from "react-redux";
+import { useSelector, shallowEqual, useDispatch } from "react-redux";
 import FollowersModal from "./FollowersModal";
-import { RootState } from "../../store/store";
+import { RootState, AppDispatch } from "../../store/store";
 import { useParams } from "react-router-dom";
 import ProfileSectionUI from "./ProfileSectionUI";
 import GuestListModalFromGuestList from "./GuestListModalFromGuestList";
+import CommentForm from "./CommentForm";
+import { reviewUser } from "../../store/profileSlice";
 // Social links now displayed inline
 
 interface ProfileSectionProps {
@@ -79,7 +111,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
     const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
     const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
     const [isSocialDropdownOpen, setIsSocialDropdownOpen] = useState(false);
+    const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const socialLinksDropdownRef = useRef<HTMLDivElement>(null);
+    const dispatch = useDispatch<AppDispatch>();
 
     const { uid } = useParams(); // Extract uid from URL
     const {
@@ -89,9 +123,46 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
       userFollowers,
       loading,
     } = useSelector((state: RootState) => state.profile, shallowEqual);
+    const { user } = useSelector((state: RootState) => state.auth);
 
     // Use visitedProfile for other users, userProfile for current user
     const authUser = localStorage.getItem("authUser");
+
+    const handleCommentSubmit = (review: string, rating: number) => {
+      if (!user?.uid) {
+        console.error("Missing user info for review submission.");
+        return;
+      }
+
+      // When reviewing a specific user, use their ID directly
+      const reviewedUserId = uid || "";
+
+      if (!reviewedUserId) {
+        console.error("Missing reviewed user ID for review submission.");
+        return;
+      }
+
+      console.log("Dispatching reviewUser", {
+        reviewerId: user.uid,
+        reviewedUserId,
+        rating,
+        review,
+      });
+
+      dispatch(
+        reviewUser(
+          user.uid, // reviewerId
+          reviewedUserId, // reviewedUserId (userId, not name)
+          rating,
+          review,
+          "", // title
+          [] // tags
+        )
+      );
+
+      // Close the modal after submission
+      setIsCommentModalOpen(false);
+    };
     let currentUserId = null;
     try {
       if (authUser) {
@@ -121,19 +192,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
 
     // Profile data usage debug logging removed to improve performance
     console.log("visitedProfile:", visitedProfile);
-    // console.log("userProfile:", userProfile);
-    // console.log("uid from params:", uid);
-    // console.log("authUser from localStorage:", authUser);
-    // console.log("currentUserId parsed:", currentUserId);
     console.log("isOwnProfile:", isOwnProfile);
     console.log("displayProfile:", displayProfile);
-
-    // Remove redundant useEffect - let parent component handle profile fetching
-    // useEffect(() => {
-    //   if (uid) {
-    //     dispatch(fetchAUserProfile(uid));
-    //   }
-    // }, [uid, dispatch]);
 
     const isFreelancer =
       displayProfile?.roles?.freelancer ||
@@ -175,8 +235,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           platform,
           url: profile[platform], // assume it's either a label or URL
         }));
-
-      console.log("✅ Social Links:", socialLinks);
 
       setFormattedSocialLinks(socialLinks);
     }, [displayProfile]);
@@ -262,6 +320,18 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                                 className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
                               >
                                 <FaCalendarPlus className="w-3 h-3" />
+                              </button>
+                            </Tooltip>
+                          )}
+
+                          {/* Review Button */}
+                          {!isOwnProfile && (
+                            <Tooltip text="Review Profile">
+                              <button
+                                onClick={() => setIsCommentModalOpen(true)}
+                                className="p-[0.25rem] rounded-full hover:bg-teal-500 hover:text-white bg-dark text-gray-400"
+                              >
+                                <FaPen className="w-3 h-3" />
                               </button>
                             </Tooltip>
                           )}
@@ -490,6 +560,50 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
           onClose={() => setIsFollowingModalOpen(false)}
           users={followingData}
         />
+
+        {/* Review Modal */}
+        {isCommentModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="bg-dark rounded-2xl shadow-2xl p-6 w-full max-w-xl relative animate-fade-in border border-gray-800">
+              <button
+                onClick={() => setIsCommentModalOpen(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
+                aria-label="Close review modal"
+              >
+                <FaTimesCircle className="w-6 h-6" />
+              </button>
+              {loading ? (
+                <div className="animate-pulse space-y-4">
+                  <div className="h-6 w-32 bg-gray-700 rounded mb-4"></div>
+                  <div className="h-24 bg-gray-700 rounded mb-4"></div>
+                  <div className="flex space-x-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-6 h-6 rounded-full bg-gray-700"
+                      ></div>
+                    ))}
+                  </div>
+                  <div className="h-10 w-full bg-gray-700 rounded-full"></div>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-xl font-semibold text-white mb-4">
+                    Review {displayProfile?.name || "User"}
+                  </h3>
+                  <CommentForm
+                    buttonText="Submit Review"
+                    loading={loading}
+                    initialTaggedUser={displayProfile?.userName}
+                    onSubmit={(review, rating) => {
+                      handleCommentSubmit(review, rating);
+                    }}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
