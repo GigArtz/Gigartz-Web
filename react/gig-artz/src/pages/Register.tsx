@@ -78,7 +78,8 @@ const Register = () => {
   const toggleShowPassword = () => setShowPassword((prev) => !prev);
   const toggleShowPassword2 = () => setShowPassword2((prev) => !prev);
 
-  const handleRegister = () => {
+  const handleRegister = (event) => {
+    event.preventDefault(); // Prevent form submission and page reload
     if (
       !userName ||
       !name ||
@@ -100,20 +101,20 @@ const Register = () => {
     }
     dispatch(
       // @ts-expect-error: Redux thunk type mismatch workaround
-      registerUser({
-        confirmPassword: confirmPassword,
-        emailAddress: emailAddress,
-        password: password,
-        userName: userName,
-        name: name,
-        city: city,
-        fcmToken: "",
-        phoneNumber: "", // Provide a value or connect to a field if needed
-        
-      })
+      registerUser(
+        {
+          confirmPassword: confirmPassword,
+          emailAddress: emailAddress,
+          password: password,
+          userName: userName,
+          name: name,
+          city: city,
+          fcmToken: "",
+          phoneNumber: "", // Provide a value or connect to a field if needed
+        },
+        navigate // Pass navigate here
+      )
     );
-
-   
   };
 
   useEffect(() => {
@@ -139,7 +140,7 @@ const Register = () => {
 
       {/* Form Section */}
       <div className="w-full max-w-md bg-[#1F1C29] rounded-lg p-6 space-y-6 shadow-lg">
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleRegister}>
           <InputField
             label="Username"
             type="text"
@@ -201,10 +202,9 @@ const Register = () => {
             onToggle={toggleShowPassword2}
             showValue={showPassword2}
           />
-        
+
           <button
             type="submit"
-            onClick={handleRegister}
             disabled={loading}
             className="btn-primary flex items-center justify-center h-12 w-full"
           >

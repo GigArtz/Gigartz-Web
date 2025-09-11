@@ -131,10 +131,7 @@ const authSlice = createSlice({
 });
 
 // Action creators for async operations
-export const registerUser = (formData: RegistrationData) => async (dispatch: AppDispatch) => {
-  // Navigate
-  const navigate = useNavigate();
-
+export const registerUser = (formData: RegistrationData, navigate: Function) => async (dispatch: AppDispatch) => {
   dispatch(authSlice.actions.registerStart());
   try {
     console.log("Sending registration request with data:", formData);
@@ -143,40 +140,18 @@ export const registerUser = (formData: RegistrationData) => async (dispatch: App
       formData
     );
 
-    // dispatch(authSlice.actions.registerSuccess({ user: response.data.user, uid: response.data.user.uid }));
-
-
 
     // Verification alert
     if (response) {
       console.log(response)
-
       notify(`Registration successful! Please verify your email`, "success")
 
       // Redirect
-      navigate("/");
+      navigate("/"); // Use the passed navigate function
     }
-
-
-    // Add notification for successful registration
-
-    //notify(`Welcome to GigArtz, ${response.data.user.userName || 'user'}! Your account has been created successfully.`, "success");
-
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      console.error("Axios error response:", error.response);
-      dispatch(authSlice.actions.registerFailure(error.response?.data.error || "An error occurred"));
-
-      // Add notification for registration failure
-      notify(error.response?.data.error || "Registration failed. Please try again.", "error");
-
-    } else if (error instanceof Error) {
-      console.error("Error during registration:", error.message);
-      dispatch(authSlice.actions.registerFailure(error.message));
-    } else {
-      console.error("An unexpected error occurred during registration");
-      dispatch(authSlice.actions.registerFailure("An unexpected error occurred"));
-    }
+  } catch (error) {
+    console.error("Registration failed:", error);
+    dispatch(authSlice.actions.registerFailure(error.message));
   }
 };
 

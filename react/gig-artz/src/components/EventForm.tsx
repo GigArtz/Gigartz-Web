@@ -21,7 +21,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import Autocomplete from "react-google-autocomplete";
+import VenueInput from "./VenueInput";
 
 // Initialize Firebase Storage
 const storage = getStorage();
@@ -799,13 +799,26 @@ const Step1 = ({ formData, handleChange, errors }) => {
           Venue *
         </label>
         <div className="relative">
-          <Autocomplete
+          <VenueInput
             apiKey={import.meta.env.VITE_MAPS_API_KEY}
             className={`input-field ${errors.venue ? "border-red-500" : ""}`}
             defaultValue={formData.venue}
             onPlaceSelected={(place) => {
-              const value = place.formatted_address || place.name || "";
-              handleChange({ target: { name: "venue", value, type: "text" } });
+              const value = place?.formatted_address || place?.name || "";
+              if (value) {
+                handleChange({
+                  target: { name: "venue", value, type: "text" },
+                });
+              } else {
+                console.error("Invalid place object received:", place);
+              }
+            }}
+            onBlur={() => {
+              if (!formData.venue) {
+                handleChange({
+                  target: { name: "venue", value: "", type: "text" },
+                });
+              }
             }}
             placeholder="Search for venue"
           />
