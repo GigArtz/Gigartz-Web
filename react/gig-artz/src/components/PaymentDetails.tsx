@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAUserProfile } from "../../store/profileSlice";
+import { RootState } from "store/store";
 
 interface Card {
   id: string;
@@ -9,6 +12,11 @@ interface Card {
 }
 
 const PaymentDetails: React.FC = () => {
+  const { profile, userProfile, loading } = useSelector(
+    (state: RootState) => state.profile
+  );
+  const { uid } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   const [cards, setCards] = useState<Card[]>([]);
   const [form, setForm] = useState({
     cardNumber: "",
@@ -38,10 +46,7 @@ const PaymentDetails: React.FC = () => {
       );
     } else {
       // Add new card
-      setCards((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), ...form },
-      ]);
+      setCards((prev) => [...prev, { id: crypto.randomUUID(), ...form }]);
     }
     resetForm();
   };
@@ -64,17 +69,29 @@ const PaymentDetails: React.FC = () => {
     if (editingId === id) resetForm();
   };
 
+  useEffect(() => {
+    if (profile) {
+      dispatch(fetchAUserProfile(uid));
+    }
+    console.log("profile:", userProfile);
+  }, [profile, uid]);
+
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <h3 className="text-xl font-semibold mb-4">Payment Details</h3>
+      <h3 className="text-xl font-semibold mb-4">Bank Details</h3>
       <p className="mb-6 text-gray-400">
         Add, edit, or remove bank card information.
       </p>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="mb-8 space-y-4 bg-gray-800 p-6 rounded-lg shadow-md">
+      <form
+        onSubmit={handleSubmit}
+        className="mb-8 space-y-4 bg-gray-800 p-6 rounded-lg shadow-md"
+      >
         <div>
-          <label className="block text-gray-300 mb-1" htmlFor="cardNumber">Card Number</label>
+          <label className="block text-gray-300 mb-1" htmlFor="cardNumber">
+            Card Number
+          </label>
           <input
             id="cardNumber"
             name="cardNumber"
@@ -88,7 +105,9 @@ const PaymentDetails: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-gray-300 mb-1" htmlFor="cardHolder">Cardholder Name</label>
+          <label className="block text-gray-300 mb-1" htmlFor="cardHolder">
+            Cardholder Name
+          </label>
           <input
             id="cardHolder"
             name="cardHolder"
@@ -102,7 +121,9 @@ const PaymentDetails: React.FC = () => {
 
         <div className="flex space-x-4">
           <div className="flex-1">
-            <label className="block text-gray-300 mb-1" htmlFor="expiry">Expiry (MM/YY)</label>
+            <label className="block text-gray-300 mb-1" htmlFor="expiry">
+              Expiry (MM/YY)
+            </label>
             <input
               id="expiry"
               name="expiry"
@@ -115,7 +136,9 @@ const PaymentDetails: React.FC = () => {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-gray-300 mb-1" htmlFor="cvv">CVV</label>
+            <label className="block text-gray-300 mb-1" htmlFor="cvv">
+              CVV
+            </label>
             <input
               id="cvv"
               name="cvv"
@@ -194,6 +217,33 @@ const PaymentDetails: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Email Notifications */}
+      <div className="mt-8">
+        <h4 className="text-lg font-semibold mb-2">Email Notifications</h4>
+        
+        {/* Toggle switch */}
+        <div className="flex flex-row items-center justify-between bg-gray-800 p-4 rounded-lg shadow-md">
+          <p>Email Notifications</p>
+          <label className="inline-flex relative items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              // checked={emailNotifications}
+              // onChange={() => setEmailNotifications(!emailNotifications)}
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"></div>
+          </label>
+        </div>
+      </div>
+
+      {/* Purchase History */}
+      <div className="mt-8">
+        <h4 className="text-lg font-semibold mb-4">Purchase History</h4>
+        <div className="bg-gray-800 p-4 rounded-lg shadow-md">
+          <p className="text-gray-400">No purchases yet.</p>
+        </div>
       </div>
     </div>
   );

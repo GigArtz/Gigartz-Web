@@ -203,6 +203,19 @@ const Register = () => {
             showValue={showPassword2}
           />
 
+          {/* Terms and Conditions */}
+          <div className="text-sm text-gray-300">
+            By signing up, you agree to our{" "}
+            <span
+              className="text-teal-400 cursor-pointer"
+              onClick={() => navigate("/terms")}
+              
+            >
+              Terms & Conditions
+            </span>
+            .
+          </div>
+
           <button
             type="submit"
             disabled={loading}

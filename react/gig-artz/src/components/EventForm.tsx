@@ -123,6 +123,10 @@ const validateStep = (step, formData) => {
 // Reducer function
 const formReducer = (state, action) => {
   if (action.type === "update") {
+    console.log("Reducer update action:", {
+      name: action.name,
+      value: action.value,
+    }); // Debugging log
     return { ...state, [action.name]: action.value };
   }
   if (action.type === "updateNested") {
@@ -236,6 +240,7 @@ const AddEventForm: React.FC = () => {
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     const finalValue = type === "checkbox" ? checked : files ? files : value;
+    console.log("handleChange called:", { name, value: finalValue }); // Debugging log
     dispatch({ type: "update", name, value: finalValue });
   };
 
@@ -802,9 +807,14 @@ const Step1 = ({ formData, handleChange, errors }) => {
           <VenueInput
             apiKey={import.meta.env.VITE_MAPS_API_KEY}
             className={`input-field ${errors.venue ? "border-red-500" : ""}`}
-            defaultValue={formData.venue}
+            value={formData.venue}
             onPlaceSelected={(place) => {
-              const value = place?.formatted_address || place?.name || "";
+              const value =
+                place?.formattedAddress ||
+                place?.displayName ||
+                place?.name ||
+                "";
+              console.log("Selected place:", place); // Debugging log
               if (value) {
                 handleChange({
                   target: { name: "venue", value, type: "text" },
@@ -813,14 +823,6 @@ const Step1 = ({ formData, handleChange, errors }) => {
                 console.error("Invalid place object received:", place);
               }
             }}
-            onBlur={() => {
-              if (!formData.venue) {
-                handleChange({
-                  target: { name: "venue", value: "", type: "text" },
-                });
-              }
-            }}
-            placeholder="Search for venue"
           />
         </div>
         <ErrorMessage error={errors.venue} />

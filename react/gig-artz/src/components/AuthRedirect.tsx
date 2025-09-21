@@ -9,7 +9,7 @@ interface AuthRedirectProps {
 }
 
 const AuthRedirect: React.FC<AuthRedirectProps> = ({
-  publicRoutes = ["/", "/register", "/forgot"],
+  publicRoutes = ["/", "/register", "/forgot", "/terms"],
   defaultAuthenticatedRoute = "/home",
   defaultUnauthenticatedRoute = "/",
 }) => {

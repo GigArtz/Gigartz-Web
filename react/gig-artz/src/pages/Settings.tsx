@@ -13,25 +13,27 @@ import {
   FaChevronRight,
   FaUserEdit,
 } from "react-icons/fa";
+import Header from "../components/Header";
+import TermsCondition from "../components/TermsCondition";
 
 const tabs = [
   {
-    id: "Edit Profile",
-    label: "Edit Profile",
+    id: "Profile Settings",
+    label: "Profile Settings",
     icon: FaUser,
     description: "Update your personal information",
     isLarge: true,
   },
   {
-    id: "Payment Details",
-    label: "Payment Details",
+    id: "Account Settings",
+    label: "Account Settings",
     icon: FaCreditCard,
     description: "Manage payment methods",
     isLarge: true,
   },
   {
-    id: "Profile Insights",
-    label: "Profile Insights",
+    id: "Insights",
+    label: "Insights",
     icon: FaChartBar,
     description: "View analytics and stats",
     isLarge: false,
@@ -44,8 +46,15 @@ const tabs = [
     isLarge: true,
   },
   {
-    id: "Privacy & Security",
-    label: "Privacy & Security",
+    id: "Terms & Conditions",
+    label: "Terms & Conditions",
+    icon: FaShieldAlt,
+    description: "Security and privacy settings",
+    isLarge: true,
+  },
+  {
+    id: "Privacy",
+    label: "Privacy",
     icon: FaShieldAlt,
     description: "Security and privacy settings",
     isLarge: true,
@@ -53,7 +62,7 @@ const tabs = [
 ];
 
 const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("Edit Profile");
+  const [activeTab, setActiveTab] = useState(null);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -73,15 +82,17 @@ const Settings: React.FC = () => {
 
   const renderActiveComponent = () => {
     switch (activeTab) {
-      case "Edit Profile":
-        return <>{ <EditProfile useModal={true} />}</>;
-      case "Payment Details":
+      case "Profile Settings":
+        return <>{<EditProfile useModal={true} />}</>;
+      case "Account Settings":
         return <PaymentDetails />;
-      case "Profile Insights":
+      case "Insights":
         return <ProfileInsights />;
       case "Preferences":
         return <Preferences />;
-      case "Privacy & Security":
+      case "Terms & Conditions":
+        return <TermsCondition />;
+      case "Privacy":
         return <PrivacySecurity />;
       default:
         return null;
@@ -98,6 +109,8 @@ const Settings: React.FC = () => {
 
   return (
     <div className="main-content h-screen">
+      <Header title="Settings" />
+
       {/* Sidebar (Tabs) - always rendered, hidden on mobile when tab is selected */}
       <div className="flex md:flex-row sm:flex-col min-h-full flex-col-reverse">
         <div
@@ -105,16 +118,6 @@ const Settings: React.FC = () => {
             screenWidth < 768 && activeTab ? "hidden" : ""
           }`}
         >
-          <div className="p-4 hidden sm:block border-b border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <FaCog className="text-teal-400" />
-              Settings
-            </h2>
-            <p className="text-gray-400 text-xs">
-              Manage your account preferences
-            </p>
-          </div>
-          
           <div className="flex-1 overflow-y-auto p-2 ">
             <div className="space-y-2">
               {tabs.map((tab) => {
@@ -123,7 +126,7 @@ const Settings: React.FC = () => {
                 return (
                   <div
                     key={tab.id}
-                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 border flex items-center gap-3 ${
+                    className={`p-1 px-2 rounded-xl cursor-pointer transition-all duration-200 border flex items-center gap-3 ${
                       isActive
                         ? "bg-teal-600 text-white border-teal-500 shadow-lg scale-[1.02]"
                         : "bg-gray-800 hover:bg-gray-700 border-transparent hover:border-gray-600 text-gray-300 hover:text-white"
@@ -133,7 +136,7 @@ const Settings: React.FC = () => {
                     aria-selected={isActive}
                     aria-label={tab.label}
                   >
-                    <Icon className="w-6 h-6" />
+                    <Icon className="w-3 h-3" />
                     <span className="flex-1 font-semibold text-sm truncate">
                       {tab.label}
                     </span>
@@ -146,7 +149,7 @@ const Settings: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Main Content Area */}
         <div
           className={`flex-1 flex flex-col ${

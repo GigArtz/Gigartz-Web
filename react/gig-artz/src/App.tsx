@@ -49,6 +49,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { Permission } from "./constants/authTypes";
 import { fetchAllEvents } from "../store/eventsSlice";
 import { fetchAllProfiles } from "../store/profileSlice";
+import Terms from "./pages/Terms";
 
 // App must only use Provider, BrowserRouter, and render InnerApp as a child of BrowserRouter
 function App() {
@@ -104,6 +105,8 @@ function InnerApp({
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<Forgot />} />
         <Route path="/reset-password" element={<Forgot />} />
+
+        <Route path="/terms" element={<Terms />} />
 
         {/* Error Pages */}
         <Route path="/unauthorized" element={<Unauthorized />} />

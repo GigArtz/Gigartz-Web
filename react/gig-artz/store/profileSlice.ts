@@ -296,6 +296,18 @@ const profileSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
+     saveCardStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    saveCardSuccess(state, action) {
+      state.loading = false;
+      //state.successMessage = action.payload;
+    },
+    saveCardFailure(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+    },
     // New actions for tracking fetching user IDs with improved logging
     startFetchingUser(state, action: PayloadAction<string>) {
       const userId = action.payload;
@@ -1993,6 +2005,9 @@ export const {
   createFetchReviewUserStart,
   createFetchReviewUserSuccess,
   createFetchReviewUserFailure,
+  saveCardState,
+  saveCardSuccess,
+  saveCardFailure,
 } = profileSlice.actions;
 
 // Helper function to check if visited profile arrays are inconsistent
@@ -2182,6 +2197,38 @@ export const subscribeToGuestList = (
     handleAxiosError(error, dispatch, profileSlice.actions.subscribeGuestListFailure);
   }
 };
+
+// Save card details (POST /save-card)
+// Save card details (POST /save-card)
+export const saveCardDetails = (
+  userId: string,
+  cardNumber: string,
+  expiryMonth: string,
+  expiryYear: string,
+  cardHolderName: string,
+  cvv: string
+) => async (dispatch: AppDispatch) => {
+  dispatch(profileSlice.actions.saveCardStart());
+  try {
+    const response = await axios.post('https://gigartz.onrender.com/save-card', {
+      userId,
+      cardNumber,
+      expiryMonth,
+      expiryYear,
+      cardHolderName,
+      cvv
+    });
+    dispatch(profileSlice.actions.saveCardSuccess(response.data.message || 'Card details saved successfully.'));
+    // Optionally notify user
+    console.log('Save card response:', response.data);
+    if (response.data.success) {
+      notify(response.data.message || 'Card details saved successfully!', 'success');
+    }
+  } catch (error) {
+    handleAxiosError(error, dispatch, profileSlice.actions.saveCardFailure);
+  };
+};
+
 
 // Tip an artist (POST /tip)
 export const sendTip = (
