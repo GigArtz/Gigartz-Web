@@ -105,7 +105,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
     >
       <div
         ref={modalRef}
-        className={`p-1 sm:p-4 ${minWidth} ${maxWidth} w-full sm:mx-4 bg-dark rounded-lg shadow-lg relative animate-fadeIn ${className}`}
+        className={`p-1 sm:p-4 ${minWidth} ${maxWidth} w-full sm:mx-4 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 rounded-3xl shadow-2xl p-8 mb-8 border border-gray-800 relative animate-fadeIn ${className}`}
       >
         {/* Modal Header */}
         {(title || showCloseButton) && (

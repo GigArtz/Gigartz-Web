@@ -9,7 +9,8 @@ interface AuthRedirectProps {
 }
 
 const AuthRedirect: React.FC<AuthRedirectProps> = ({
-  publicRoutes = ["/", "/register", "/forgot", "/terms"],
+  // Include both /forgot and /reset-password since Login navigates to /reset-password
+  publicRoutes = ["/", "/register", "/forgot", "/reset-password", "/terms"],
   defaultAuthenticatedRoute = "/home",
   defaultUnauthenticatedRoute = "/",
 }) => {

@@ -198,6 +198,8 @@ interface ProfileState {
   cachedVisitedProfileIds: string[];
   // Per-user cache timestamps to track individual user profiles
   userCacheTimestamps: Record<string, number>;
+  // Flag to indicate whether we've fetched the global user list at least once
+  userListFetched?: boolean;
   // Track fetching to prevent duplicates
   fetchingUserIds: string[];
 }
@@ -222,6 +224,7 @@ const initialState: ProfileState = {
   userTickets: [],
   userTipsProfit: null,
   userList: [],
+  userListFetched: false,
   loading: false,
   loadingProfile: false,
   error: null,
@@ -296,7 +299,7 @@ const profileSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-     saveCardStart(state) {
+    saveCardStart(state) {
       state.loading = true;
       state.error = null;
     },
@@ -673,6 +676,8 @@ const profileSlice = createSlice({
       state.loading = false;
       state.userList = action.payload;
       state.error = null;
+      // Mark that the global user list was fetched successfully
+      state.userListFetched = true;
       // Update cache timestamp for user list
       state.userListCacheTimestamp = Date.now();
 
@@ -1388,15 +1393,19 @@ export const fetchAllProfiles = (forceRefresh: boolean = false) => async (dispat
   const { userListCacheTimestamp, userList, loading } = state.profile;
   const userId = "all_users"; // Special ID for user list
 
-  // Prevent multiple simultaneous calls using our request tracking
-  if ((loading && !forceRefresh) || (!forceRefresh && shouldDebounce(userId))) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Already fetching user profiles, skipping duplicate call");
-    }
+  if (!loading) {
     return;
   }
 
   // Check if cache is still valid and we have data
+  // If we've already fetched the global user list once, skip future automatic fetches unless forced
+  if (!forceRefresh && state.profile.userListFetched) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Global user list already fetched; skipping fetchAllProfiles');
+    }
+    return;
+  }
+
   if (!forceRefresh && userList && userList.length > 0 && isCacheValid(userListCacheTimestamp)) {
     if (process.env.NODE_ENV === 'development') {
       console.log(`Using cached user list (${userList.length} users)`);
@@ -1408,7 +1417,7 @@ export const fetchAllProfiles = (forceRefresh: boolean = false) => async (dispat
 
   try {
     const response = await axios.get(`https://gigartz.onrender.com/users/`, {
-      timeout: 15000
+      timeout: 25000
     });
 
     dispatch(profileSlice.actions.getProfileSuccess(response.data));
@@ -1934,7 +1943,12 @@ export const fetchUserReviews = (forceRefresh = false) => async (dispatch, getSt
     const response = await axios.get(`https://gigartz.onrender.com/usersReviews`);
     console.log("User reviews response:", response.data);
 
-    dispatch(profileSlice.actions.createFetchReviewUserSuccess(response.data));
+    // Defensive: axios may return a non-extensible/frozen object for response.data in some environments.
+    // Create a shallow, writable copy and normalize the reviews field before dispatching to reducers.
+    const responseData = response && response.data ? { ...response.data } : { reviews: [] };
+    const normalizedReviews = Array.isArray(responseData.reviews) ? responseData.reviews : [];
+
+    dispatch(profileSlice.actions.createFetchReviewUserSuccess({ reviews: normalizedReviews }));
 
     // Update cache timestamp
     if (getState) {

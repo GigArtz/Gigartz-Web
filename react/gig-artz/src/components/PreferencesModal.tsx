@@ -5,6 +5,7 @@ import {
   eventCategories,
   freelancerCategories,
 } from "../constants/EventCategories";
+import VenueInput from "./VenueInput";
 
 interface PreferencesModalProps {
   isOpen: boolean;
@@ -269,11 +270,13 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
               Locations
             </h3>
             <div className="rounded p-1 animate-fadeInUp">
-              <Autocomplete
+             
+               <VenueInput
                 apiKey={import.meta.env.VITE_MAPS_API_KEY}
                 onPlaceSelected={addLocation}
-                placeholder="Search for a city, venue, or location..."
-                className="input-field text-sm py-1 px-2"
+                
+                className="input-field text-sm p-0 "
+                value={""}
               />
             </div>
           </section>
@@ -324,7 +327,7 @@ const PreferencesModal: React.FC<PreferencesModalProps> = ({
         </main>
 
         {/* Footer with buttons */}
-        <footer className="flex-shrink-0 flex justify-between items-center mb-2 gap-2 pt-3 border-t border-gray-700 bg-dark animate-fadeInUp">
+        <footer className="flex-shrink-0 flex justify-between items-center mb-2 gap-2 pt-3 border-t border-gray-700 animate-fadeInUp">
           <div className="text-xs text-gray-400 animate-fadeIn">
             {selectedInterests.length + selectedLocations.length} items selected
           </div>

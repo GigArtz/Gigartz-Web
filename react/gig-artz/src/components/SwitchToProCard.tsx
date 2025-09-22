@@ -7,7 +7,7 @@ const SwitchToProCard: React.FC = () => {
 
   const handleUpgrade = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate("/upgrade");
+    navigate("/monetization");
   };
 
   return (

@@ -16,8 +16,45 @@ text {
     @apply w-full p-3 text-white bg-gray-800 border rounded-xl focus:ring-2 active:bg-black border-gray-800 bg-dark shadow-md placeholder-gray-400 focus:outline-none focus:ring-teal-500;
   }
 
+  /* Browser-native input icon styling (make icons white) */
+  /* WebKit-based browsers: calendar icon, clear/search buttons, etc. */
+  .input-field::-webkit-calendar-picker-indicator,
+  .input-field::-webkit-clear-button,
+  .input-field::-webkit-search-cancel-button,
+  .input-field::-webkit-search-decoration {
+    /* invert + brighten to make dark icons appear white on dark backgrounds */
+    filter: invert(1) brightness(2) saturate(0);
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  /* Remove number input spin buttons in WebKit so they don't clash visually */
+  .input-field[type="number"]::-webkit-inner-spin-button,
+  .input-field[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Edge / IE specifics: tint clear/expand controls where supported */
+  .input-field::-ms-clear,
+  .input-field::-ms-expand {
+    filter: invert(1) brightness(2) saturate(0);
+  }
+
+  /* Firefox and other browsers: best-effort fallbacks. Many browsers don't
+     expose native icons for full styling; ensure text color is white so
+     built-in controls that follow text color are visually consistent. */
+  .input-field,
+  .input-field[type="date"],
+  .input-field[type="time"],
+  .input-field[type="datetime-local"] {
+    color: #fff;
+    background-color: transparent;
+  }
+
   .modal-content {
-    @apply p-4 w-full  rounded-lg shadow-lg bg-dark transform transition-all duration-300 ease-in-out;
+    @apply p-4 w-full  rounded-lg shadow-lg transform transition-all duration-300 ease-in-out;
   }
 
   .btn-primary {
@@ -41,30 +78,28 @@ text {
   }
 
   .main-content {
-  @apply dark:bg-[#060512]  text-white min-h-screen relative pb-20 mt-20 md:mt-1 md:px-1 lg:px-5;
+    @apply dark:bg-[#060512]  text-white min-h-screen relative pb-20 mt-20 md:mt-1 md:px-1 lg:px-5;
 
-  /* Width adjustments */
-  @apply sm:w-full md:w-[70%] lg:w-[45%] xl:w-[40%];
+    /* Width adjustments */
+    @apply sm:w-full md:w-[70%] lg:w-[45%] xl:w-[40%];
 
-  /* Position adjustments */
-  @apply lg:left-[24%] md:left-[25%] xl:left-[27%];
+    /* Position adjustments */
+    @apply lg:left-[24%] md:left-[25%] xl:left-[27%];
 
-  /* Padding */
-  @apply md:p-2;
+    /* Padding */
+    @apply md:p-2;
 
-  /* Border adjustments */
-  @apply lg:border-t-0;
-}
-
+    /* Border adjustments */
+    @apply lg:border-t-0;
+  }
 
   .tabs {
-  @apply text-sm font-medium text-center text-gray-500 border-b border-gray-700
+    @apply text-sm font-medium text-center text-gray-500 border-b border-gray-700
          overflow-hidden sticky top-[8%] md:top-0 pt-2 bg-[#060512] z-10;
-  
-  /* Optional: Add a box shadow to enhance visibility */
-  @apply shadow-md;
-}
 
+    /* Optional: Add a box shadow to enhance visibility */
+    @apply shadow-md;
+  }
 
   .modal {
     @apply relative p-4 w-full md:w-[50%] max-w-[80%] max-h-[80%] rounded-lg shadow-lg bg-dark transform transition-all duration-300 ease-in-out;
@@ -123,6 +158,105 @@ text {
 .hide-scrollbar {
   -ms-overflow-style: none; /* Hide scrollbar in IE & Edge */
   scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+
+/* Animated gradient background for the hero section
+     Improvements:
+     - smoother multi-stop gradient with slower, eased animation
+     - `will-change` hint for better rendering on modern browsers
+     - pointer-events none so it doesn't intercept interactions
+     - layered radial vignette and noise overlay for depth
+     - respects prefers-reduced-motion to disable animation for accessibility
+  */
+.animated-background {
+  /* Fill its host and scroll with content instead of sticking to the viewport */
+  position: relative; /* allow the element to size with its content */
+  display: block;
+  width: 100%;
+  /* No fixed height: let the element grow and become scrollable with page */
+  pointer-events: none;
+  isolation: isolate; /* create a stacking context so z-index on pseudo elements behaves predictably */
+
+  /* Base animated gradient (using more color stops for a richer transition) */
+  background: linear-gradient(
+    270deg,
+    #6e45e2 0%,
+    #7b61e6 20%,
+    #88d3ce 40%,
+    #ffd7e0 60%,
+    #ff6e7f 75%,
+    #bfe9ff 100%
+  );
+  background-size: 300% 300%;
+  background-attachment: scroll; /* ensure gradient moves relative to the element */
+  opacity: 0.78; /* slightly lower so foreground content reads better */
+  filter: saturate(1.05) contrast(1.02) blur(0.2px);
+  transform: translateZ(0); /* create new composite layer */
+  will-change: background-position, opacity, transform;
+  animation: heroGradientMove 24s cubic-bezier(0.22, 0.7, 0.36, 1) infinite;
+}
+
+/* Subtle radial vignette to focus content in the center */
+.animated-background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 45%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  z-index: -1; /* sit behind the content */
+}
+
+/* Lightweight noise texture for organic feel (pure CSS approximation) */
+.animated-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px
+  );
+  background-size: 3px 3px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: -1; /* sit behind the content */
+}
+
+/* Ensure any direct children render above the background overlays */
+.animated-background > * {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto; /* allow children to receive pointer events */
+}
+
+/* Animation: move the background gradient smoothly */
+@keyframes heroGradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Accessibility: respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .animated-background {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+  }
+  .animated-background::after,
+  .animated-background::before {
+    display: none;
+  }
 }
 
 /* Toast */

@@ -475,14 +475,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                         {Array.isArray(displayProfile?.genre) &&
                           displayProfile.genre.length > 0 && (
                             <div className="flex items-start flex-wrap">
-                              <div className="flex gap-2 my-2 pb-2 overflow-x-auto whitespace-nowrap px-1 custom-scrollbar max-w-[65%] md:max-w-[80%]">
+                              <div className="flex gap-2 my-2 pb-2 overflow-x-auto whitespace-nowrap px-1 custom-scrollbar ">
                                 {displayProfile.genre
-                                  .slice(
-                                    0,
-                                    showAllTags
-                                      ? displayProfile.genre.length
-                                      : defaultTagCount
-                                  )
                                   .map((genre, index) => (
                                     <span
                                       key={index}
@@ -494,30 +488,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                                     </span>
                                   ))}
                               </div>
-
-                              {displayProfile.genre.length >
-                                defaultTagCount && (
-                                <button
-                                  className="ml-2 mt-2 text-xs text-gray-500 hover:text-teal-500 transition-colors duration-200 flex items-center focus:outline-none"
-                                  onClick={() =>
-                                    setShowAllTags((prev) => !prev)
-                                  }
-                                  aria-expanded={showAllTags}
-                                >
-                                  {showAllTags ? (
-                                    <>
-                                      See less <span className="ml-1">▲</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      +
-                                      {displayProfile.genre.length -
-                                        defaultTagCount}{" "}
-                                      more <span className="ml-1">▼</span>
-                                    </>
-                                  )}
-                                </button>
-                              )}
                             </div>
                           )}
                       </div>

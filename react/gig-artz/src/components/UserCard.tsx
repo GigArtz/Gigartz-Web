@@ -102,7 +102,7 @@ const UserCard: React.FC<UserCardProps> = memo(({ user }) => {
 
             {/* User Name & Bio */}
             <div
-              className="cursor-pointer text-truncate w-20 mr-1"
+              className="cursor-pointer text-truncate  max-w-sm-[20rem] mr-1"
               onClick={handleClick}
             >
               <h3 className="text-base font-bold text-white leading-tight hover:underline truncate w-full">

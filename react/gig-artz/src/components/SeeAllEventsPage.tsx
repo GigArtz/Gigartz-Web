@@ -278,9 +278,9 @@ const SeeAllEventsPage: React.FC<SeeAllEventsPageProps> = ({
   }
 
   return (
-    <div className="main-content min-h-screen bg-gray-950 text-white">
+    <div className="main-content min-h-screen  text-white">
       {/* Header */}
-      <div className="sticky hidden sm:block top-0 z-10 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800">
+      <div className="sticky hidden sm:block top-0 z-10  backdrop-blur-sm  border-gray-800">
         <Header title={finalSectionTitle} />
       </div>
 

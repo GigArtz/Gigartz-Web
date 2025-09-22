@@ -806,7 +806,7 @@ const Step1 = ({ formData, handleChange, errors }) => {
         <div className="relative">
           <VenueInput
             apiKey={import.meta.env.VITE_MAPS_API_KEY}
-            className={`input-field ${errors.venue ? "border-red-500" : ""}`}
+            className={`input-field p-0 ${errors.venue ? "border-red-500" : ""}`}
             value={formData.venue}
             onPlaceSelected={(place) => {
               const value =
@@ -1034,6 +1034,18 @@ const Step4 = ({ formData, dispatch, errors }) => {
       errors.ticketType = "This ticket type already exists";
     }
 
+    // Check total ticket limit (max 300 across all types)
+    const currentTotalTickets = Object.values(formData.ticketsAvailable).reduce(
+      (total, ticket) => total + parseInt(ticket.quantity || 0),
+      0
+    );
+    const newTicketQuantity = parseInt(newTicket.quantity || 0);
+
+    if (currentTotalTickets + newTicketQuantity > 300) {
+      const remainingTickets = 300 - currentTotalTickets;
+      errors.quantity = `Total tickets across all types cannot exceed 300. You can add up to ${remainingTickets} more tickets.`;
+    }
+
     return errors;
   };
 
@@ -1069,7 +1081,17 @@ const Step4 = ({ formData, dispatch, errors }) => {
     <div className="space-y-4 rounded-lg p-6">
       {Object.keys(formData.ticketsAvailable).length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-white">Current Tickets</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-white">Current Tickets</h3>
+            <div className="text-sm text-gray-300">
+              Total:{" "}
+              {Object.values(formData.ticketsAvailable).reduce(
+                (total, ticket) => total + parseInt(ticket.quantity || 0),
+                0
+              )}{" "}
+              / 300 tickets
+            </div>
+          </div>
           {Object.entries(formData.ticketsAvailable).map(
             ([ticketType, ticket]) => (
               <div
@@ -1172,6 +1194,13 @@ const Step4 = ({ formData, dispatch, errors }) => {
                 type="number"
                 placeholder="0"
                 min="1"
+                max={
+                  300 -
+                  Object.values(formData.ticketsAvailable).reduce(
+                    (total, ticket) => total + parseInt(ticket.quantity || 0),
+                    0
+                  )
+                }
                 value={newTicket.quantity}
                 onChange={(e) =>
                   handleNewTicketChange("quantity", e.target.value)
@@ -1180,6 +1209,15 @@ const Step4 = ({ formData, dispatch, errors }) => {
                   ticketErrors.quantity ? "border-red-500" : ""
                 }`}
               />
+              <p className="text-xs text-gray-400 mt-1">
+                Max 300 tickets total across all types.
+                {300 -
+                  Object.values(formData.ticketsAvailable).reduce(
+                    (total, ticket) => total + parseInt(ticket.quantity || 0),
+                    0
+                  )}{" "}
+                tickets remaining.
+              </p>
               <ErrorMessage error={ticketErrors.quantity} />
             </div>
           </div>

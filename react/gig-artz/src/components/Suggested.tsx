@@ -40,7 +40,7 @@ export default function SuggestedForYou() {
     console.log("isSuccess State:", isSuccess);
   }, [cachedUserList, suggestedUsers, isSuccess]);
 
-  if (!isSuccess) {
+  if (!isSuccess || isLoading) {
     return null; // or some fallback UI
   }
 

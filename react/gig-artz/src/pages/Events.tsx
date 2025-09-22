@@ -37,6 +37,8 @@ interface Event {
   id: string;
   title: string;
   date: string;
+  // Optional ISO datetime string indicating when tickets go on sale
+  releaseDate?: string;
   time?: string;
   eventStartTime?: string;
   eventEndTime?: string;
@@ -46,6 +48,11 @@ interface Event {
   gallery: string[];
   eventVideo?: string;
   ticketsAvailable: Record<string, { price: number; quantity: number }>;
+  // Optional per-ticket release fields (ISO strings)
+  // e.g. ticketsAvailable.VIP.ticketReleaseDate
+  // or ticketsAvailable.VIP.ticketReleaseTime
+  // These are checked to allow per-ticket-type on-sale gating.
+  // Note: some backends may store these as strings — we attempt to parse them.
   category: string;
   hostName: string;
   comments: string[];
@@ -137,6 +144,7 @@ const EventDetails = () => {
     });
   };
 
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const handleResaleQuantityChange = (resaleId: string, delta: number) => {
     setResaleTicketQuantities((prevQuantities) => {
       const newQuantity = Math.max(0, (prevQuantities[resaleId] || 0) + delta);
@@ -164,6 +172,50 @@ const EventDetails = () => {
   );
 
   const grandTotal = totalTicketPrice + totalResaleTicketPrice;
+
+  // Determine if tickets are released based on releaseDate (if provided).
+  // If no releaseDate is provided we assume tickets are already released.
+  // NOTE: releaseDate should be an ISO string (e.g. "2025-09-21T14:00:00Z").
+  // Behavior: if releaseDate is missing or invalid we treat the event as released to
+  // preserve backward compatibility. If present and in the future, UI controls
+  // for selecting and purchasing tickets will be disabled until that time.
+  const isReleased = (() => {
+    if (!event) return false;
+    if (!event.releaseDate) return true;
+    const release = new Date(event.releaseDate).getTime();
+    if (isNaN(release)) return true; // if invalid date, treat as released
+    return Date.now() >= release;
+  })();
+
+  // Helper: per-ticket-type release check. Tickets are considered released when
+  // there is no per-type release date/time, or when the parsed date is in the past.
+  const parseTicketReleaseForType = (type: string): number | null => {
+    const ticketUnknown = event?.ticketsAvailable[type] as unknown;
+    const ticket = ticketUnknown as { [k: string]: unknown } | undefined;
+    if (!ticket) return null;
+    const dateStrRaw =
+      ticket["ticketReleaseDate"] ?? ticket["ticketReleaseTime"];
+    const dateStr = typeof dateStrRaw === "string" ? dateStrRaw : null;
+    if (!dateStr) return null;
+    const t = new Date(dateStr).getTime();
+    return isNaN(t) ? null : t;
+  };
+
+  const isTypeReleased = (type: string) => {
+    // If event-level release exists and is in the future, that can also gate tickets.
+    if (!event) return false;
+    const typeRelease = parseTicketReleaseForType(type);
+    if (typeRelease === null) {
+      // fallback to event-level release
+      return isReleased;
+    }
+    return Date.now() >= typeRelease;
+  };
+
+  // Whether any selected ticket quantities correspond to released ticket types.
+  const hasSelectedReleasedTickets = Object.entries(ticketQuantities).some(
+    ([type, qty]) => qty > 0 && isTypeReleased(type)
+  );
 
   // Handle users liked events
   const [likedEvents, setLikedEvents] = useState<string[]>([]);
@@ -253,9 +305,20 @@ const EventDetails = () => {
       return;
     }
 
+    if (!isReleased) {
+      alert("Tickets are not on sale yet. Please check back when sales open.");
+      return;
+    }
+
     if (eventId) {
+      if (!hasSelectedReleasedTickets) {
+        alert(
+          "Selected tickets are not on sale yet. Please choose available ticket types."
+        );
+        return;
+      }
       const ticketTypes = Object.entries(ticketQuantities)
-        .filter(([_, quantity]) => quantity > 0)
+        .filter(([, quantity]) => quantity > 0)
         .map(([type, quantity]) => ({
           ticketType: type,
           price: event?.ticketsAvailable[type].price || 0,
@@ -264,7 +327,7 @@ const EventDetails = () => {
         }));
 
       const resaleTicketTypes = Object.entries(resaleTicketQuantities)
-        .filter(([_, quantity]) => quantity > 0)
+        .filter(([, quantity]) => quantity > 0)
         .map(([resaleId, quantity]) => {
           const resaleTicket = event?.resaleTickets?.find(
             (t) => t.resaleId === resaleId
@@ -710,6 +773,15 @@ const EventDetails = () => {
           Tickets
         </h2>
 
+        {/* Release banner when tickets are not yet on sale */}
+        {!isReleased && event.releaseDate && (
+          <div className="mb-4 p-3 rounded-lg bg-yellow-900/70 border border-yellow-600 text-yellow-100">
+            Tickets go on sale on{" "}
+            <strong>{new Date(event.releaseDate).toLocaleString()}</strong>.
+            They will be available to select and purchase after that time.
+          </div>
+        )}
+
         {/* Original Tickets */}
         {Object.entries(event.ticketsAvailable).map(([type, ticket], index) => (
           <div
@@ -749,7 +821,7 @@ const EventDetails = () => {
                           disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100
                           shadow-md hover:shadow-lg"
                 onClick={() => handleQuantityChange(type, -1)}
-                disabled={ticketQuantities[type] <= 0}
+                disabled={ticketQuantities[type] <= 0 || !isReleased}
               >
                 <span className="font-bold">-</span>
               </button>
@@ -765,7 +837,9 @@ const EventDetails = () => {
                           disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100
                           shadow-md hover:shadow-lg"
                 onClick={() => handleQuantityChange(type, 1)}
-                disabled={ticketQuantities[type] >= ticket.quantity}
+                disabled={
+                  ticketQuantities[type] >= ticket.quantity || !isReleased
+                }
               >
                 <span className="font-bold">+</span>
               </button>
@@ -778,8 +852,18 @@ const EventDetails = () => {
           <div className="mt-8 flex flex-col gap-4">
             <button
               onClick={showResaleTicketModal}
-              className="bg-orange-500 rounded-2xl px-4 py-2 mb-4 transform transition-all duration-300 
-                      hover:scale-105 hover:shadow-lg active:scale-95"
+              className={`rounded-2xl px-4 py-2 mb-4 transform transition-all duration-300 
+                      hover:scale-105 hover:shadow-lg active:scale-95 ${
+                        !isReleased
+                          ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                          : "bg-orange-500"
+                      }`}
+              disabled={!isReleased}
+              title={
+                !isReleased
+                  ? "Resale tickets are not viewable until sales open"
+                  : undefined
+              }
             >
               View Resale Tickets{" "}
               <span className="text-xs bg-teal-500/80 text-white px-2 py-0.5 rounded-full">
@@ -835,7 +919,8 @@ const EventDetails = () => {
               className="btn-primary-sm px-4 py-2 transform transition-all duration-300 
                         hover:scale-105 hover:shadow-lg active:scale-95
                         disabled:cursor-not-allowed disabled:scale-100"
-              disabled={grandTotal === 0}
+              disabled={grandTotal === 0 || !isReleased}
+              title={!isReleased ? "Tickets are not on sale yet" : undefined}
             >
               Get Tickets
             </button>

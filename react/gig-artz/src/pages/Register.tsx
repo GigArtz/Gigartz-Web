@@ -13,16 +13,28 @@ import { useNavigate } from "react-router-dom";
 import logo from "../assets/White.png";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { FaSpinner } from "react-icons/fa";
+import BaseModal from "../components/BaseModal";
 
-const InputField = ({
+interface InputFieldProps {
+  label: string;
+  type: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  showToggle?: boolean;
+  onToggle?: () => void;
+  showValue?: boolean;
+}
+
+const InputField: React.FC<InputFieldProps> = ({
   label,
   type,
   placeholder,
   value,
   onChange,
-  showToggle,
+  showToggle = false,
   onToggle,
-  showValue,
+  showValue = false,
 }) => (
   <div className="space-y-2">
     <label className="text-white">{label}</label>
@@ -41,18 +53,20 @@ const InputField = ({
           className="absolute right-3 top-3 text-white"
           onClick={onToggle}
         >
-          {showValue ? (
-            <MdVisibilityOff size={24} />
-          ) : (
-            <MdVisibility size={24} />
-          )}
+          {showValue ? <MdVisibilityOff size={24} /> : <MdVisibility size={24} />}
         </button>
       )}
     </div>
   </div>
 );
 
-const Button = ({ label, onClick, disabled }) => (
+interface ButtonProps {
+  label: string;
+  onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
+  disabled?: boolean;
+}
+
+const Button: React.FC<ButtonProps> = ({ label, onClick, disabled }) => (
   <button className="btn-primary" onClick={onClick} disabled={disabled}>
     {label}
   </button>
@@ -132,18 +146,19 @@ const Register = () => {
   }, [error, dispatch]);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row md:justify-evenly items-center p-6 bg-[#060512]">
+    <div className=" flex flex-col md:flex-row md:justify-evenly items-center p-6 animated-background">
       {/* Logo Section */}
-      <div className="flex justify-center md:w-1/3">
+      <div className="flex justify-center md:w-1/3 mb-8 md:mb-0 animate-fadeIn">
         <img src={logo} alt="Logo" className="w-32 md:w-2/3" />
       </div>
 
       {/* Form Section */}
-      <div className="w-full max-w-md bg-[#1F1C29] rounded-lg p-6 space-y-6 shadow-lg">
+      <div className=" z-30 w-full max-w-md bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 rounded-3xl shadow-2xl p-8 mb-8 border border-gray-800 relative animate-fadeIn">
         <form className="space-y-6" onSubmit={handleRegister}>
           <InputField
             label="Username"
             type="text"
+          
             placeholder="Enter username"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
