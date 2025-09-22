@@ -122,7 +122,7 @@ const PaymentDetails: React.FC = () => {
         <div className="flex space-x-4">
           <div className="flex-1">
             <label className="block text-gray-300 mb-1" htmlFor="expiry">
-              Expiry (MM/YY)
+              MM/YY
             </label>
             <input
               id="expiry"

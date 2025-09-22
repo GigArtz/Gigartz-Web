@@ -471,11 +471,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = React.memo(
                           Followers
                         </p>
                       </div>
-                      <div className="flex flex-row mb-1 max-w-[85%] justify-between w-full text-wrap">
+                      <div className="flex flex-row mb-1 max-w-[95%] justify-between w-full text-wrap">
                         {Array.isArray(displayProfile?.genre) &&
                           displayProfile.genre.length > 0 && (
-                            <div className="flex items-start flex-wrap">
-                              <div className="flex gap-2 my-2 pb-2 overflow-x-auto whitespace-nowrap px-1 custom-scrollbar ">
+                            <div className="flex items-start max-w-[98%] flex-wrap">
+                              <div className="flex gap-2 my-2 pb-2 overflow-x-auto hide-scrollbar whitespace-nowrap px-1 hover:custom-scrollbar ">
                                 {displayProfile.genre
                                   .map((genre, index) => (
                                     <span

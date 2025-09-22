@@ -5,14 +5,35 @@ import { FaSpinner } from "react-icons/fa";
 
 import { useSelector } from "react-redux";
 
-function ScrollableEventRow({ events = [] }) {
+interface ScrollableEventRowProps {
+  events?: unknown[];
+  loading?: boolean;
+  error?: string | null;
+}
+
+function ScrollableEventRow({
+  events = [],
+  loading,
+  error,
+}: ScrollableEventRowProps) {
   const AD_FREQUENCY = 4;
   const loadingByEventId = useSelector(
     (state) => state.events.loadingByEventId
   );
   const errorByEventId = useSelector((state) => state.events.errorByEventId);
 
-  if (events.length === 0) {
+  if (!Array.isArray(events) || events.length === 0) {
+    // If there's a loading state, surface that instead of the empty message
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center py-4">
+          <FaSpinner className="text-teal-500 text-2xl animate-spin" />
+        </div>
+      );
+    }
+    if (error) {
+      return <p className="text-red-400 text-center">{error}</p>;
+    }
     return <p className="text-gray-400 text-center">No events found.</p>;
   }
 

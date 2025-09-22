@@ -1,17 +1,18 @@
-// @ts-expect-error
-interface Window {
-  google: any;
-  mapsReady?: boolean;
+declare global {
+  interface Window {
+    google: any;
+    mapsReady?: boolean;
+  }
 }
+export {};
 
 import { RootState } from "../../store/store";
 import { addEvent } from "../../store/eventsSlice";
 import { showToast } from "../../store/notificationSlice";
-import React, { useState, useReducer, useEffect, useRef } from "react";
+import React, { useState, useReducer, useEffect } from "react";
 import {
   FaArrowLeft,
   FaArrowRight,
-  FaCircle,
   FaTrash,
   FaSpinner,
   FaExclamationTriangle,
@@ -48,7 +49,7 @@ const initialState = {
   venue: "",
 
   // Artist Lineup
-  artistLineUp: [""], // Dynamic array for artists
+  artistLineUp: [], // Dynamic array for artists (start empty)
 
   // Tickets Section
   ticketsAvailable: {}, // Each ticket will be an object with type, price, quantity, etc.
@@ -58,8 +59,8 @@ const initialState = {
   galleryFiles: [],
 };
 
-// Validation schema for each step
-const validateStep = (step, formData) => {
+// Validation schema for each step (loose types to avoid file-only TS noise)
+const validateStep = (step: any, formData: any) => {
   const errors = {};
 
   switch (step) {
@@ -75,7 +76,7 @@ const validateStep = (step, formData) => {
       if (!formData.eventType) errors.eventType = "Event type is required";
       break;
 
-    case 2:
+    case 2: {
       const validArtists = formData.artistLineUp?.filter((artist) =>
         artist.trim()
       );
@@ -83,6 +84,7 @@ const validateStep = (step, formData) => {
         errors.artistLineUp = "At least one artist is required";
       }
       break;
+    }
 
     case 3:
       if (!formData.date) errors.date = "Event date is required";
@@ -120,8 +122,8 @@ const validateStep = (step, formData) => {
   return errors;
 };
 
-// Reducer function
-const formReducer = (state, action) => {
+// Reducer function (loose types)
+const formReducer = (state: any, action: any) => {
   if (action.type === "update") {
     console.log("Reducer update action:", {
       name: action.name,
@@ -164,6 +166,17 @@ const formReducer = (state, action) => {
   }
   if (action.type === "addArtist") {
     return { ...state, artistLineUp: [...state.artistLineUp, ""] };
+  }
+  if (action.type === "appendArtist") {
+    // action.name is the artist display name to append
+    const artistName = action.name || "";
+    if (!artistName) return state;
+    // prevent duplicates (case-insensitive)
+    const exists = state.artistLineUp.some(
+      (a) => a && a.toLowerCase() === artistName.toLowerCase()
+    );
+    if (exists) return state;
+    return { ...state, artistLineUp: [...state.artistLineUp, artistName] };
   }
   if (action.type === "removeArtist") {
     const updatedArray = [...state.artistLineUp];
@@ -335,10 +348,6 @@ const AddEventForm: React.FC = () => {
     );
   };
 
-  const handleArtistChange = (index, value) => {
-    dispatch({ type: "updateArray", index, value });
-  };
-
   const handleNextStep = () => {
     const errors = validateStep(step, formData);
 
@@ -506,168 +515,180 @@ const AddEventForm: React.FC = () => {
     }
   };
 
-  return (
-    <div className="justify-center items-center z-30">
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center">
-            <FaSpinner className="text-teal-500 text-4xl animate-spin mb-4" />
-            <p className="text-white text-lg">
-              {step === 6
-                ? "Uploading files and creating event..."
-                : "Processing..."}
-            </p>
+  let content: any;
+  try {
+    content = (
+      <div className="justify-center items-center z-30">
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center">
+              <FaSpinner className="text-teal-500 text-4xl animate-spin mb-4" />
+              <p className="text-white text-lg">
+                {step === 6
+                  ? "Uploading files and creating event..."
+                  : "Processing..."}
+              </p>
+            </div>
           </div>
+        )}
+
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-semibold text-white mb-2">
+            {
+              [
+                "Event Details",
+                "Artist Lineup",
+                "Event Schedule",
+                "Event Tickets",
+                "Event Media",
+                "Review Your Event",
+              ][step - 1]
+            }
+          </h2>
+          <p className="text-gray-400">
+            {
+              [
+                "Add your event information",
+                "Who's performing at your event?",
+                "When is your event happening?",
+                "Configure your ticket types and pricing",
+                "Update photos and videos to showcase your event",
+                "Review your event details before submission",
+              ][step - 1]
+            }
+          </p>
         </div>
-      )}
 
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-semibold text-white mb-2">
-          {
-            [
-              "Event Details",
-              "Artist Lineup",
-              "Event Schedule",
-              "Event Tickets",
-              "Event Media",
-              "Review Your Event",
-            ][step - 1]
-          }
-        </h2>
-        <p className="text-gray-400">
-          {
-            [
-              "Add your event information",
-              "Who's performing at your event?",
-              "When is your event happening?",
-              "Configure your ticket types and pricing",
-              "Update photos and videos to showcase your event",
-              "Review your event details before submission",
-            ][step - 1]
-          }
-        </p>
-      </div>
-
-      <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
-        {/* Progress Header */}
-        <div className="rounded-lg p-4 mb-4 ">
-          <div className="flex items-center justify-between">
-            {Array.from({ length: 6 }, (_, i) => i + 1).map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                    stepNumber === step
-                      ? "bg-teal-500 text-white"
-                      : completedSteps.has(stepNumber)
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-600 text-gray-300"
-                  }`}
-                >
-                  {completedSteps.has(stepNumber) && stepNumber !== step ? (
-                    <FaCheckCircle className="text-sm" />
-                  ) : (
-                    stepNumber
+        <div className="flex-row p-2 space-y-2 md:p-4 md:space-y-6">
+          {/* Progress Header */}
+          <div className="rounded-lg p-4 mb-4 ">
+            <div className="flex items-center justify-between">
+              {Array.from({ length: 6 }, (_, i) => i + 1).map((stepNumber) => (
+                <div key={stepNumber} className="flex items-center">
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      stepNumber === step
+                        ? "bg-teal-500 text-white"
+                        : completedSteps.has(stepNumber)
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-600 text-gray-300"
+                    }`}
+                  >
+                    {completedSteps.has(stepNumber) && stepNumber !== step ? (
+                      <FaCheckCircle className="text-sm" />
+                    ) : (
+                      stepNumber
+                    )}
+                  </div>
+                  {stepNumber < 6 && (
+                    <div
+                      className={`h-1 w-14 hidden md:block ${
+                        completedSteps.has(stepNumber)
+                          ? "bg-green-500"
+                          : "bg-gray-600"
+                      }`}
+                    />
                   )}
                 </div>
-                {stepNumber < 6 && (
-                  <div
-                    className={`h-1 w-14 hidden md:block ${
-                      completedSteps.has(stepNumber)
-                        ? "bg-green-500"
-                        : "bg-gray-600"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="flex justify-between mt-2 text-xs text-gray-400">
+              <span>Details</span>
+              <span>Artists</span>
+              <span>Schedule</span>
+              <span>Tickets</span>
+              <span>Media</span>
+              <span>Review</span>
+            </div>
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-400">
-            <span>Details</span>
-            <span>Artists</span>
-            <span>Schedule</span>
-            <span>Tickets</span>
-            <span>Media</span>
-            <span>Review</span>
+
+          <div className="rounded-lg">
+            {step === 1 && (
+              <Step1
+                formData={formData}
+                handleChange={handleChange}
+                errors={validationErrors}
+              />
+            )}
+            {step === 2 && (
+              <Step2
+                formData={formData}
+                dispatch={dispatch}
+                errors={validationErrors}
+              />
+            )}
+            {step === 3 && (
+              <Step3
+                formData={formData}
+                handleDateChange={handleChange}
+                errors={validationErrors}
+              />
+            )}
+            {step === 4 && (
+              <Step4
+                formData={formData}
+                dispatch={dispatch}
+                errors={validationErrors}
+              />
+            )}
+            {step === 5 && (
+              <Step5
+                formData={formData}
+                handleGalleryChange={handleGalleryChange}
+                handleVideoChange={handleVideoChange}
+                dispatch={dispatch}
+              />
+            )}
+            {step === 6 && <Step6 formData={formData} />}
           </div>
-        </div>
 
-        <div className="rounded-lg">
-          {step === 1 && (
-            <Step1
-              formData={formData}
-              handleChange={handleChange}
-              errors={validationErrors}
-            />
-          )}
-          {step === 2 && (
-            <Step2
-              formData={formData}
-              handleArtistChange={handleArtistChange}
-              dispatch={dispatch}
-              errors={validationErrors}
-            />
-          )}
-          {step === 3 && (
-            <Step3
-              formData={formData}
-              handleDateChange={handleChange}
-              errors={validationErrors}
-            />
-          )}
-          {step === 4 && (
-            <Step4
-              formData={formData}
-              dispatch={dispatch}
-              errors={validationErrors}
-            />
-          )}
-          {step === 5 && (
-            <Step5
-              formData={formData}
-              handleGalleryChange={handleGalleryChange}
-              handleVideoChange={handleVideoChange}
-              dispatch={dispatch}
-            />
-          )}
-          {step === 6 && <Step6 formData={formData} />}
-        </div>
+          <div className="flex justify-between ">
+            {step > 1 && (
+              <button
+                onClick={() => setStep((prev) => prev - 1)}
+                className="border bg-teal-500 border-teal-500 rounded-2xl text-white w-28 text-sm p-2 flex items-center hover:bg-teal-600 transition-colors"
+              >
+                <FaArrowLeft className="mr-2" /> Previous
+              </button>
+            )}
 
-        <div className="flex justify-between ">
-          {step > 1 && (
-            <button
-              onClick={() => setStep((prev) => prev - 1)}
-              className="border bg-teal-500 border-teal-500 rounded-2xl text-white w-28 text-sm p-2 flex items-center hover:bg-teal-600 transition-colors"
-            >
-              <FaArrowLeft className="mr-2" /> Previous
-            </button>
-          )}
+            {step < 6 && (
+              <button
+                onClick={handleNextStep}
+                disabled={Object.keys(validationErrors).length > 0}
+                className={`border px-4 rounded-2xl text-white w-20 text-sm p-2 flex items-center transition-colors ${
+                  Object.keys(validationErrors).length > 0
+                    ? "bg-gray-500 border-gray-500 cursor-not-allowed"
+                    : "bg-teal-500 border-teal-500 hover:bg-teal-600"
+                }`}
+              >
+                Next <FaArrowRight className="ml-2" />
+              </button>
+            )}
 
-          {step < 6 && (
-            <button
-              onClick={handleNextStep}
-              disabled={Object.keys(validationErrors).length > 0}
-              className={`border px-4 rounded-2xl text-white w-20 text-sm p-2 flex items-center transition-colors ${
-                Object.keys(validationErrors).length > 0
-                  ? "bg-gray-500 border-gray-500 cursor-not-allowed"
-                  : "bg-teal-500 border-teal-500 hover:bg-teal-600"
-              }`}
-            >
-              Next <FaArrowRight className="ml-2" />
-            </button>
-          )}
-
-          {step === 6 && (
-            <button
-              onClick={handleSubmit}
-              className="px-4 btn-primary w-20 text-sm p-2 text-white hover:bg-teal-600 transition-colors"
-            >
-              Submit
-            </button>
-          )}
+            {step === 6 && (
+              <button
+                onClick={handleSubmit}
+                className="px-4 btn-primary w-20 text-sm p-2 text-white hover:bg-teal-600 transition-colors"
+              >
+                Submit
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (err) {
+    console.error("EventForm render error:", err);
+    content = (
+      <div className="p-4 text-red-400 bg-gray-900 rounded">
+        <h3 className="font-semibold">Error rendering Event form</h3>
+        <p className="text-sm">Check the browser console for details.</p>
+      </div>
+    );
+  }
+
+  return content;
 };
 
 // Error message component
@@ -806,7 +827,9 @@ const Step1 = ({ formData, handleChange, errors }) => {
         <div className="relative">
           <VenueInput
             apiKey={import.meta.env.VITE_MAPS_API_KEY}
-            className={`input-field p-0 ${errors.venue ? "border-red-500" : ""}`}
+            className={`input-field p-0 text-white ${
+              errors.venue ? "border-red-500" : ""
+            }`}
             value={formData.venue}
             onPlaceSelected={(place) => {
               const value =
@@ -911,42 +934,98 @@ const Step1 = ({ formData, handleChange, errors }) => {
   );
 };
 
-// Step 2: Artist Lineup
-const Step2 = ({ formData, handleArtistChange, dispatch, errors }) => (
-  <div className="space-y-4 rounded-lg p-6">
-    {formData.artistLineUp.map((artist, index) => (
-      <div key={index} className="flex space-x-2">
+// Step 2: Artist Lineup with registered user search
+const Step2 = ({ formData, dispatch, errors }) => {
+  const { userList } = useSelector((state: RootState) => state.profile);
+  const [query, setQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Filtered suggestions from registered users
+  const suggestions = (userList || [])
+    .filter((u) => {
+      const name = (u.userName || u.name || u.displayName || "").toLowerCase();
+      return query.trim() !== "" && name.includes(query.toLowerCase());
+    })
+    .slice(0, 8);
+
+  const onSelectSuggestion = (name: string) => {
+    // append artist via reducer action
+    dispatch({ type: "appendArtist", name });
+    setQuery("");
+    setShowSuggestions(false);
+  };
+
+  return (
+    <div className="space-y-4 rounded-lg p-6 relative">
+      <div>
         <input
           type="text"
-          value={artist}
-          onChange={(e) => handleArtistChange(index, e.target.value)}
-          className="input-field flex-1"
-          placeholder={`Artist ${index + 1} name`}
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          placeholder="Search artist by name (select from registered users)"
+          className="input-field w-full"
         />
-        {formData.artistLineUp.length > 1 && (
-          <button
-            onClick={() => dispatch({ type: "removeArtist", index })}
-            className="p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300"
-          >
-            <FaMinus />
-          </button>
+
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-40 mt-1 w-full bg-white text-black rounded shadow max-h-60 overflow-auto">
+            {suggestions.map((u) => {
+              const display = u.userName || u.name || u.displayName || u.id;
+              return (
+                <button
+                  key={u.id}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onSelectSuggestion(display);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                >
+                  <div className="text-sm font-medium">{display}</div>
+                  <div className="text-xs text-gray-500">
+                    {u.emailAddress || u.phoneNumber || ""}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
-    ))}
 
-    <ErrorMessage error={errors.artistLineUp} />
+      {/* Render static artist names with remove buttons; no free-text editing */}
+      {formData.artistLineUp && formData.artistLineUp.length > 0 ? (
+        formData.artistLineUp.map((artist, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between bg-gray-800 rounded p-2"
+          >
+            <div className="text-white">{artist}</div>
+            <div>
+              <button
+                onClick={() => dispatch({ type: "removeArtist", index })}
+                className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300"
+                type="button"
+              >
+                <FaMinus />
+              </button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-400 text-sm">
+          No artists added yet. Use the search above to add registered users as
+          artists.
+        </p>
+      )}
 
-    <div className="flex justify-center">
-      <button
-        onClick={() => dispatch({ type: "addArtist" })}
-        className="inline-flex items-center px-6 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
-        type="button"
-      >
-        + Add Artist
-      </button>
+      <ErrorMessage error={errors.artistLineUp} />
     </div>
-  </div>
-);
+  );
+};
 
 // Step 3: Event Schedule
 const Step3 = ({ formData, handleDateChange, errors }) => (

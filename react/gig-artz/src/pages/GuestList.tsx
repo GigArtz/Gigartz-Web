@@ -36,6 +36,8 @@ function GuestList() {
   const [newListName, setNewListName] = useState("");
   const [newListDescription, setNewListDescription] = useState("");
   const [editingList, setEditingList] = useState(null);
+  const [isPaid, setIsPaid] = useState(false);
+  const [price, setPrice] = useState<number | string>(0);
   const [showListModal, setShowListModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [isGuestListModalOpen, setIsGuestListModalOpen] = useState(false);
@@ -68,9 +70,26 @@ function GuestList() {
       showToast("List name cannot be empty!", "error");
       return;
     }
+    // If paid list, validate price
+    if (isPaid) {
+      const numericPrice = Number(price);
+      if (Number.isNaN(numericPrice) || numericPrice <= 0) {
+        showToast(
+          "Please provide a valid monthly price for paid guest lists.",
+          "error"
+        );
+        return;
+      }
+    }
     if (editingList) {
       try {
-        await dispatch(updateGuestList(user.uid, editingList.id, newListName));
+        await dispatch(
+          updateGuestList(user.uid, editingList.id, newListName, {
+            isPaid: !!isPaid,
+            price: isPaid ? Number(price) : 0,
+            billingCycle: isPaid ? "monthly" : undefined,
+          })
+        );
         showToast("Guest list updated successfully!", "success");
         setEditingList(null);
         setShowListModal(false);
@@ -89,12 +108,21 @@ function GuestList() {
         guestListName: newListName,
         description: newListDescription,
         guests: [],
+        isPaid: !!isPaid,
+        price: isPaid ? Number(price) : 0,
+        billingCycle: isPaid ? "monthly" : undefined,
       };
       setGuestLists((prev) => [...prev, optimisticList]);
 
       try {
         const actionResult = await dispatch(
-          createGuestList({ userId: user.uid, guestListName: newListName })
+          createGuestList({
+            userId: user.uid,
+            guestListName: newListName,
+            isPaid: !!isPaid,
+            price: isPaid ? Number(price) : 0,
+            billingCycle: isPaid ? "monthly" : "monthly",
+          })
         );
         let guestListId = undefined;
         if (actionResult && typeof actionResult === "object") {
@@ -142,6 +170,8 @@ function GuestList() {
     setNewListName("");
     setNewGuestName("");
     setNewListDescription("");
+    setIsPaid(false);
+    setPrice(0);
     setEditingList(null);
     setShowListModal(false);
   };
@@ -272,6 +302,8 @@ function GuestList() {
               setEditingList(null);
               setNewListName("");
               setNewListDescription("");
+              setIsPaid(false);
+              setPrice(0);
               setShowFloatingMenu(false);
             }}
             className="w-10 h-10 rounded-full btn-primary flex items-center justify-center shadow-lg transform transition-all hover:scale-105 hover:shadow-xl hover:shadow-teal-500/25 animate-pulse-glow"
@@ -401,6 +433,8 @@ function GuestList() {
                     setEditingList(list);
                     setNewListName(list.guestListName || "");
                     setNewListDescription(list.description || "");
+                    setIsPaid(!!list.isPaid);
+                    setPrice(list.price || 0);
                     setSelectedList(list);
                     setShowListModal(true);
                   }}
@@ -537,6 +571,8 @@ function GuestList() {
           setEditingList(null);
           setNewListName("");
           setNewListDescription("");
+          setIsPaid(false);
+          setPrice(0);
         }}
         title={editingList ? "Edit List" : "Create New List"}
         icon={<FaEdit className="w-5 h-5" />}
@@ -581,19 +617,32 @@ function GuestList() {
               </label>
             </div>
 
-            <div className="flex items-center">
+            {/* removed duplicate paid toggle - using dedicated paid pricing control below */}
+          </div>
+
+          {/* Paid guestlist pricing */}
+          <div className="flex items-center gap-3 animate-fade-in animation-delay-300">
+            <input
+              id="is-paid-toggle"
+              type="checkbox"
+              checked={isPaid}
+              onChange={(e) => setIsPaid(e.target.checked)}
+              className="toggle-checkbox transform hover:scale-110 transition-transform duration-200"
+            />
+            <label htmlFor="is-paid-toggle" className="text-gray-300 text-sm">
+              Paid guest list (monthly subscription)
+            </label>
+            {isPaid && (
               <input
-                type="checkbox"
-                id="paid-private-toggle"
-                className="toggle-checkbox transform hover:scale-110 transition-transform duration-200"
+                type="number"
+                min={0}
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="Monthly price"
+                className="input-field w-36 ml-2"
               />
-              <label
-                htmlFor="paid-private-toggle"
-                className="toggle-label text-gray-400 ml-2 text-sm hover:text-teal-300 transition-colors duration-200"
-              >
-                Paid Event
-              </label>
-            </div>
+            )}
           </div>
 
           {!editingList && (
@@ -658,6 +707,8 @@ function GuestList() {
                   setEditingList(null);
                   setNewListName("");
                   setNewListDescription("");
+                  setIsPaid(false);
+                  setPrice(0);
                   setShowFloatingMenu(false);
                 }}
                 className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-teal-600 rounded-lg transition-all duration-200 animate-slide-in-left"

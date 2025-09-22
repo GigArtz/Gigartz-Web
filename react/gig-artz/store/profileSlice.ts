@@ -94,6 +94,7 @@ declare global {
 
 // User Profile Interface
 export interface UserProfile {
+  id?: string;
   userId?: string;
   userName: string;
   name: string;
@@ -121,13 +122,27 @@ export interface UserProfile {
     pro: boolean;
     admin: boolean;
   };
-  // Nested data properties that come from API responses
-  likedEvents?: unknown[];
-  myBookings?: Booking[];
+  // Additional collections commonly returned by profile APIs
+  userProfile?: unknown; // sometimes nested profile object
   userEvents?: unknown[];
+  likedEvents?: unknown[];
+  userTickets?: unknown[];
   userFollowing?: unknown[];
   userFollowers?: unknown[];
   userReviews?: unknown[];
+  userBookings?: Booking[];
+  userBookingsRequests?: Booking[];
+  userGuestList?: unknown[];
+  userEventProfit?: unknown | null;
+  userTipsProfit?: unknown | null;
+  userSavedEvents?: unknown[];
+  userSavedReviews?: unknown[];
+  userReviewGiven?: unknown[];
+  userReviewReceived?: unknown[];
+  userNotifications?: unknown[];
+  userCardDetails?: unknown | null;
+  // Nested data properties that come from API responses
+  myBookings?: Booking[];
 }
 
 interface Booking {

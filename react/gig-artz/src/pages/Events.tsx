@@ -1,6 +1,7 @@
 import EventGalleryCarousel from "../components/EventGalleryCarousel";
 import { RootState } from "../../store/store";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { UserProfile } from "../../store/profileSlice";
 import {
   FaCalendar,
   FaClock,
@@ -11,7 +12,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { addLike, buyTicket, fetchAllEvents } from "../../store/eventsSlice";
-import React from "react";
 import CommentsModal from "../components/CommentsModal";
 import ShareModal from "../components/ShareModal";
 import EventActions from "../components/EventActions";
@@ -54,6 +54,7 @@ interface Event {
   // These are checked to allow per-ticket-type on-sale gating.
   // Note: some backends may store these as strings — we attempt to parse them.
   category: string;
+  promoterId?: string;
   hostName: string;
   comments: string[];
   likes: number;
@@ -79,18 +80,60 @@ const EventDetails = () => {
   );
   const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.auth);
-  const { profile } = useSelector((state: RootState) => state.profile);
+  // Local helper type: backend sometimes provides `id` or `userId` fields
+  type MaybeUser = UserProfile & { id?: string; userId?: string };
+
+  // Profile state and cached user list (userList typed as MaybeUser[])
+  const profileState = useSelector((state: RootState) => state.profile);
+  const { profile, userList } = profileState as {
+    profile: MaybeUser | null;
+    userList: MaybeUser[];
+  };
 
   // Show performers dropdown state
   const [showPerformers, setShowPerformers] = useState(false);
+  const performersRef = useRef<HTMLDivElement | null>(null);
+
+  // Close performers dropdown on outside click or Escape
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (!performersRef.current) return;
+      const target = e.target as Node;
+      if (showPerformers && !performersRef.current.contains(target)) {
+        setShowPerformers(false);
+      }
+    };
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowPerformers(false);
+    };
+
+    document.addEventListener("click", handleOutsideClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [showPerformers]);
 
   // Helper to get seller info from event profile (if available)
   const getSellerInfo = (sellerId: string) => {
     // Try to find seller in eventData (if user info is available)
     // This is a placeholder; adapt as needed for your user data source
-    if (sellerId === profile?.id) {
-      return { name: profile.name, email: profile.emailAddress };
+    // Check current profile first (note: profile slice uses different field names)
+    if (sellerId === profile?.id || sellerId === profile?.userId) {
+      return {
+        name: profile?.name || profile?.userName,
+        email: profile?.emailAddress,
+      };
     }
+
+    // Try userList cache
+    const found = (userList || []).find(
+      (u: MaybeUser) => u.id === sellerId || u.userId === sellerId
+    );
+    if (found)
+      return { name: found.name || found.userName, email: found.emailAddress };
     // Could add more logic to look up seller in a user list if available
     return undefined;
   };
@@ -154,7 +197,12 @@ const EventDetails = () => {
 
   const totalTicketPrice = Object.entries(ticketQuantities).reduce(
     (total, [type, quantity]) => {
-      const ticketPrice = event?.ticketsAvailable[type].price || 0;
+      // Coerce stored price (may be string) to number without using `any`
+      const ticketEntry = event?.ticketsAvailable[type] as unknown as
+        | { [k: string]: unknown }
+        | undefined;
+      const rawPrice = ticketEntry?.price ?? 0;
+      const ticketPrice = Number(rawPrice as unknown) || 0;
       return total + ticketPrice * quantity;
     },
     0
@@ -165,7 +213,7 @@ const EventDetails = () => {
       const resaleTicket = event?.resaleTickets?.find(
         (t) => t.resaleId === resaleId
       );
-      const ticketPrice = resaleTicket?.price || 0;
+      const ticketPrice = Number(resaleTicket?.price) || 0;
       return total + ticketPrice * quantity;
     },
     0
@@ -193,11 +241,38 @@ const EventDetails = () => {
     const ticketUnknown = event?.ticketsAvailable[type] as unknown;
     const ticket = ticketUnknown as { [k: string]: unknown } | undefined;
     if (!ticket) return null;
-    const dateStrRaw =
-      ticket["ticketReleaseDate"] ?? ticket["ticketReleaseTime"];
-    const dateStr = typeof dateStrRaw === "string" ? dateStrRaw : null;
-    if (!dateStr) return null;
-    const t = new Date(dateStr).getTime();
+
+    // Support separate ticketReleaseDate and ticketReleaseTime fields
+    const dateField =
+      ticket["ticketReleaseDate"] ?? ticket["ticketReleaseDate"];
+    const timeField =
+      ticket["ticketReleaseTime"] ?? ticket["ticketReleaseTime"];
+
+    // If both present, combine them into an ISO-ish string; otherwise try single field parsing
+    const dateStr =
+      typeof dateField === "string" && dateField.trim() !== ""
+        ? dateField.trim()
+        : null;
+    const timeStr =
+      typeof timeField === "string" && timeField.trim() !== ""
+        ? timeField.trim()
+        : null;
+
+    let combined: string | null = null;
+    if (dateStr && timeStr) {
+      // Some backends store date as YYYY-MM-DD and time as HH:mm (local). Create a combined
+      // string in a form Date can parse reliably by joining with 'T' and appending seconds if missing.
+      const normalizedTime = timeStr.length === 5 ? `${timeStr}:00` : timeStr; // HH:mm -> HH:mm:00
+      combined = `${dateStr}T${normalizedTime}`;
+    } else if (dateStr) {
+      combined = dateStr;
+    } else if (timeStr) {
+      combined = timeStr;
+    }
+
+    if (!combined) return null;
+
+    const t = new Date(combined).getTime();
     return isNaN(t) ? null : t;
   };
 
@@ -210,6 +285,23 @@ const EventDetails = () => {
       return isReleased;
     }
     return Date.now() >= typeRelease;
+  };
+
+  // Format release timestamps like: "Thu, Sep 25, 2025 16:56"
+  const formatReleaseTimestamp = (ts: number | null | undefined) => {
+    if (!ts) return "TBA";
+    const d = new Date(ts);
+    const formatted = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(d);
+    // Intl often returns "Thu, Sep 25, 2025, 16:56" — replace the last comma with a space
+    return formatted.replace(/, (?=[^,]*$)/, " ");
   };
 
   // Whether any selected ticket quantities correspond to released ticket types.
@@ -321,7 +413,15 @@ const EventDetails = () => {
         .filter(([, quantity]) => quantity > 0)
         .map(([type, quantity]) => ({
           ticketType: type,
-          price: event?.ticketsAvailable[type].price || 0,
+          // Safely coerce stored price to number without using `any`
+          price:
+            Number(
+              (
+                event?.ticketsAvailable[type] as unknown as {
+                  [k: string]: unknown;
+                }
+              ).price as unknown
+            ) || 0,
           quantity,
           isResale: false,
         }));
@@ -465,7 +565,7 @@ const EventDetails = () => {
                   );
                   return {
                     ticketType: resaleTicket?.ticketType || "",
-                    price: resaleTicket?.price || 0,
+                    price: Number(resaleTicket?.price) || 0,
                     quantity,
                     isResale: true,
                     resaleId,
@@ -588,7 +688,7 @@ const EventDetails = () => {
           </button>
 
           {/* Performers Dropdown Modal */}
-          <div className="relative inline-block">
+          <div className="relative inline-block" ref={performersRef}>
             <button
               className="flex items-center gap-1 text-teal-400 hover:text-teal-300 font-medium px-2 py-0.5 rounded transition-all duration-200 text-xs border border-teal-500/30 bg-gray-900 hover:bg-gray-800"
               onClick={() => setShowPerformers((prev) => !prev)}
@@ -605,20 +705,93 @@ const EventDetails = () => {
                 style={{ animationFillMode: "both" }}
               >
                 <ul className="py-1">
-                  {event.artistLineUp.length === 0 ? (
-                    <li className="px-3 py-1 text-gray-400 text-xs">
-                      No performers
-                    </li>
-                  ) : (
-                    event.artistLineUp.map((artist, idx) => (
-                      <li
-                        key={artist + idx}
-                        className="px-3 py-1 text-white text-xs hover:bg-teal-700/20 transition-all duration-150 cursor-pointer"
-                      >
-                        {artist}
-                      </li>
-                    ))
-                  )}
+                  {event.artistLineUp.length === 0
+                    ? // If there are no artists, try to show promoter/host as a fallback (resolve to user if available)
+                      (() => {
+                        const pid = event.promoterId;
+                        const promoter = (userList || []).find(
+                          (u: MaybeUser) => u.id === pid || u.userId === pid
+                        );
+                        if (promoter) {
+                          return (
+                            <li className="px-0 py-0">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowPerformers(false);
+                                  navigate(`/people/${pid}`);
+                                }}
+                                className="w-full text-left px-3 py-1 text-white text-xs hover:bg-teal-700/20 transition-all duration-150 cursor-pointer"
+                              >
+                                {promoter.name ||
+                                  promoter.userName ||
+                                  promoter.userName}
+                              </button>
+                            </li>
+                          );
+                        }
+                        return (
+                          <li className="px-3 py-1 text-gray-200 text-xs">
+                            {event.hostName || "No performers"}
+                          </li>
+                        );
+                      })()
+                    : event.artistLineUp.map((artist: unknown, idx) => {
+                        // artist may be:
+                        // - a string id
+                        // - a string display name
+                        // - an object containing user info (possibly from older data)
+                        const isObject =
+                          typeof artist === "object" && artist !== null;
+                        const artistObj = (
+                          isObject ? (artist as MaybeUser) : null
+                        ) as MaybeUser | null;
+
+                        const artistIdFromObj =
+                          artistObj?.id || artistObj?.userId;
+                        const artistId =
+                          typeof artist === "string" ? artist : artistIdFromObj;
+
+                        // Try to find in cached user list by id
+                        let resolved: MaybeUser | undefined = undefined;
+                        if (artistId) {
+                          resolved = (userList || []).find(
+                            (u: MaybeUser) =>
+                              u.id === artistId || u.userId === artistId
+                          );
+                        }
+
+                        // If not found in cache but artistObj exists, use it
+                        if (!resolved && artistObj) resolved = artistObj;
+
+                        const displayName = resolved
+                          ? resolved.name || resolved.userName
+                          : typeof artist === "string"
+                          ? artist
+                          : "Unknown";
+                        const keyId = artistId || displayName || idx;
+
+                        return (
+                          <li key={String(keyId) + idx} className="px-0 py-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowPerformers(false);
+                                const targetId =
+                                  resolved?.id ||
+                                  resolved?.userId ||
+                                  (typeof artist === "string"
+                                    ? artist
+                                    : undefined);
+                                if (targetId) navigate(`/people/${targetId}`);
+                              }}
+                              className="w-full text-left px-3 py-1 text-white text-xs hover:bg-teal-700/20 transition-all duration-150 cursor-pointer"
+                            >
+                              {displayName}
+                            </button>
+                          </li>
+                        );
+                      })}
                 </ul>
               </div>
             )}
@@ -702,7 +875,10 @@ const EventDetails = () => {
               <p className="text-sm text-gray-400 transition-colors duration-300 group-hover:text-gray-300">
                 Venue
               </p>
-              <p className="text-white font-medium transition-all duration-300 group-hover:tracking-wide">
+              <p
+                className="text-white font-medium transition-all duration-300 group-hover:tracking-wide line-clamp-1"
+                title={event.venue}
+              >
                 {event.venue}
               </p>
             </div>
@@ -777,8 +953,12 @@ const EventDetails = () => {
         {!isReleased && event.releaseDate && (
           <div className="mb-4 p-3 rounded-lg bg-yellow-900/70 border border-yellow-600 text-yellow-100">
             Tickets go on sale on{" "}
-            <strong>{new Date(event.releaseDate).toLocaleString()}</strong>.
-            They will be available to select and purchase after that time.
+            <strong>
+              {formatReleaseTimestamp(
+                event.releaseDate ? new Date(event.releaseDate).getTime() : null
+              )}
+            </strong>
+            . They will be available to select and purchase after that time.
           </div>
         )}
 
@@ -807,6 +987,21 @@ const EventDetails = () => {
               <p className="text-gray-300 transition-all duration-300 group-hover:text-gray-200">
                 R {ticket.price}
               </p>
+              {/* Show per-type release message when ticket type is not yet released */}
+              {!isTypeReleased(type) && (
+                <p className="text-xs text-yellow-200 mt-1">
+                  Available on{" "}
+                  {(() => {
+                    const ts = parseTicketReleaseForType(type);
+                    const useTs =
+                      ts ??
+                      (event.releaseDate
+                        ? new Date(event.releaseDate).getTime()
+                        : null);
+                    return formatReleaseTimestamp(useTs);
+                  })()}
+                </p>
+              )}
               <p
                 className="text-xs text-gray-500 transition-all duration-300 
                           group-hover:text-teal-400 group-hover:font-medium"
@@ -821,7 +1016,7 @@ const EventDetails = () => {
                           disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100
                           shadow-md hover:shadow-lg"
                 onClick={() => handleQuantityChange(type, -1)}
-                disabled={ticketQuantities[type] <= 0 || !isReleased}
+                disabled={ticketQuantities[type] <= 0}
               >
                 <span className="font-bold">-</span>
               </button>
@@ -838,7 +1033,8 @@ const EventDetails = () => {
                           shadow-md hover:shadow-lg"
                 onClick={() => handleQuantityChange(type, 1)}
                 disabled={
-                  ticketQuantities[type] >= ticket.quantity || !isReleased
+                  ticketQuantities[type] >= Number(ticket.quantity) ||
+                  !isTypeReleased(type)
                 }
               >
                 <span className="font-bold">+</span>
@@ -919,7 +1115,9 @@ const EventDetails = () => {
               className="btn-primary-sm px-4 py-2 transform transition-all duration-300 
                         hover:scale-105 hover:shadow-lg active:scale-95
                         disabled:cursor-not-allowed disabled:scale-100"
-              disabled={grandTotal === 0 || !isReleased}
+              disabled={
+                grandTotal === 0 || !isReleased || !hasSelectedReleasedTickets
+              }
               title={!isReleased ? "Tickets are not on sale yet" : undefined}
             >
               Get Tickets

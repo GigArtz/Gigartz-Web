@@ -50,7 +50,7 @@ text {
   .input-field[type="time"],
   .input-field[type="datetime-local"] {
     color: #fff;
-    background-color: transparent;
+    background-color: #111827; /* fallback for browsers that don't support bg-dark */
   }
 
   .modal-content {

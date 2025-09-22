@@ -11,7 +11,6 @@ import {
   FaCog,
   FaShieldAlt,
   FaChevronRight,
-  FaUserEdit,
 } from "react-icons/fa";
 import Header from "../components/Header";
 import TermsCondition from "../components/TermsCondition";
@@ -62,9 +61,7 @@ const tabs = [
 ];
 
 const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState(null);
-  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   // Track screen width for responsive logic
@@ -72,9 +69,7 @@ const Settings: React.FC = () => {
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
       // Always close mobile menu when switching to desktop
-      if (window.innerWidth >= 768) {
-        setIsMobileMenuOpen(false);
-      }
+      // no-op for mobile menu here (state removed); retained for future if needed
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -83,7 +78,7 @@ const Settings: React.FC = () => {
   const renderActiveComponent = () => {
     switch (activeTab) {
       case "Profile Settings":
-        return <>{<EditProfile useModal={true} />}</>;
+        return <EditProfile useModal={true} />;
       case "Account Settings":
         return <PaymentDetails />;
       case "Insights":
@@ -101,24 +96,21 @@ const Settings: React.FC = () => {
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
-    // Close the mobile menu when a tab is clicked on mobile
-    if (screenWidth < 768) {
-      setIsMobileMenuOpen(false);
-    }
   };
 
   return (
-    <div className="main-content h-screen">
+    <div className="main-content h-screen flex flex-col">
       <Header title="Settings" />
 
       {/* Sidebar (Tabs) - always rendered, hidden on mobile when tab is selected */}
-      <div className="flex md:flex-row sm:flex-col min-h-full flex-col-reverse">
-        <div
-          className={`md:w-[30%] w-full md:border-r min-h-full border-gray-700 flex flex-col bg-dark ${
+      <div className="flex md:flex-row sm:flex-col flex-1 flex-col-reverse">
+        <aside
+          className={`md:w-[30%] w-full md:border-r border-gray-700 flex flex-col bg-dark ${
             screenWidth < 768 && activeTab ? "hidden" : ""
           }`}
         >
-          <div className="flex-1 overflow-y-auto p-2 ">
+          {/* Sticky sidebar on md+; intentionally no internal scroll so only main content scrolls */}
+          <div className="md:sticky md:top-[76px] md:h-[calc(100vh-76px)] p-2 flex flex-col">
             <div className="space-y-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -148,16 +140,17 @@ const Settings: React.FC = () => {
               })}
             </div>
           </div>
-        </div>
+        </aside>
 
         {/* Main Content Area */}
-        <div
+        <main
           className={`flex-1 flex flex-col ${
             activeTab && screenWidth < 768 ? "" : "md:flex"
           }`}
         >
           {activeTab ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
+            // Make active content scrollable while keeping sidebar static
+            <div className="flex-1 overflow-y-auto p-8 text-center relative">
               {/* Back button for mobile */}
               {screenWidth < 768 && (
                 <button
@@ -185,7 +178,7 @@ const Settings: React.FC = () => {
               </p>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

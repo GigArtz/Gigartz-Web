@@ -1,16 +1,10 @@
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProfiles } from "../../store/profileSlice";
 import UserCard from "./UserCard";
 import { AppDispatch, RootState } from "../../store/store";
 import { fetchAllEvents } from "../../store/eventsSlice";
-import { FaFilter, FaSearch, FaSpinner } from "react-icons/fa";
+import { FaFilter, FaSearch, FaSlidersH, FaSpinner } from "react-icons/fa";
 import ScrollableEventRow from "./ScrollableEventRow";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -74,24 +68,19 @@ function ExploreTabs() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
-    if (tab === "events" || tab === "people") {
-      setActiveTab(tab);
+    if (tab) {
+      // Accept current tab keys and map legacy values
+      const normalized = tab === "events" ? "gigs" : tab;
+      const validTabs = ["top", "latest", "gigs", "people"];
+      if (validTabs.includes(normalized)) {
+        setActiveTab(normalized);
+      }
     }
   }, [location.search]);
 
-  // Track if we've already attempted to fetch to prevent infinite loops
-  const hasFetchedRef = useRef(false);
-
-  // Load data
-  useEffect(() => {
-    // Only fetch once and avoid during errors to prevent infinite loops
-    if (!hasFetchedRef.current) {
-      // fetchAllProfiles now uses cache by default, only fetches if cache is invalid
-      dispatch(fetchAllProfiles());
-      dispatch(fetchAllEvents());
-      hasFetchedRef.current = true;
-    }
-  }, [dispatch]);
+  // NOTE: data fetching is handled globally (e.g. in App.tsx). This component
+  // will rely on Redux state already populated. A manual Retry button is
+  // provided in the error UI to re-dispatch fetches if needed.
 
   // Redux state
   const { userList, loading, error } = useSelector(
@@ -157,14 +146,7 @@ function ExploreTabs() {
       })
     : [];
 
-  // Navigate on "See All"
-  const handleSeeAll = (section: string) => {
-    let tab = "gigs";
-    if (section === "Popular Freelancers" || section === "People") {
-      tab = "people";
-    }
-    navigate(`/explore?tab=${tab}`);
-  };
+  // NOTE: Navigation helpers - `handleSeeAll` was removed because it's unused.
 
   // Navigate to SeeAllEventsPage with section context
   const handleSeeAllEvents = (
@@ -349,16 +331,17 @@ function ExploreTabs() {
   );
 
   // Memoize interest sections to prevent UserCard re-renders
-  const memoizedPeopleInterestSections = useMemo(
-    () =>
-      (peopleData.interestSections as { interest: string; users: any[] }[]).map(
-        (section) => ({
-          ...section,
-          users: section.users.map(safeUser),
-        })
-      ),
-    [peopleData.interestSections, safeUser]
-  );
+  const memoizedPeopleInterestSections = useMemo(() => {
+    const raw = peopleData.interestSections as
+      | { interest: string; users: unknown[] }[]
+      | undefined;
+    if (!Array.isArray(raw))
+      return [] as { interest: string; users: ReturnType<typeof safeUser>[] }[];
+    return raw.map((section) => ({
+      ...section,
+      users: Array.isArray(section.users) ? section.users.map(safeUser) : [],
+    }));
+  }, [peopleData.interestSections, safeUser]);
 
   return (
     <div className="px-2">
@@ -384,15 +367,13 @@ function ExploreTabs() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <div className="button-group flex gap-3">
-              <button className="absolute right-5 top-0 mt-2 mr-3">
-                <FaSearch className="absolute right-2 top-1 text-gray-400" />
-              </button>
+          
               <button
                 type="button"
                 className="absolute right-0 top-0 mt-2 mr-3"
                 onClick={() => setShowFilters(true)}
               >
-                <FaFilter className="absolute right-2 top-1 text-gray-400" />
+                <FaSlidersH className="absolute right-2 top-1 text-gray-400" />
               </button>
             </div>
           </form>
@@ -447,7 +428,9 @@ function ExploreTabs() {
           </div>
         )}
 
-        {!loading && !error && (
+     
+
+        {!loading && (
           <>
             {activeTab === "top" && (
               <div className="flex flex-col gap-6">

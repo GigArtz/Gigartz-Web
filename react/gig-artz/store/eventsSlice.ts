@@ -384,7 +384,7 @@ export const addEvent = (eventData: Event) => async (dispatch: AppDispatch) => {
 
 // Adding guest list name
 export const createGuestList =
-  (guestListData: { userId: string; guestListName: string }) =>
+  (guestListData: { userId: string; guestListName: string; isPaid?: boolean; price?: number; billingCycle?: string }) =>
     async (dispatch: AppDispatch) => {
       dispatch(eventsSlice.actions.createGuestListStart());
 
@@ -1076,13 +1076,13 @@ export const refundTicket = (
   }
 };
 
-// Update guest list name
-export const updateGuestList = (userId: string, guestListId: string, guestListName: string) => async (dispatch: AppDispatch) => {
+// Update guest list (name, paid config)
+export const updateGuestList = (userId: string, guestListId: string, guestListName: string, options?: { isPaid?: boolean; price?: number; billingCycle?: string }) => async (dispatch: AppDispatch) => {
   dispatch(eventsSlice.actions.createGuestListStart());
   try {
     await axios.put(
       `https://gigartz.onrender.com/guest-list/edit`,
-      { userId, guestListId, guestListName }
+      { userId, guestListId, guestListName, ...options }
     );
     dispatch(eventsSlice.actions.createGuestListSuccess("Guest list updated successfully!"));
     notify(dispatch, {
