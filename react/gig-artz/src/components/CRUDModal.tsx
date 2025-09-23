@@ -4,29 +4,25 @@ import {
   FaEye,
   FaBookmark,
   FaExclamationTriangle,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import React from "react";
 
-interface Event {
-  id: string;
-  title?: string;
-  eventId?: string;
-  [key: string]: string | string[] | number | boolean | undefined;
-}
-
 interface CRUDModalProps {
   setIsCRUDVisible: (isVisible: boolean) => void;
-  onEdit: (event: Event) => void;
+  onEdit: (event: Record<string, unknown>) => void;
+  onPostpone: (event: Record<string, unknown>) => void;
   onDelete: () => void;
   onInsights: () => void;
   onReport: () => void;
-  event: Event;
+  event: Record<string, unknown>;
   isCreator: boolean;
 }
 
 const CRUDModal: React.FC<CRUDModalProps> = ({
   setIsCRUDVisible,
   onEdit,
+  onPostpone,
   onDelete,
   onInsights,
   onReport,
@@ -40,7 +36,7 @@ const CRUDModal: React.FC<CRUDModalProps> = ({
   };
 
   return (
-    <div className="bg-dark rounded-lg relative overflow-hidden">
+    <div className="rounded-lg relative overflow-hidden">
       {/* Modal Content */}
       <div className="flex flex-col items-center">
         <div className="w-full flex-row transition divide-y divide-gray-800">
@@ -76,6 +72,19 @@ const CRUDModal: React.FC<CRUDModalProps> = ({
                 <FaEdit className="w-4 h-4" />
                 <span className="text-sm">Edit</span>
               </button>
+
+              {/* Postpone Button */}
+              <button
+                onClick={() => {
+                  onPostpone(event);
+                  setIsCRUDVisible(false); // Close modal after editing
+                }}
+                className="w-full flex gap-3 items-center py-1.5 px-3 hover:bg-gray-900 transition text-gray-500"
+              >
+                <FaCalendarAlt className="w-4 h-4" />
+                <span className="text-sm">Postpone</span>
+              </button>
+
               {/* Insights Button */}
               <button
                 onClick={() => {

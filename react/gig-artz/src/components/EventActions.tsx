@@ -10,6 +10,7 @@ import {
 import React, { useEffect, useState } from "react";
 import CRUDModal from "../components/CRUDModal";
 import EditEventModal from "../components/EditEventModal";
+import EditEventDateTimeModal from "../components/EditEventDateTimeModal";
 import ReportModal from "./ReportModal";
 import "./EventActions.css";
 
@@ -173,6 +174,7 @@ const EventActions: React.FC<EventActionsProps> = ({
   const [isCRUDVisible, setIsCRUDVisible] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDateEditMode, setIsDateEditMode] = useState(false);
   const [isCommentsVisible, setIsCommentsVisible] = useState(false);
   const [isShareVisible, setIsShareVisible] = useState(false);
 
@@ -208,6 +210,7 @@ const EventActions: React.FC<EventActionsProps> = ({
   };
 
   const handleEditEvent = (event: Event) => {
+    setIsDateEditMode(false);
     setEventToEdit(event);
     setIsEditModalOpen(true);
   };
@@ -265,6 +268,15 @@ const EventActions: React.FC<EventActionsProps> = ({
     }
   };
 
+  // Update event date (open date/time-only modal)
+  const handleEditDate = (event: Event) => {
+    setIsDateEditMode(true);
+    setEventToEdit(event);
+    // Close CRUD modal before opening the date modal
+    setIsCRUDVisible(false);
+    setIsEditModalOpen(true);
+  };
+
   const { error, success } = useSelector(
     (state: { events: { error: string; success: string } }) => state.events
   );
@@ -286,10 +298,17 @@ const EventActions: React.FC<EventActionsProps> = ({
   return (
     <>
       {/* Modals rendered outside the card component */}
-      {/* Edit Event Modal */}
+      {/* Edit Event Modal (full edit) */}
       <EditEventModal
-        isModalOpen={isEditModalOpen}
+        isModalOpen={isEditModalOpen && !isDateEditMode}
         closeModal={closeEditModal}
+        event={eventToEdit}
+      />
+
+      {/* Edit Date/Time Modal (postpone) */}
+      <EditEventDateTimeModal
+        isOpen={isEditModalOpen && isDateEditMode}
+        onClose={closeEditModal}
         event={eventToEdit}
       />
 
@@ -304,9 +323,11 @@ const EventActions: React.FC<EventActionsProps> = ({
         minWidth="min-w-fit"
         showCloseButton={false}
       >
+        {/* Pass the full event so CRUD actions (Edit/Postpone) receive all fields */}
         <CRUDModal
           setIsCRUDVisible={setIsCRUDVisible}
           onEdit={(e) => handleEditEvent(e as Event)}
+          onPostpone={(e) => handleEditDate(e as Event)}
           onDelete={() => {
             // Handle delete logic here
             setIsCRUDVisible(false); // Close modal after deleting
@@ -316,11 +337,7 @@ const EventActions: React.FC<EventActionsProps> = ({
             setIsCRUDVisible(false); // Close modal after viewing insights
           }}
           onReport={handleReport}
-          event={{
-            id: event.id,
-            title: event.title,
-            // Only include properties expected by CRUDModal
-          }}
+          event={event}
           isCreator={isCreator}
         />
       </BaseModal>
