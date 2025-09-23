@@ -676,6 +676,48 @@ const profileSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+    // Set booking extras (additional costs / deposit) reducers
+    setBookingExtrasStart(state) {
+      state.loading = true;
+      state.error = null;
+      state.success = null;
+    },
+    setBookingExtrasSuccess(state, action: PayloadAction<{ bookingId: string; extras: { additionalCosts?: number; depositPercent?: number; depositAmount?: number; } }>) {
+      state.loading = false;
+      state.success = "Booking extras updated";
+      state.error = null;
+
+      const { bookingId, extras } = action.payload;
+
+      // Update in userBookings
+      if (state.userBookings && Array.isArray(state.userBookings)) {
+        const idx = state.userBookings.findIndex((b: Booking) => b.id === bookingId);
+        if (idx !== -1) {
+          const booking = state.userBookings[idx] as any;
+          booking.additionalCosts = extras.additionalCosts ?? booking.additionalCosts;
+          booking.depositPercent = extras.depositPercent ?? booking.depositPercent;
+          booking.depositAmount = extras.depositAmount ?? booking.depositAmount;
+          booking.status = booking.status === 'Pending' ? 'ExtrasAdded' : booking.status;
+        }
+      }
+
+      // Update in userBookingsRequests
+      if (state.userBookingsRequests && Array.isArray(state.userBookingsRequests)) {
+        const idxReq = state.userBookingsRequests.findIndex((b: Booking) => b.id === bookingId);
+        if (idxReq !== -1) {
+          const booking = state.userBookingsRequests[idxReq] as any;
+          booking.additionalCosts = extras.additionalCosts ?? booking.additionalCosts;
+          booking.depositPercent = extras.depositPercent ?? booking.depositPercent;
+          booking.depositAmount = extras.depositAmount ?? booking.depositAmount;
+          booking.status = booking.status === 'Pending' ? 'ExtrasAdded' : booking.status;
+        }
+      }
+    },
+    setBookingExtrasFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+      state.success = null;
+    },
     fetchDrawerProfileSuccess(state, action: PayloadAction<UserProfile>) {
       state.loading = false;
       state.profile = action.payload;
@@ -2282,3 +2324,38 @@ export const sendTip = (
     handleAxiosError(error, dispatch, profileSlice.actions.fetchProfileFailure);
   }
 };
+
+// Persist booking extras (additional costs and deposit percent)
+export const setBookingExtras =
+  (payload: { bookingId: string; extras: { additionalCosts?: number; depositPercent?: number } }) =>
+    async (dispatch: AppDispatch) => {
+      dispatch(profileSlice.actions.setBookingExtrasStart());
+      try {
+        const { bookingId, extras } = payload;
+        // Send extras to backend
+        const response = await axios.post(
+          `https://gigartz.onrender.com/setBookingExtras`,
+          { bookingId, extras }
+        );
+
+        // Compute a best-effort deposit amount locally (backend should own this calculation ideally)
+        const additionalCosts = Number(extras.additionalCosts) || 0;
+        const depositPercent = Number(extras.depositPercent) || 0;
+        const depositAmount = Math.round((additionalCosts * depositPercent) / 100);
+
+        dispatch(
+          profileSlice.actions.setBookingExtrasSuccess({
+            bookingId,
+            extras: { additionalCosts, depositPercent, depositAmount },
+          })
+        );
+        notify("Booking extras updated", "success");
+      } catch (error: unknown) {
+        let message = "Failed to set booking extras";
+        if (axios.isAxiosError(error)) {
+          message = (error.response && (error.response.data as any)?.message) || error.message || message;
+        }
+        dispatch(profileSlice.actions.setBookingExtrasFailure(message));
+        notify("Failed to set booking extras", "error");
+      }
+    };

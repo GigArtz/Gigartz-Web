@@ -1,7 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store/store";
-import { updateBookingStatus } from "../../store/profileSlice";
+import {
+  updateBookingStatus,
+  setBookingExtras,
+} from "../../store/profileSlice";
 import BaseModal from "./BaseModal";
 import { FaInfoCircle } from "react-icons/fa";
 import "../styles/bookings-animations.css";
@@ -108,6 +111,11 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
 
   // State management
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
+  const [extrasForm, setExtrasForm] = useState({
+    additionalCosts: "",
+    depositPercent: "",
+  });
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set()
   );
@@ -170,6 +178,44 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
         })
       );
       closeModal();
+    }
+  };
+
+  const handleOpenExtras = (booking) => {
+    setSelectedBooking(booking);
+    setExtrasForm({
+      additionalCosts: booking.additionalCosts || "",
+      depositPercent: booking.depositPercent || "",
+    });
+    setIsExtrasModalOpen(true);
+  };
+
+  const handleExtrasChange = (e) => {
+    const { name, value } = e.target;
+    setExtrasForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmitExtras = async () => {
+    if (!selectedBooking) return;
+    const bookingId = selectedBooking.id;
+    const extrasPayload = {
+      bookingId,
+      extras: {
+        additionalCosts: Number(extrasForm.additionalCosts) || 0,
+        depositPercent: Number(extrasForm.depositPercent) || 0,
+      },
+    };
+    try {
+      await dispatch(setBookingExtras(extrasPayload) as any);
+      // Optionally update status in case backend doesn't
+      dispatch(
+        updateBookingStatus({ bookingId, newStatus: "ExtrasAdded" }) as any
+      );
+      setIsExtrasModalOpen(false);
+      setSelectedBooking(null);
+    } catch (err) {
+      console.error("Failed to submit extras", err);
+      setIsExtrasModalOpen(false);
     }
   };
 
@@ -531,6 +577,16 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
                                     >
                                       ✕
                                     </button>
+                                    {/* Add Extras button shown to freelancer (profile owner) */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenExtras(booking);
+                                      }}
+                                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded text-xs transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5"
+                                    >
+                                      +Extras
+                                    </button>
                                   </div>
                                 </div>
                               </div>
@@ -557,6 +613,52 @@ const BookingsComponent: React.FC<BookingsComponentProps> = ({
                   strokeWidth="2"
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
+                {/* Extras Modal */}
+                <BaseModal
+                  isOpen={isExtrasModalOpen}
+                  onClose={() => setIsExtrasModalOpen(false)}
+                  title="Add Extras & Deposit"
+                  icon={<FaInfoCircle />}
+                >
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-gray-300">
+                        Additional Costs (USD)
+                      </label>
+                      <input
+                        name="additionalCosts"
+                        value={extrasForm.additionalCosts}
+                        onChange={handleExtrasChange}
+                        className="w-full mt-1 p-2 bg-gray-900 border border-gray-700 rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-300">
+                        Deposit Percent (%)
+                      </label>
+                      <input
+                        name="depositPercent"
+                        value={extrasForm.depositPercent}
+                        onChange={handleExtrasChange}
+                        className="w-full mt-1 p-2 bg-gray-900 border border-gray-700 rounded"
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={() => setIsExtrasModalOpen(false)}
+                        className="px-4 py-2 bg-gray-700 rounded text-sm"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSubmitExtras}
+                        className="px-4 py-2 bg-indigo-600 rounded text-sm text-white"
+                      >
+                        Save Extras
+                      </button>
+                    </div>
+                  </div>
+                </BaseModal>
               </svg>
               <p className="text-gray-400 text-sm animate-fade-in animation-delay-200">
                 No pending bookings

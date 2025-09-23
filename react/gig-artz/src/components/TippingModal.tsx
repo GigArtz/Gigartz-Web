@@ -78,7 +78,7 @@ const TippingModal: React.FC<TippingModalProps> = ({
           </div>
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-medium">Custom Amount</label>
+          <label className="block text-sm text-white font-medium">Custom Amount:</label>
           <input
             type="number"
             min="1"

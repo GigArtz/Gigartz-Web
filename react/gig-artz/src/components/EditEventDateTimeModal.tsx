@@ -75,14 +75,20 @@ const EditEventDateTimeModal: React.FC<Props> = ({
       const updatedEvent = {
         ...existingEvent,
         date,
-        eventStartTime: startTime || (existingEvent.eventStartTime as string | undefined) || (existingEvent.time as string | undefined),
-        eventEndTime: endTime || (existingEvent.eventEndTime as string | undefined),
+        eventStartTime:
+          startTime ||
+          (existingEvent.eventStartTime as string | undefined) ||
+          (existingEvent.time as string | undefined),
+        eventEndTime:
+          endTime || (existingEvent.eventEndTime as string | undefined),
       } as Record<string, unknown>;
 
       // Extract promoterId safely
       const promoterId = (existingEvent.promoterId as string) || "";
 
-      await dispatch(updateEvent(String(existingEvent.id), promoterId, updatedEvent));
+      await dispatch(
+        updateEvent(String(existingEvent.id), promoterId, updatedEvent)
+      );
 
       dispatch(
         showToast({ message: "Event date/time updated", type: "success" })

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { FaCalendarPlus } from "react-icons/fa";
-import Payment from "./Payment";
 import BaseModal from "./BaseModal";
 
 interface BookingFormData {
@@ -50,12 +49,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
     additionalInfo: "",
   });
 
-  const [showPayment, setShowPayment] = useState(false);
-  const [pendingBooking, setPendingBooking] = useState<
-    (BookingFormData & { serviceName: string }) | null
-  >(null);
-  const [pendingAmount, setPendingAmount] = useState<number>(0);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -66,41 +59,19 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService) return;
-    // Find the selected service and get its price
-    const serviceObj = services.find(
-      (s, idx) => (s.name ?? s["serviceName"] ?? idx) === selectedService
-    );
-    let amount = 0;
-    if (serviceObj) {
-      // Prefer package price if packages exist and user selects one (not implemented here, can be extended)
-      if (
-        Array.isArray(serviceObj.packages) &&
-        serviceObj.packages.length > 0
-      ) {
-        // For now, just use the first package's price
-        amount = Number(
-          serviceObj.packages[0].price || serviceObj.packages[0].baseFee || 0
-        );
-      } else {
-        amount = Number(serviceObj.baseFee || serviceObj.price || 0);
-      }
-    }
-    setPendingBooking({ ...formData, serviceName: selectedService });
-    setPendingAmount(amount);
-    setShowPayment(true);
-  };
-
-  const handlePaymentSuccess = () => {
-    setShowPayment(false);
-    if (pendingBooking) {
-      onSubmit(pendingBooking);
-      setPendingBooking(null);
-    }
-  };
-
-  const handlePaymentFailure = () => {
-    setShowPayment(false);
-    setPendingBooking(null);
+    // Directly submit booking without payment step
+    onSubmit({ ...formData, serviceName: selectedService });
+    // Reset and close modal
+    setFormData({
+      eventDetails: "",
+      date: "",
+      time: "",
+      venue: "",
+      additionalInfo: "",
+    });
+    setSelectedService(null);
+    setSelectedPackage(null);
+    onClose();
   };
 
   const handleServiceSelect = (key: string) => {
@@ -115,7 +86,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
   // Handler for going back to service selection
   const handleBackToService = () => {
-    setSelectedService("");
+    // reset selected service and package and go back to step 1
+    setSelectedService(null);
+    setSelectedPackage(null);
     setStep(1);
   };
 
@@ -276,7 +249,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             <div className="flex justify-between mt-4">
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={handleBackToService}
                 className="btn-primary w-32  text-sm"
               >
                 ← Back
@@ -417,16 +390,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   </button>
                 </div>
 
-                {/* Optional Payment Modal */}
-                <Payment
-                  isOpen={showPayment}
-                  amount={pendingAmount}
-                  type="booking"
-                  bookingDetails={pendingBooking || {}}
-                  onSuccess={handlePaymentSuccess}
-                  onFailure={handlePaymentFailure}
-                  onClose={() => setShowPayment(false)}
-                />
+                {/* Payment flow removed: booking is dispatched directly via onSubmit */}
               </>
             );
           })()}
